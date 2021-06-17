@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "module": "esnext",
+    "moduleResolution": "node",
+    "target": "es2016",
+    "jsx": "react",
+    "allowJs": true,
+    "strict": false,
+    "noUnusedLocals": true,
+    "paths": {
+      "@openshift-console/dynamic-plugin-sdk/api": ["node_modules/@openshift-console/dynamic-plugin-sdk/lib/api/api"],
+      "@openshift-console/dynamic-plugin-sdk/webpack": ["node_modules/@openshift-console/dynamic-plugin-sdk/lib/webpack"],
+    },
+  },
+  "include": ["src"],
+  }

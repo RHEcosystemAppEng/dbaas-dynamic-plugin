@@ -1,0 +1,65 @@
+[
+  {
+    "type": "console.flag/model",
+    "properties": {
+      "flag": "DBAAS_FLAG",
+      "model": {
+        "group": "dbaas.redhat.com",
+        "version": "v1",
+        "kind": "DBaaSService"
+      }
+    }
+  },
+  {
+    "type": "dev-console.add/action",
+    "flags": {
+      "required": []
+    },
+    "properties": {
+      "id": "dbaasAddAction",
+      "href": "/catalog?catalogType=dbaas-new",
+      "label": "%dbaas-plugin~DBaaS%",
+      "description": "%dbaas-plugin~Provide database related services.%",
+      "icon": { "$codeRef": "constants.dbaasServicesIcon" },
+      "accessReview": [
+        { "group": "apps.openshift.io", "resource": "deploymentconfigs", "verb": "create" },
+        { "group": "route.openshift.io", "resource": "routes", "verb": "create" },
+        { "group": "", "resource": "secrets", "verb": "create" },
+        { "group": "", "resource": "services", "verb": "create" }
+      ]
+    }
+  },
+  {
+    "type": "console.catalog/item-type",
+    "properties": {
+      "type": "dbaas-new",
+      "title": "%dbaas-plugin~Connected Database Providers%",
+      "catalogDescription": "%dbaas-plugin~See a list of connected database providers%",
+      "typeDescription": "%dbaas-plugin~DBaaS%"
+    },
+    "flags": {
+      "required": []
+    }
+  },
+  {
+    "type": "console.catalog/item-provider",
+    "properties": {
+      "catalogId": "dev-catalog",
+      "type": "dbaas-new",
+      "provider": { "$codeRef": "catalog.dbaasProvider" }
+    },
+    "flags": {
+      "required": []
+    }
+  },
+  {
+    "type": "console.page/route/standalone",
+    "properties": {
+      "exact": true,
+      "path": "/foo",
+      "component": {
+        "$codeRef": "fooComp"
+      }
+    }
+  }
+]

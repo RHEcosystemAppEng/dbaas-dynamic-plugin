@@ -1,0 +1,54 @@
+{
+  "name": "@console/dbaas-dynamic-plugin",
+  "version": "0.0.0",
+  "private": true,
+  "repository": "git@github.com:yzhao583/dbaaS-dynamic-plugin.git",
+  "scripts": {
+    "clean": "rm -rf ./dist",
+    "build": "yarn clean && NODE_ENV=production yarn ts-node ./node_modules/.bin/webpack",
+    "build-dev": "yarn clean && yarn ts-node ./node_modules/.bin/webpack",
+    "http-server": "./http-server.sh ./dist",
+    "ts-node": "ts-node -O '{\"module\":\"commonjs\"}' -I '/node_modules/(?!(@console)/)/'"
+  },
+  "dependencies": {
+    "@patternfly/react-core": "4.106.2",
+    "@patternfly/react-table": "4.24.1",
+    "@types/node": "^14.14.34",
+    "css-loader": "^5.2.6",
+    "file-loader": "^6.2.0",
+    "lodash": "^4.17.21",
+    "react": "16.9.0",
+    "react-dom": "^17.0.1",
+    "react-i18next": "^11.8.11",
+    "react-router": "5.1.2",
+    "react-router-dom": "5.1.2",
+    "style-loader": "^2.0.0"
+  },
+  "devDependencies": {
+    "@openshift-console/dynamic-plugin-sdk": "0.0.0-alpha14",
+    "@types/react": "16.8.13",
+    "@types/react-router-dom": "5.1.2",
+    "comment-json": "4.x",
+    "http-server": "0.12.x",
+    "read-pkg": "5.x",
+    "ts-loader": "6.2.2",
+    "ts-node": "5.0.1",
+    "typescript": "3.8.3",
+    "webpack": "5.0.0-beta.16",
+    "webpack-cli": "4.5.x"
+  },
+  "consolePlugin": {
+    "name": "dbaas-dynamic-plugin",
+    "version": "0.0.0",
+    "displayName": "DBaaS Dynamic Plugin",
+    "description": "Dynamic Plugin for Openshift Console to provide custom components for DBaaS",
+    "exposedModules": {
+      "constants": "./const.ts",
+      "catalog": "./catalog",
+      "fooComp": "./components/Foo.tsx"
+    },
+    "dependencies": {
+      "@console/pluginAPI": "*"
+    }
+  }
+}
