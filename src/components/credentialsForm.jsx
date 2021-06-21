@@ -1,9 +1,6 @@
 import React from "react";
-import * as _ from 'lodash-es';
-import { k8sGet, k8sCreate } from '@console/internal/module/k8s';
-import { SecretModel } from '@console/internal/models';
-import { getActiveNamespace } from '@console/internal/actions/ui';
-import { errorModal } from '@console/internal/components/modals';
+import * as _ from 'lodash';
+import { currentNS } from '../const';
 
 class CredentialsForm extends React.Component {
     constructor(props) {
@@ -14,7 +11,6 @@ class CredentialsForm extends React.Component {
             orgPublicKey: "",
             orgPrivateKey: "",
             postResponse: "",
-            currentNS: getActiveNamespace()
         };
     }
 
@@ -26,51 +22,45 @@ class CredentialsForm extends React.Component {
             kind: "Secret",
             metadata: {
                 name: "dbaas-vendor-credentials",
-                namespace: this.state.currentNS,
+                namespace: currentNS,
                 labels: {
                     "related-to": "dbaas-operator",
                     type: "dbaas-vendor-credentials",
                 },
             },
             stringData: {
-                orgId: Buffer.from(this.state.orgId).toString(),
-                publicApiKey: Buffer.from(this.state.orgPublicKey).toString(),
-                privateApiKey: Buffer.from(this.state.orgPrivateKey).toString(),
+                orgId: this.state.orgId.toString("base64"),
+                publicApiKey: this.state.orgPublicKey.toString("base64"),
+                privateApiKey: this.state.orgPrivateKey.toString("base64"),
             },
             type: "Opaque",
         };
 
-        //create secret based on user's input
-        k8sGet(SecretModel, "dbaas-vendor-credentials", this.state.currentNS, {}).then((oldSecrets) => {
-            if (!_.isEmpty(oldSecrets)) {
-                console.log("Secret already exist")
-            } else {
-                k8sCreate(SecretModel, newSecret)
-                    .then((nsSecrets) => {
-                        this.setState({ postResponse: nsSecrets })
-                    })
-                    .catch((err) => {
-                        if (err?.response?.status != 409) {
-                            errorModal({ error: err?.message });
-                        }
-                    });
-            }
-        })
+        let postSecretRequestOpts = {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json",
+            },
+            body: JSON.stringify(newSecret),
+        };
+
+        fetch(
+            "api/kubernetes/api/v1/namespaces/" + currentNS + "/secrets",
+            postSecretRequestOpts
+        )
+            .then((response) => response.json())
+            .then((data) => {
+                this.setState({ postResponse: data })
+
+            })
             .catch((err) => {
                 if (err?.response?.status == 404) {
-                    k8sCreate(SecretModel, newSecret)
-                        .then((nsSecrets) => {
-                            this.setState({ postResponse: nsSecrets })
-                        })
-                        .catch((err) => {
-                            if (err?.response?.status != 409) {
-                                errorModal({ error: err?.message });
-                            }
-                        });
+                    console.warn(err);
                 } else {
-                    errorModal({ error: err?.message });
+                    console.warn(err);
                 }
-            });
+            });;
 
         let requestOpts = {
             method: "POST",
@@ -83,7 +73,7 @@ class CredentialsForm extends React.Component {
                 kind: "DBaaSService",
                 metadata: {
                     name: "atlas-dbaas-service",
-                    namespace: this.state.currentNS,
+                    namespace: currentNS,
                     labels: {
                         "related-to": "dbaas-operator",
                         type: "dbaas-vendor-service",
@@ -99,7 +89,7 @@ class CredentialsForm extends React.Component {
             }),
         };
         fetch(
-            '/api/kubernetes/apis/dbaas.redhat.com/v1/namespaces/' + this.state.currentNS + '/dbaasservices',
+            '/api/kubernetes/apis/dbaas.redhat.com/v1/namespaces/' + currentNS + '/dbaasservices',
             requestOpts
         )
             .then((response) => response.json())

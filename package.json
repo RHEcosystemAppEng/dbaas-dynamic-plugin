@@ -45,7 +45,8 @@
     "exposedModules": {
       "constants": "./const.ts",
       "catalog": "./catalog",
-      "fooComp": "./components/Foo.tsx"
+      "dbaasImportPage": "./components/dbaasImportPage.jsx",
+      "instanceListPage": "./components/instanceListPage.jsx"
     },
     "dependencies": {
       "@console/pluginAPI": "*"

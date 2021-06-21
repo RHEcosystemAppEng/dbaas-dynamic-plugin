@@ -32,7 +32,6 @@ const useDBaaSCatalog: ExtensionHook<CatalogItem[]> = ({
           {t("dbaas-plugin~MongoDBAtlasCardDescription")}
         </Text>
       </TextContent>
-      // <div>mongodb</div>
     );
 
     const mongoDBAtlasServiceDetailsDescription = [

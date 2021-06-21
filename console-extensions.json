@@ -53,12 +53,22 @@
     }
   },
   {
-    "type": "console.page/route/standalone",
+    "type": "console.page/route",
     "properties": {
       "exact": true,
-      "path": "/foo",
+      "path": "/k8s/ns/:ns/clusterserviceversions/dbaas-operator.v0.0.1/dbaas.redhat.com~v1~DBaaSService/~new",
       "component": {
-        "$codeRef": "fooComp"
+        "$codeRef": "dbaasImportPage"
+      }
+    }
+  },
+  {
+    "type": "console.page/route",
+    "properties": {
+      "exact": true,
+      "path": "/dbaas/ns/:ns/mongodb-atlas",
+      "component": {
+        "$codeRef": "instanceListPage"
       }
     }
   }
