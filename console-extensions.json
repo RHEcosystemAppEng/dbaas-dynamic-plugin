@@ -56,7 +56,7 @@
     "type": "console.page/route",
     "properties": {
       "exact": true,
-      "path": "/k8s/ns/:ns/clusterserviceversions/:appName/dbaas.redhat.com~v1~DBaaSService/~new",
+      "path": "/k8s/ns/:ns/clusterserviceversions/:appName/dbaas.redhat.com~v1alpha1~DBaaSInventory/~new",
       "component": {
         "$codeRef": "dbaasImportPage"
       }

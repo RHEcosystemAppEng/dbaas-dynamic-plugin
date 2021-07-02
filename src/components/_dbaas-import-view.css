@@ -194,5 +194,9 @@
   }
 
   .instance-table-container {
-    margin: 20px
+    margin: 20px;
+  }
+
+  .inventory-tabs {
+    margin-top: 20px;
   }

@@ -15,7 +15,7 @@ const useDBaaSCatalog: ExtensionHook<CatalogItem[]> = ({
   const { t } = useTranslation();
 
   const [dbaasService, loaded, errorMsg] = useK8sWatchResource({
-    kind: "dbaas.redhat.com~v1~DBaaSService",
+    kind: "dbaas.redhat.com~v1alpha1~DBaaSInventory",
     isList: false,
     name: DBaaSServiceCRName,
     namespace,

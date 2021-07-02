@@ -25,7 +25,6 @@ class VendorForm extends React.Component {
                             value="atlas"
                             name="vendor"
                             className="select-radio-input"
-                            defaultChecked={true}
                         />
               MongoDB Atlas
             </label>
@@ -36,6 +35,7 @@ class VendorForm extends React.Component {
                             value="crunchy"
                             name="vendor"
                             className="select-radio-input"
+                            defaultChecked={true}
                         />
               Crunchy Data PostgreSQL
             </label>

@@ -1,29 +1,35 @@
 import React from "react";
 import InstanceTable from "./instanceTable";
 import { currentNS } from '../const';
+import {
+    Tabs,
+    Tab,
+    TabTitleText,
+    Title,
+    EmptyState,
+    EmptyStateIcon,
+    Spinner
+} from '@patternfly/react-core';
 class InstancesForm extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
             showResults: false,
-            instances: [],
+            inventories: [],
             hasInstanceUpdated: false,
+            activeTabKey: 0
         };
-        // eslint-disable-next-line
-        this.fetchInstances = this.fetchInstances.bind(this);
-        // eslint-disable-next-line
-        this.parsePayload = this.parsePayload.bind(this);
     }
 
     componentDidUpdate() {
-        if (this.props.dbaaSServiceStatus && this.state.instances.length == 0 && !this.state.hasInstanceUpdated) {
+        if (this.props.dbaaSServiceStatus && this.state.inventories.length == 0 && !this.state.hasInstanceUpdated) {
             setInterval(() => {
-                this.fetchInstances();
+                this.fetchInventories();
             }, 3000)
         }
     }
 
-    fetchInstances() {
+    fetchInventories = () => {
         var requestOpts = {
             method: "GET",
             headers: {
@@ -32,39 +38,71 @@ class InstancesForm extends React.Component {
             },
         };
         fetch(
-            '/api/kubernetes/apis/dbaas.redhat.com/v1/namespaces/' + currentNS + '/dbaasservices/atlas-dbaas-service',
+            '/api/kubernetes/apis/dbaas.redhat.com/v1alpha1/namespaces/' + currentNS + '/dbaasinventories?limit=250',
             requestOpts
         )
             .then((response) => response.json())
             .then((data) => this.parsePayload(data));
     };
 
-    parsePayload(responseJson) {
-        let instances = [];
+    parsePayload = (responseJson) => {
+        let inventories = [];
 
-        if (responseJson.status) {
-            responseJson?.status?.projects?.forEach(function (value) {
-                value?.clusters?.forEach(function (value) {
-                    instances.push(value);
-                });
-
+        if (responseJson.items) {
+            responseJson.items?.forEach((inventory, index) => {
+                let obj = { id: 0, name: "", instances: [] };
+                obj.id = index;
+                obj.name = inventory.metadata.name;
+                inventory.status?.instances?.map((instance) => {
+                    return instance.provider = inventory.spec?.provider?.name;
+                })
+                obj.instances = inventory.status?.instances;
+                inventories.push(obj);
             });
             this.setState({
-                instances: instances,
+                inventories: inventories,
                 hasInstanceUpdated: true,
                 showResults: true
             });
         }
     }
 
+    handleTabClick = (event, tabIndex) => {
+        event.preventDefault();
+        this.setState({
+            activeTabKey: tabIndex
+        });
+    };
+
 
     render() {
+        const { showResults, inventories, activeTabKey } = this.state;
+
+        if (!showResults) {
+            return (
+                <EmptyState>
+                    <EmptyStateIcon variant="container" component={Spinner} />
+                    <Title size="lg" headingLevel="h3">
+                        Fetching inventories...
+                    </Title>
+                </EmptyState>
+            )
+        }
+
         return (
-            <form id="instances-form">
-                <div className="instance-table">
-                    <InstanceTable isLoading={!this.state.showResults} data={this.state.instances} isSelectable={false} />
-                </div>
-            </form>
+            <Tabs activeKey={activeTabKey} onSelect={this.handleTabClick} isBox className="inventory-tabs">
+                {inventories.map((inventory) => {
+                    return (
+                        <Tab eventKey={inventory?.id} title={<TabTitleText>{inventory?.name}</TabTitleText>}>
+                            <form id="instances-form">
+                                <div className="instance-table">
+                                    <InstanceTable isLoading={!showResults} data={inventory} isSelectable={false} />
+                                </div>
+                            </form>
+                        </Tab>
+                    )
+                })}
+            </Tabs>
         );
     }
 }

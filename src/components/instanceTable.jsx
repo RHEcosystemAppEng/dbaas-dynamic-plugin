@@ -22,11 +22,9 @@ class InstanceTable extends React.Component {
         super(props);
         this.state = {
             columns: [
-                { title: 'Instance' },
-                { title: 'Size', transforms: [wrappable] },
+                { title: 'ID', transforms: [wrappable] },
+                { title: 'Instance', transforms: [wrappable] },
                 { title: 'Provider', transforms: [wrappable] },
-                { title: 'Region', transforms: [wrappable] },
-                { title: 'ID' }
             ],
             rows: [],
             selectedInstance: {},
@@ -35,6 +33,7 @@ class InstanceTable extends React.Component {
                 msg: "",
                 type: ""
             },
+            inventoryName: props.data.name ? props.data.name : ""
         };
         this.onSelect = this.onSelect.bind(this);
         this.getRows = this.getRows.bind(this);
@@ -45,16 +44,20 @@ class InstanceTable extends React.Component {
     }
 
     componentDidUpdate(prevProps) {
-        if (this.props.data && this.props.data.length > 0 && !_.isEqual(prevProps.data, this.props.data)) {
-            this.getRows(this.props.data);
+        if (this.props.data.instances && this.props.data.instances.length > 0 && !_.isEqual(prevProps.data.instances, this.props.data.instances)) {
+            this.getRows(this.props.data.instances);
         }
+    }
+
+    componentDidMount() {
+        this.getRows(this.props.data.instances);
     }
 
     getRows(data) {
         let rowList = [];
         if (data) {
             _.forEach(data, rowData => {
-                rowList.push({ cells: [rowData.name, rowData.instanceSizeName, rowData.providerName, rowData.regionName, rowData.id] })
+                rowList.push({ cells: [rowData.instanceID, rowData.name, rowData.provider] })
             })
         };
 
@@ -67,29 +70,38 @@ class InstanceTable extends React.Component {
             return oneRow;
         });
         this.setState({
-            selectedInstance: this.props.data[rowId],
+            selectedInstance: this.props.data.instances[rowId],
             rows: rows
         });
     }
 
     submitInstances() {
-        let patch = [
-            {
-                "op": "add",
-                "path": "/spec/selectedForImport",
-                "value": [this.state.selectedInstance.id]
+
+        let newBody = {
+            apiVersion: "dbaas.redhat.com/v1alpha1",
+            kind: "DBaaSConnection",
+            metadata: {
+                name: this.state.selectedInstance.name,
+                namespace: currentNS,
+            },
+            spec: {
+                instanceID: this.state.selectedInstance.instanceID,
+                inventory: {
+                    name: this.state.inventoryName
+                }
             }
-        ]
+        };
+
         let requestOpts = {
-            method: "PATCH",
+            method: "POST",
             headers: {
-                "Content-Type": "application/json-patch+json",
+                "Content-Type": "application/json",
                 Accept: "application/json",
             },
-            body: JSON.stringify(patch),
+            body: JSON.stringify(newBody),
         };
         fetch(
-            '/api/kubernetes/apis/dbaas.redhat.com/v1/namespaces/' + currentNS + '/dbaasservices/atlas-dbaas-service',
+            '/api/kubernetes/apis/dbaas.redhat.com/v1alpha1/namespaces/' + currentNS + '/dbaasconnections',
             requestOpts
         )
             .then((response) => response.json())
@@ -101,6 +113,15 @@ class InstanceTable extends React.Component {
                     type: "success"
                 }
             }))
+            .catch(err => {
+                this.setState({
+                    alert: {
+                        isActive: true,
+                        msg: err.message,
+                        type: "error"
+                    }
+                })
+            })
     }
 
     handleSubmit = async (event) => {

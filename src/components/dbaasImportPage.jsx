@@ -76,7 +76,7 @@ class DBaasImportPage extends React.Component {
                         >
                             <div className="pf-c-tab-content__body">
                                 <div className="section-title">
-                                    MongoDB Atlas Credentials
+                                    Account Credentials
                                 </div>
                                 <CredentialsForm setActiveTab={this.setActiveTab} setDBaaSServiceStatus={this.setDBaaSServiceStatus} />
                             </div>

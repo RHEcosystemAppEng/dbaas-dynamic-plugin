@@ -18,7 +18,7 @@ class CredentialsForm extends React.Component {
         event.preventDefault();
 
         let newSecret = {
-            apiVersion: "v1",
+            apiVersion: "v1alpha1",
             kind: "Secret",
             metadata: {
                 name: "dbaas-vendor-credentials",
@@ -69,7 +69,7 @@ class CredentialsForm extends React.Component {
                 Accept: "application/json",
             },
             body: JSON.stringify({
-                apiVersion: "dbaas.redhat.com/v1",
+                apiVersion: "dbaas.redhat.com/v1alpha1",
                 kind: "DBaaSService",
                 metadata: {
                     name: "atlas-dbaas-service",
@@ -89,7 +89,7 @@ class CredentialsForm extends React.Component {
             }),
         };
         fetch(
-            '/api/kubernetes/apis/dbaas.redhat.com/v1/namespaces/' + currentNS + '/dbaasservices',
+            '/api/kubernetes/apis/dbaas.redhat.com/v1alpha1/namespaces/' + currentNS + '/dbaasservices',
             requestOpts
         )
             .then((response) => response.json())
