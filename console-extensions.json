@@ -53,13 +53,14 @@
     }
   },
   {
-    "type": "console.page/route",
+    "type": "console.olm/create-operand",
     "properties": {
-      "exact": true,
-      "path": "/k8s/ns/:ns/clusterserviceversions/:appName/dbaas.redhat.com~v1alpha1~DBaaSInventory/~new",
-      "component": {
-        "$codeRef": "dbaasImportPage"
-      }
+      "model": {
+        "group": "dbaas.redhat.com",
+        "version": "v1alpha1",
+        "kind": "DBaaSInventory"
+      },
+      "component": { "$codeRef": "dbaasImportPage" }
     }
   },
   {
