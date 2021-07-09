@@ -53,7 +53,7 @@
     }
   },
   {
-    "type": "console.olm/create-operand",
+    "type": "console.resource/create",
     "properties": {
       "model": {
         "group": "dbaas.redhat.com",

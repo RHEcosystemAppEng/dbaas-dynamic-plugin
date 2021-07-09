@@ -1,10 +1,20 @@
 import React from "react";
+import { MONGODB_PROVIDER_NAME, CRUNCHY_PROVIDER_NAME } from "../const";
 
 class VendorForm extends React.Component {
     constructor(props) {
         super(props);
+        this.state = {
+            selectedDBProvider: MONGODB_PROVIDER_NAME
+        };
         this.handleSubmit = this.handleSubmit.bind(this);
+        this.onDBProviderChange = this.onDBProviderChange.bind(this);
     }
+
+    onDBProviderChange = (e) => {
+        let dbProviderName = e.target.value;
+        this.setState({ selectedDBProvider: dbProviderName });
+    };
 
     handleSubmit = async (event) => {
         event.preventDefault();
@@ -22,9 +32,11 @@ class VendorForm extends React.Component {
                         <input
                             type="radio"
                             id="atlas"
-                            value="atlas"
+                            value={MONGODB_PROVIDER_NAME}
                             name="vendor"
                             className="select-radio-input"
+                            defaultChecked={true}
+                            onChange={this.onDBProviderChange}
                         />
               MongoDB Atlas
             </label>
@@ -32,10 +44,10 @@ class VendorForm extends React.Component {
                     <label className="radio-label">
                         <input
                             type="radio"
-                            value="crunchy"
+                            value={CRUNCHY_PROVIDER_NAME}
                             name="vendor"
                             className="select-radio-input"
-                            defaultChecked={true}
+                            onChange={this.onDBProviderChange}
                         />
               Crunchy Bridge PostgreSQL
             </label>
