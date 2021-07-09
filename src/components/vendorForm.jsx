@@ -37,27 +37,7 @@ class VendorForm extends React.Component {
                             className="select-radio-input"
                             defaultChecked={true}
                         />
-              Crunchy Data PostgreSQL
-            </label>
-                    <br />
-                    <label className="radio-label">
-                        <input
-                            type="radio"
-                            value="cockroach"
-                            name="vendor"
-                            className="select-radio-input"
-                        />
-              CockroachCloud
-            </label>
-                    <br />
-                    <label className="radio-label">
-                        <input
-                            type="radio"
-                            value="couchbase"
-                            name="vendor"
-                            className="select-radio-input"
-                        />
-              Couchbase Cloud
+              Crunchy Bridge PostgreSQL
             </label>
                     <br />
                     <br />
