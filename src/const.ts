@@ -12,7 +12,10 @@ export const mongoDBIcon = `data:image/svg+xml,%3Csvg height='64' viewBox='0 0 3
 export const APITokenLengthMinimum = 500;
 export const currentNS = 'dbaas-operator';
 export const MONGODB_PROVIDER_NAME = 'Red Hat DBaaS / MongoDB Atlas';
+export const MONGODB_PROVIDER_TYPE = 'mongodb-atlas';
 export const CRUNCHY_PROVIDER_NAME = 'Red Hat DBaaS / Crunchy Bridge';
+export const CRUNCHY_PROVIDER_TYPE = 'crunchy-bridge';
+
 
 
 

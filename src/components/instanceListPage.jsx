@@ -1,4 +1,5 @@
 import * as React from 'react';
+import * as _ from 'lodash';
 import {
   FormSection,
   Tabs,
@@ -14,11 +15,24 @@ import FlexForm from './form/flexForm';
 import FormBody from './form/formBody';
 import { currentNS } from '../const';
 import InstanceTable from './instanceTable';
+import { MONGODB_PROVIDER_NAME, CRUNCHY_PROVIDER_NAME, MONGODB_PROVIDER_TYPE, CRUNCHY_PROVIDER_TYPE } from '../const';
 
 const InstanceListPage = () => {
   const [showResults, setShowResults] = React.useState(false);
   const [inventories, setInventories] = React.useState();
   const [activeTabKey, setActiveTabKey] = React.useState(0);
+  const [selectedDBProvider, setSelectedDBProvider] = React.useState('');
+
+
+  const parseSelectedDBProvider = () => {
+    let dbProviderType = _.last(window.location.pathname.split('/'));
+    if (dbProviderType === MONGODB_PROVIDER_TYPE) {
+      setSelectedDBProvider(MONGODB_PROVIDER_NAME);
+    }
+    if (dbProviderType === CRUNCHY_PROVIDER_TYPE) {
+      setSelectedDBProvider(CRUNCHY_PROVIDER_NAME);
+    }
+  };
 
   const handleTabClick = (event, tabIndex) => {
     event.preventDefault();
@@ -29,7 +43,10 @@ const InstanceListPage = () => {
     let inventories = [];
 
     if (responseJson.items) {
-      responseJson.items?.forEach((inventory, index) => {
+      let filteredInventories = _.filter(responseJson.items, inventory => {
+        return inventory.spec?.provider?.name === selectedDBProvider && inventory.status?.conditions[0]?.status !== "False"
+      })
+      filteredInventories.forEach((inventory, index) => {
         let obj = { id: 0, name: "", instances: [] };
         obj.id = index;
         obj.name = inventory.metadata.name;
@@ -63,8 +80,9 @@ const InstanceListPage = () => {
   };
 
   React.useEffect(() => {
+    parseSelectedDBProvider();
     fetchInstances();
-  }, [currentNS]);
+  }, [currentNS, selectedDBProvider]);
 
   return (
     <FlexForm className='instance-table-container'>

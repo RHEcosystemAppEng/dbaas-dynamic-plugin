@@ -1,4 +1,5 @@
 import React from "react";
+import * as _ from 'lodash';
 import InstanceTable from "./instanceTable";
 import { currentNS } from '../const';
 import {
@@ -47,9 +48,13 @@ class InstancesForm extends React.Component {
 
     parsePayload = (responseJson) => {
         let inventories = [];
+        let { selectedDBProvider } = this.props;
 
         if (responseJson.items) {
-            responseJson.items?.forEach((inventory, index) => {
+            let filteredInventories = _.filter(responseJson.items, inventory => {
+                return inventory.spec?.provider?.name === selectedDBProvider && inventory.status?.conditions[0]?.status !== "False"
+            })
+            filteredInventories?.forEach((inventory, index) => {
                 let obj = { id: 0, name: "", instances: [] };
                 obj.id = index;
                 obj.name = inventory.metadata.name;

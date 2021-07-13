@@ -4,9 +4,7 @@ import { TextContent, Text, TextVariants } from "@patternfly/react-core";
 import { CatalogItem } from "@openshift-console/dynamic-plugin-sdk";
 import { ExtensionHook } from "../../types";
 import { useK8sWatchResource } from "@openshift-console/dynamic-plugin-sdk/api";
-// import { referenceForModel } from '@console/internal/module/k8s';
-import { DBaaSServiceCRName, mongoDBIcon } from "../../const";
-// import { DBaaSServiceModel } from '../../models';
+import { mongoDBIcon } from "../../const";
 import { CATALOG_TYPE } from "../const";
 
 const useDBaaSCatalog: ExtensionHook<CatalogItem[]> = ({
@@ -17,7 +15,6 @@ const useDBaaSCatalog: ExtensionHook<CatalogItem[]> = ({
   const [dbaasService, loaded, errorMsg] = useK8sWatchResource({
     kind: "dbaas.redhat.com~v1alpha1~DBaaSInventory",
     isList: false,
-    name: DBaaSServiceCRName,
     namespace,
     namespaced: true,
   });

@@ -103,7 +103,7 @@ class DBaasImportPage extends React.Component {
                                 <div className="section-title">
                                     Database Instances
                                 </div>
-                                <InstancesForm dbaaSServiceStatus={isDBaaSServiceUp} />
+                                <InstancesForm dbaaSServiceStatus={isDBaaSServiceUp} selectedDBProvider={selectedDBProvider} />
                             </div>
                         </section>
                     </Tab>
