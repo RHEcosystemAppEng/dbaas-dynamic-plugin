@@ -52,7 +52,7 @@ class InstancesForm extends React.Component {
 
         if (responseJson.items) {
             let filteredInventories = _.filter(responseJson.items, inventory => {
-                return inventory.spec?.provider?.name === selectedDBProvider && inventory.status?.conditions[0]?.status !== "False"
+                return inventory.spec?.provider?.name === selectedDBProvider && inventory.status?.conditions[0]?.status !== "False" && inventory.status?.conditions[0]?.type === "SpecSynced"
             })
             filteredInventories?.forEach((inventory, index) => {
                 let obj = { id: 0, name: "", instances: [] };
