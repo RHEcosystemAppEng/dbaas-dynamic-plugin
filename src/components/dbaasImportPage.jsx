@@ -12,10 +12,12 @@ class DBaasImportPage extends React.Component {
         this.state = {
             activeTabKey: 0,
             isDBaaSServiceUp: false,
+            selectedDBProvider: ''
         };
         this.handleTabClick = this.handleTabClick.bind(this);
         this.setActiveTab = this.setActiveTab.bind(this);
         this.setDBaaSServiceStatus = this.setDBaaSServiceStatus.bind(this);
+        this.setSelectedDBProvider = this.setSelectedDBProvider.bind(this);
     }
 
     handleTabClick(event, tabIndex) {
@@ -30,6 +32,14 @@ class DBaasImportPage extends React.Component {
         });
     }
 
+    setSelectedDBProvider(dbProvider) {
+        if (dbProvider) {
+            this.setState({selectedDBProvider: dbProvider})
+        } else {
+            console.log("No DB Provider Selected");
+        }
+    }
+
     setDBaaSServiceStatus() {
         this.setState({
             isDBaaSServiceUp: true
@@ -37,7 +47,7 @@ class DBaasImportPage extends React.Component {
     }
 
     render() {
-        const { activeTabKey, isDBaaSServiceUp } = this.state;
+        const { activeTabKey, isDBaaSServiceUp, selectedDBProvider } = this.state;
 
         return (
             <div>
@@ -63,7 +73,7 @@ class DBaasImportPage extends React.Component {
                                 <div className="section-title">
                                     Select Database Provider
                                 </div>
-                                <VendorForm setActiveTab={this.setActiveTab} />
+                                <VendorForm setActiveTab={this.setActiveTab} setSelectedDBProvider={this.setSelectedDBProvider} />
                             </div>
                         </section>
                     </Tab>
@@ -78,7 +88,7 @@ class DBaasImportPage extends React.Component {
                                 <div className="section-title">
                                     Account Credentials
                                 </div>
-                                <CredentialsForm setActiveTab={this.setActiveTab} setDBaaSServiceStatus={this.setDBaaSServiceStatus} />
+                                <CredentialsForm setActiveTab={this.setActiveTab} setDBaaSServiceStatus={this.setDBaaSServiceStatus} selectedDBProvider={selectedDBProvider} />
                             </div>
                         </section>
                     </Tab>

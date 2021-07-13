@@ -18,6 +18,8 @@ class VendorForm extends React.Component {
 
     handleSubmit = async (event) => {
         event.preventDefault();
+        //TODO: Store the selected DB provider information somewhere.
+        this.props.setSelectedDBProvider(this.state.selectedDBProvider);
         this.props.setActiveTab(1);
     };
 
