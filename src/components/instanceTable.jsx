@@ -85,10 +85,11 @@ class InstanceTable extends React.Component {
                 namespace: currentNS,
             },
             spec: {
-                instanceID: this.state.selectedInstance.instanceID,
-                inventory: {
-                    name: this.state.inventoryName
-                }
+                inventoryRef: {
+                    name: this.state.inventoryName,
+                    namespace: currentNS,
+                },
+                instanceId: this.state.selectedInstance.instanceID
             }
         };
 

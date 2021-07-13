@@ -1,6 +1,6 @@
 import React from "react";
 import * as _ from 'lodash';
-import { currentNS } from '../const';
+import {currentNS, MONGODB_PROVIDER_NAME} from '../const';
 
 class CredentialsForm extends React.Component {
     constructor(props) {
@@ -17,11 +17,13 @@ class CredentialsForm extends React.Component {
     handleSubmit = async (event) => {
         event.preventDefault();
 
+        let secretName = "dbaas-vendor-credentials-" + Date.now();
+
         let newSecret = {
-            apiVersion: "v1alpha1",
+            apiVersion: "v1",
             kind: "Secret",
             metadata: {
-                name: "dbaas-vendor-credentials",
+                name: secretName,
                 namespace: currentNS,
                 labels: {
                     "related-to": "dbaas-operator",
@@ -60,7 +62,7 @@ class CredentialsForm extends React.Component {
                 } else {
                     console.warn(err);
                 }
-            });;
+            });
 
         let requestOpts = {
             method: "POST",
@@ -70,9 +72,9 @@ class CredentialsForm extends React.Component {
             },
             body: JSON.stringify({
                 apiVersion: "dbaas.redhat.com/v1alpha1",
-                kind: "DBaaSService",
+                kind: "DBaaSInventory",
                 metadata: {
-                    name: "atlas-dbaas-service",
+                    name: "dbaas-inventory-" + Date.now(),
                     namespace: currentNS,
                     labels: {
                         "related-to": "dbaas-operator",
@@ -81,15 +83,17 @@ class CredentialsForm extends React.Component {
                 },
                 spec: {
                     provider: {
-                        name: "MongoDB Atlas",
+                        name: MONGODB_PROVIDER_NAME
                     },
-                    credentialsSecretName: "dbaas-vendor-credentials",
-                    credentialsSecretNamespace: "dbaas-operator",
+                    credentialsRef: {
+                        name: secretName,
+                        namespace: currentNS,
+                    }
                 },
             }),
         };
         fetch(
-            '/api/kubernetes/apis/dbaas.redhat.com/v1alpha1/namespaces/' + currentNS + '/dbaasservices',
+            '/api/kubernetes/apis/dbaas.redhat.com/v1alpha1/namespaces/' + currentNS + '/dbaasinventories',
             requestOpts
         )
             .then((response) => response.json())
@@ -97,7 +101,6 @@ class CredentialsForm extends React.Component {
 
         this.props.setDBaaSServiceStatus();
         this.props.setActiveTab(2)
-
     };
 
     render() {
