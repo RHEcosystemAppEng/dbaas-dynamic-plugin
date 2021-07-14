@@ -1,6 +1,5 @@
 import React from "react";
 import InstanceTable from "./instanceTable";
-import { currentNS } from '../const';
 import {
     Tabs,
     Tab,
@@ -14,10 +13,11 @@ class InstancesForm extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
+            currentNS: window.location.pathname.split('/')[3],
             showResults: false,
             inventories: [],
             hasInstanceUpdated: false,
-            activeTabKey: 0
+            activeTabKey: 0,
         };
     }
 
@@ -38,7 +38,7 @@ class InstancesForm extends React.Component {
             },
         };
         fetch(
-            '/api/kubernetes/apis/dbaas.redhat.com/v1alpha1/namespaces/' + currentNS + '/dbaasinventories?limit=250',
+            '/api/kubernetes/apis/dbaas.redhat.com/v1alpha1/namespaces/' + this.state.currentNS + '/dbaasinventories?limit=250',
             requestOpts
         )
             .then((response) => response.json())

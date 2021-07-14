@@ -1,12 +1,14 @@
 import React from "react";
 import * as _ from 'lodash';
-import {currentNS, MONGODB_PROVIDER_NAME} from '../const';
+import {MONGODB_PROVIDER_NAME} from '../const';
 
 class CredentialsForm extends React.Component {
     constructor(props) {
         super(props);
         this.handleSubmit = this.handleSubmit.bind(this);
+
         this.state = {
+            currentNS: window.location.pathname.split('/')[3],
             orgId: "",
             orgPublicKey: "",
             orgPrivateKey: "",
@@ -18,51 +20,7 @@ class CredentialsForm extends React.Component {
         event.preventDefault();
 
         let secretName = "dbaas-vendor-credentials-" + Date.now();
-
-        let newSecret = {
-            apiVersion: "v1",
-            kind: "Secret",
-            metadata: {
-                name: secretName,
-                namespace: currentNS,
-                labels: {
-                    "related-to": "dbaas-operator",
-                    type: "dbaas-vendor-credentials",
-                },
-            },
-            stringData: {
-                orgId: this.state.orgId.toString("base64"),
-                publicApiKey: this.state.orgPublicKey.toString("base64"),
-                privateApiKey: this.state.orgPrivateKey.toString("base64"),
-            },
-            type: "Opaque",
-        };
-
-        let postSecretRequestOpts = {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                Accept: "application/json",
-            },
-            body: JSON.stringify(newSecret),
-        };
-
-        fetch(
-            "api/kubernetes/api/v1/namespaces/" + currentNS + "/secrets",
-            postSecretRequestOpts
-        )
-            .then((response) => response.json())
-            .then((data) => {
-                this.setState({ postResponse: data })
-
-            })
-            .catch((err) => {
-                if (err?.response?.status == 404) {
-                    console.warn(err);
-                } else {
-                    console.warn(err);
-                }
-            });
+        let inventoryName = "dbaas-inventory-" + Date.now();
 
         let requestOpts = {
             method: "POST",
@@ -74,8 +32,8 @@ class CredentialsForm extends React.Component {
                 apiVersion: "dbaas.redhat.com/v1alpha1",
                 kind: "DBaaSInventory",
                 metadata: {
-                    name: "dbaas-inventory-" + Date.now(),
-                    namespace: currentNS,
+                    name: inventoryName,
+                    namespace: this.state.currentNS,
                     labels: {
                         "related-to": "dbaas-operator",
                         type: "dbaas-vendor-service",
@@ -87,17 +45,80 @@ class CredentialsForm extends React.Component {
                     },
                     credentialsRef: {
                         name: secretName,
-                        namespace: currentNS,
+                        namespace: this.state.currentNS,
                     }
                 },
             }),
         };
         fetch(
-            '/api/kubernetes/apis/dbaas.redhat.com/v1alpha1/namespaces/' + currentNS + '/dbaasinventories',
+            '/api/kubernetes/apis/dbaas.redhat.com/v1alpha1/namespaces/' + this.state.currentNS + '/dbaasinventories',
             requestOpts
         )
             .then((response) => response.json())
-            .then((data) => this.setState({ postResponse: data }))
+            .then((data) => {
+                this.state.postResponse = data;
+
+                console.log(this.state);
+
+                let newSecret = {
+                    apiVersion: "v1",
+                    kind: "Secret",
+                    metadata: {
+                        name: secretName,
+                        namespace: this.state.currentNS,
+                        labels: {
+                            "related-to": "dbaas-operator",
+                            "type": "dbaas-vendor-credentials",
+                            "owner": inventoryName,
+                            "owner.kind": "DBaaSInventory",
+                            "owner.namespace": this.state.currentNS,
+                        },
+                        ownerReferences: [
+                            {
+                                apiVersion: "dbaas.redhat.com/v1alpha1",
+                                name: inventoryName,
+                                kind: "DBaaSInventory",
+                                uid: this.state.postResponse.metadata.uid,
+                                controller: true,
+                                blockOwnerDeletion: false,
+                            }
+                        ]
+
+                    },
+                    stringData: {
+                        orgId: this.state.orgId.toString("base64"),
+                        publicApiKey: this.state.orgPublicKey.toString("base64"),
+                        privateApiKey: this.state.orgPrivateKey.toString("base64"),
+                    },
+                    type: "Opaque",
+                };
+
+                let postSecretRequestOpts = {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Accept: "application/json",
+                    },
+                    body: JSON.stringify(newSecret),
+                };
+
+                fetch(
+                    "api/kubernetes/api/v1/namespaces/" + this.state.currentNS + "/secrets",
+                    postSecretRequestOpts
+                )
+                    .then((response) => response.json())
+                    .then((data) => {
+                        this.setState({ postResponse: data });
+
+                    })
+                    .catch((err) => {
+                        if (err?.response?.status == 404) {
+                            console.warn(err);
+                        } else {
+                            console.warn(err);
+                        }
+                    });
+            })
 
         this.props.setDBaaSServiceStatus();
         this.props.setActiveTab(2)

@@ -12,7 +12,6 @@ import {
 import FormHeader from './form/formHeader';
 import FlexForm from './form/flexForm';
 import FormBody from './form/formBody';
-import { currentNS } from '../const';
 import InstanceTable from './instanceTable';
 
 const InstanceListPage = () => {
@@ -45,6 +44,7 @@ const InstanceListPage = () => {
   };
 
   const fetchInstances = () => {
+    let currentNS = window.location.pathname.split('/')[3];
     var requestOpts = {
       method: 'GET',
       headers: {

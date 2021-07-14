@@ -16,11 +16,11 @@ import {
     Alert,
     AlertActionCloseButton
 } from '@patternfly/react-core';
-import { currentNS } from '../const';
 class InstanceTable extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
+            currentNS: window.location.pathname.split('/')[3],
             columns: [
                 { title: 'ID', transforms: [wrappable] },
                 { title: 'Instance', transforms: [wrappable] },
@@ -82,12 +82,12 @@ class InstanceTable extends React.Component {
             kind: "DBaaSConnection",
             metadata: {
                 name: this.state.selectedInstance.name,
-                namespace: currentNS,
+                namespace: this.state.currentNS,
             },
             spec: {
                 inventoryRef: {
                     name: this.state.inventoryName,
-                    namespace: currentNS,
+                    namespace: this.state.currentNS,
                 },
                 instanceId: this.state.selectedInstance.instanceID
             }
@@ -102,7 +102,7 @@ class InstanceTable extends React.Component {
             body: JSON.stringify(newBody),
         };
         fetch(
-            '/api/kubernetes/apis/dbaas.redhat.com/v1alpha1/namespaces/' + currentNS + '/dbaasconnections',
+            '/api/kubernetes/apis/dbaas.redhat.com/v1alpha1/namespaces/' + this.state.currentNS + '/dbaasconnections',
             requestOpts
         )
             .then((response) => response.json())
