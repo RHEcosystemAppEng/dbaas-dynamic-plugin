@@ -22,6 +22,51 @@ class CredentialsForm extends React.Component {
         let secretName = "dbaas-vendor-credentials-" + Date.now();
         let inventoryName = "dbaas-inventory-" + Date.now();
 
+        let newSecret = {
+            apiVersion: "v1",
+            kind: "Secret",
+            metadata: {
+                name: secretName,
+                namespace: this.state.currentNS,
+                labels: {
+                    "related-to": "dbaas-operator",
+                    type: "dbaas-vendor-credentials",
+                },
+            },
+            stringData: {
+                orgId: this.state.orgId.toString("base64"),
+                publicApiKey: this.state.orgPublicKey.toString("base64"),
+                privateApiKey: this.state.orgPrivateKey.toString("base64"),
+            },
+            type: "Opaque",
+        };
+
+        let postSecretRequestOpts = {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json",
+            },
+            body: JSON.stringify(newSecret),
+        };
+
+        fetch(
+            "api/kubernetes/api/v1/namespaces/" + this.state.currentNS + "/secrets",
+            postSecretRequestOpts
+        )
+            .then((response) => response.json())
+            .then((data) => {
+                this.setState({ postResponse: data });
+
+            })
+            .catch((err) => {
+                if (err?.response?.status == 404) {
+                    console.warn(err);
+                } else {
+                    console.warn(err);
+                }
+            });
+
         let requestOpts = {
             method: "POST",
             headers: {
@@ -56,68 +101,10 @@ class CredentialsForm extends React.Component {
         )
             .then((response) => response.json())
             .then((data) => {
-                this.state.postResponse = data;
+                this.setState({ postResponse: data})
 
-                console.log(this.state);
-
-                let newSecret = {
-                    apiVersion: "v1",
-                    kind: "Secret",
-                    metadata: {
-                        name: secretName,
-                        namespace: this.state.currentNS,
-                        labels: {
-                            "related-to": "dbaas-operator",
-                            "type": "dbaas-vendor-credentials",
-                            "owner": inventoryName,
-                            "owner.kind": "DBaaSInventory",
-                            "owner.namespace": this.state.currentNS,
-                        },
-                        ownerReferences: [
-                            {
-                                apiVersion: "dbaas.redhat.com/v1alpha1",
-                                name: inventoryName,
-                                kind: "DBaaSInventory",
-                                uid: this.state.postResponse.metadata.uid,
-                                controller: true,
-                                blockOwnerDeletion: false,
-                            }
-                        ]
-
-                    },
-                    stringData: {
-                        orgId: this.state.orgId.toString("base64"),
-                        publicApiKey: this.state.orgPublicKey.toString("base64"),
-                        privateApiKey: this.state.orgPrivateKey.toString("base64"),
-                    },
-                    type: "Opaque",
-                };
-
-                let postSecretRequestOpts = {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Accept: "application/json",
-                    },
-                    body: JSON.stringify(newSecret),
-                };
-
-                fetch(
-                    "api/kubernetes/api/v1/namespaces/" + this.state.currentNS + "/secrets",
-                    postSecretRequestOpts
-                )
-                    .then((response) => response.json())
-                    .then((data) => {
-                        this.setState({ postResponse: data });
-
-                    })
-                    .catch((err) => {
-                        if (err?.response?.status == 404) {
-                            console.warn(err);
-                        } else {
-                            console.warn(err);
-                        }
-                    });
+                //TODO: add PATCH call to update secret and add OwnerReference with uid from new DBaaSInventory
+                //will be postResponse.metadata.uid
             })
 
         this.props.setDBaaSServiceStatus();
