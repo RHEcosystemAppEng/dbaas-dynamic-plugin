@@ -103,8 +103,48 @@ class CredentialsForm extends React.Component {
             .then((data) => {
                 this.setState({ postResponse: data })
 
-                //TODO: add PATCH call to update secret and add OwnerReference with uid from new DBaaSInventory
-                //will be postResponse.metadata.uid
+                let patchPayload = [
+                    {
+                        "op": "add",
+                        "path": "/metadata/ownerReferences",
+                        "value": [
+                            {
+                                "apiVersion": "dbaas.redhat.com/v1alpha1",
+                                "kind": "DBaaSInventory",
+                                "name": inventoryName,
+                                "uid": this.state.postResponse.metadata.uid,
+                                "controller": true,
+                                "blockOwnerDeletion": false,
+                            }
+                        ]
+                    }
+                ];
+
+                let patchSecretRequestOpts = {
+                    method: "PATCH",
+                    headers: {
+                        "Content-Type": "application/json-patch+json",
+                        Accept: "application/json",
+                    },
+                    body: JSON.stringify(patchPayload),
+                };
+
+                fetch(
+                    "api/kubernetes/api/v1/namespaces/" + this.state.currentNS + "/secrets/" + secretName,
+                    patchSecretRequestOpts
+                )
+                    .then((response) => response.json())
+                    .then((data) => {
+                        this.setState({ postResponse: data });
+
+                    })
+                    .catch((err) => {
+                        if (err?.response?.status == 404) {
+                            console.warn(err);
+                        } else {
+                            console.warn(err);
+                        }
+                    });
             })
 
         this.props.setDBaaSServiceStatus();
