@@ -1,6 +1,5 @@
 import React from "react";
 import * as _ from 'lodash';
-import {MONGODB_PROVIDER_NAME} from '../const';
 
 class CredentialsForm extends React.Component {
     constructor(props) {
@@ -21,6 +20,7 @@ class CredentialsForm extends React.Component {
 
         let secretName = "dbaas-vendor-credentials-" + Date.now();
         let inventoryName = "dbaas-inventory-" + Date.now();
+        const { selectedDBProvider } = this.props;
 
         let newSecret = {
             apiVersion: "v1",
@@ -86,7 +86,7 @@ class CredentialsForm extends React.Component {
                 },
                 spec: {
                     provider: {
-                        name: MONGODB_PROVIDER_NAME
+                        name: selectedDBProvider
                     },
                     credentialsRef: {
                         name: secretName,
@@ -101,7 +101,7 @@ class CredentialsForm extends React.Component {
         )
             .then((response) => response.json())
             .then((data) => {
-                this.setState({ postResponse: data})
+                this.setState({ postResponse: data })
 
                 //TODO: add PATCH call to update secret and add OwnerReference with uid from new DBaaSInventory
                 //will be postResponse.metadata.uid
@@ -120,7 +120,7 @@ class CredentialsForm extends React.Component {
                 <div className="radio-div">
                     <label className="text-field-label" htmlFor="orgId">
                         Organization ID
-            </label>
+                    </label>
                     <br />
                     <input
                         id="orgId"
@@ -132,7 +132,7 @@ class CredentialsForm extends React.Component {
                     <br />
                     <label className="text-field-label" htmlFor="orgPublicKey">
                         Organization Public Key
-            </label>
+                    </label>
                     <br />
                     <input
                         id="orgPublicKey"
@@ -146,7 +146,7 @@ class CredentialsForm extends React.Component {
                     <br />
                     <label className="text-field-label" htmlFor="orgPrivateKey">
                         Organization Private Key
-            </label>
+                    </label>
                     <br />
                     <input
                         id="orgPrivateKey"
@@ -160,7 +160,7 @@ class CredentialsForm extends React.Component {
                     <br />
                     <button id="credential-select-button" className="select-button">
                         Submit
-            </button>
+                    </button>
                 </div>
             </form>
         );
