@@ -2,9 +2,6 @@ import React from "react";
 import * as _ from 'lodash';
 import InstanceTable from "./instanceTable";
 import {
-    Tabs,
-    Tab,
-    TabTitleText,
     Title,
     EmptyState,
     EmptyStateIcon,
