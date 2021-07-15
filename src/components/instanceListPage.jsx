@@ -21,6 +21,8 @@ const InstanceListPage = () => {
   const [inventories, setInventories] = React.useState();
   const [activeTabKey, setActiveTabKey] = React.useState(0);
   const [selectedDBProvider, setSelectedDBProvider] = React.useState('');
+  const currentNS = window.location.pathname.split('/')[3];
+ 
 
 
   const parseSelectedDBProvider = () => {
@@ -61,7 +63,6 @@ const InstanceListPage = () => {
   };
 
   const fetchInstances = () => {
-    let currentNS = window.location.pathname.split('/')[3];
     var requestOpts = {
       method: 'GET',
       headers: {

@@ -12,12 +12,22 @@ class DBaasImportPage extends React.Component {
         this.state = {
             activeTabKey: 0,
             isDBaaSServiceUp: false,
-            selectedDBProvider: ''
+            selectedDBProvider: '',
+            currentCreatedInventoryInfo: {},
         };
         this.handleTabClick = this.handleTabClick.bind(this);
         this.setActiveTab = this.setActiveTab.bind(this);
         this.setDBaaSServiceStatus = this.setDBaaSServiceStatus.bind(this);
         this.setSelectedDBProvider = this.setSelectedDBProvider.bind(this);
+        this.setCurrentCreatedInventoryInfo = this.setCurrentCreatedInventoryInfo.bind(this);
+    }
+
+    setCurrentCreatedInventoryInfo(inventoryInfo){
+        if(!_.isEmpty(inventoryInfo)) {
+            this.setState({currentCreatedInventoryInfo: inventoryInfo});
+        } else {
+            console.error("Failed to created inventory");
+        }
     }
 
     handleTabClick(event, tabIndex) {
@@ -36,7 +46,7 @@ class DBaasImportPage extends React.Component {
         if (dbProvider) {
             this.setState({selectedDBProvider: dbProvider})
         } else {
-            console.log("No DB Provider Selected");
+            console.error("No DB Provider Selected");
         }
     }
 
@@ -47,7 +57,7 @@ class DBaasImportPage extends React.Component {
     }
 
     render() {
-        const { activeTabKey, isDBaaSServiceUp, selectedDBProvider } = this.state;
+        const { activeTabKey, isDBaaSServiceUp, selectedDBProvider, currentCreatedInventoryInfo } = this.state;
 
         return (
             <div>
@@ -88,7 +98,7 @@ class DBaasImportPage extends React.Component {
                                 <div className="section-title">
                                     Account Credentials
                                 </div>
-                                <CredentialsForm setActiveTab={this.setActiveTab} setDBaaSServiceStatus={this.setDBaaSServiceStatus} selectedDBProvider={selectedDBProvider} />
+                                <CredentialsForm setActiveTab={this.setActiveTab} setDBaaSServiceStatus={this.setDBaaSServiceStatus} selectedDBProvider={selectedDBProvider} setCurrentCreatedInventoryInfo={this.setCurrentCreatedInventoryInfo} />
                             </div>
                         </section>
                     </Tab>
@@ -103,7 +113,7 @@ class DBaasImportPage extends React.Component {
                                 <div className="section-title">
                                     Database Instances
                                 </div>
-                                <InstancesForm dbaaSServiceStatus={isDBaaSServiceUp} selectedDBProvider={selectedDBProvider} />
+                                <InstancesForm dbaaSServiceStatus={isDBaaSServiceUp} selectedDBProvider={selectedDBProvider} currentCreatedInventoryInfo={currentCreatedInventoryInfo} storeFetchInventoryTimerID={this.storeFetchInventoryTimerID} />
                             </div>
                         </section>
                     </Tab>

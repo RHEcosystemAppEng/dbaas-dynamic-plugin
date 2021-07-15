@@ -101,6 +101,7 @@ class CredentialsForm extends React.Component {
         )
             .then((response) => response.json())
             .then((data) => {
+                this.props.setCurrentCreatedInventoryInfo(data);
                 this.setState({ postResponse: data })
 
                 let patchPayload = [
