@@ -2,44 +2,52 @@ import React from "react";
 import * as _ from 'lodash';
 import InstanceTable from "./instanceTable";
 import {
-    Tabs,
-    Tab,
-    TabTitleText,
     Title,
     EmptyState,
     EmptyStateIcon,
     Spinner
 } from '@patternfly/react-core';
+import TimesCircleIcon from '@patternfly/react-icons/dist/js/icons/times-circle-icon';
 class InstancesForm extends React.Component {
     constructor(props) {
         super(props);
+        this.fetchInventoryTimerID = 0;
         this.state = {
             currentNS: window.location.pathname.split('/')[3],
             showResults: false,
-            inventories: [],
+            inventory: { instances: [] },
             hasInstanceUpdated: false,
             activeTabKey: 0,
+            noInstances: false,
+            fetchInstancesFailed: false,
+            statusMsg: ''
         };
     }
 
-    componentDidUpdate() {
-        if (this.props.dbaaSServiceStatus && this.state.inventories.length == 0 && !this.state.hasInstanceUpdated) {
-            setInterval(() => {
-                this.fetchInventories();
-            }, 3000)
+    componentDidUpdate(prevProps) {
+        if (this.props.dbaaSServiceStatus !== prevProps.dbaaSServiceStatus && this.state.inventory.instances.length == 0 && !this.state.hasInstanceUpdated) {
+            this.fetchInventoryTimerID = setInterval(() => {
+                this.fetchInventory();
+            }, 3000);
         }
     }
 
-    fetchInventories = () => {
-        var requestOpts = {
+    componentWillUnmount() {
+        clearInterval(this.fetchInventoryTimerID);
+    }
+
+    fetchInventory = () => {
+        let requestOpts = {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
                 Accept: "application/json",
             },
         };
+        const { currentCreatedInventoryInfo } = this.props;
+
         fetch(
-            '/api/kubernetes/apis/dbaas.redhat.com/v1alpha1/namespaces/' + this.state.currentNS + '/dbaasinventories?limit=250',
+            '/api/kubernetes/apis/dbaas.redhat.com/v1alpha1/namespaces/' + this.state.currentNS + '/dbaasinventories/' + currentCreatedInventoryInfo?.metadata?.name,
             requestOpts
         )
             .then((response) => response.json())
@@ -47,28 +55,37 @@ class InstancesForm extends React.Component {
     };
 
     parsePayload = (responseJson) => {
-        let inventories = [];
         let { selectedDBProvider } = this.props;
 
-        if (responseJson.items) {
-            let filteredInventories = _.filter(responseJson.items, inventory => {
-                return inventory.spec?.provider?.name === selectedDBProvider && inventory.status?.conditions[0]?.status !== "False" && inventory.status?.conditions[0]?.type === "SpecSynced"
-            })
-            filteredInventories?.forEach((inventory, index) => {
-                let obj = { id: 0, name: "", instances: [] };
-                obj.id = index;
-                obj.name = inventory.metadata.name;
-                inventory.status?.instances?.map((instance) => {
-                    return instance.provider = inventory.spec?.provider?.name;
+        if (responseJson?.status?.conditions[0]?.type === "SpecSynced") {
+            if (responseJson?.status?.conditions[0]?.status === "False") {
+                this.setState({
+                    fetchInstancesFailed: true,
+                    statusMsg: responseJson?.status?.conditions[0]?.message,
+                    showResults: true
                 })
-                obj.instances = inventory.status?.instances;
-                inventories.push(obj);
-            });
-            this.setState({
-                inventories: inventories,
-                hasInstanceUpdated: true,
-                showResults: true
-            });
+            }
+            if (responseJson?.status?.conditions[0]?.status === "True") {
+                if (_.isEmpty(responseJson?.status?.instances)) {
+                    this.setState({
+                        noInstances: true,
+                        statusMsg: "No DB Instance in this inventory",
+                        showResults: true
+                    })
+                } else {
+                    responseJson?.status?.instances.map(instance => {
+                        instance.provider = responseJson?.spec?.provider?.name
+                    })
+                    this.setState({
+                        inventory: { instances: responseJson?.status?.instances },
+                        hasInstanceUpdated: true,
+                        showResults: true
+                    });
+                }
+            }
+
+        } else {
+            setTimeout(() => { console.error("Could not connect with DB provider") }, 30000);
         }
     }
 
@@ -81,33 +98,36 @@ class InstancesForm extends React.Component {
 
 
     render() {
-        const { showResults, inventories, activeTabKey } = this.state;
+        const { showResults, inventory, activeTabKey, fetchInstancesFailed, noInstances, statusMsg } = this.state;
 
         if (!showResults) {
             return (
                 <EmptyState>
                     <EmptyStateIcon variant="container" component={Spinner} />
                     <Title size="lg" headingLevel="h3">
-                        Fetching inventories...
+                        Fetching inventory...
+                    </Title>
+                </EmptyState>
+            )
+        }
+
+        if (showResults && fetchInstancesFailed || noInstances) {
+            return (
+                <EmptyState>
+                    <EmptyStateIcon variant="container" component={TimesCircleIcon} />
+                    <Title size="lg" headingLevel="h3">
+                        {statusMsg}
                     </Title>
                 </EmptyState>
             )
         }
 
         return (
-            <Tabs activeKey={activeTabKey} onSelect={this.handleTabClick} isBox className="inventory-tabs">
-                {inventories.map((inventory) => {
-                    return (
-                        <Tab eventKey={inventory?.id} title={<TabTitleText>{inventory?.name}</TabTitleText>}>
-                            <form id="instances-form">
-                                <div className="instance-table">
-                                    <InstanceTable isLoading={!showResults} data={inventory} isSelectable={false} />
-                                </div>
-                            </form>
-                        </Tab>
-                    )
-                })}
-            </Tabs>
+            <form id="instances-form">
+                <div className="instance-table">
+                    <InstanceTable isLoading={!showResults} data={inventory} isSelectable={false} />
+                </div>
+            </form>
         );
     }
 }
