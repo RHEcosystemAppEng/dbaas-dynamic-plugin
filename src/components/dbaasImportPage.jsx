@@ -1,50 +1,42 @@
 import React from "react";
 import * as _ from 'lodash';
 import "./_dbaas-import-view.css";
-import { Tabs, Tab, TabTitleText } from '@patternfly/react-core';
+import { Breadcrumb, BreadcrumbItem } from '@patternfly/react-core';
 import VendorForm from './vendorForm';
 import CredentialsForm from './credentialsForm';
 import InstancesForm from './instancesForm';
+import { MONGODB_PROVIDER_NAME } from "../const";
 
 class DBaasImportPage extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            activeTabKey: 0,
             isDBaaSServiceUp: false,
             selectedDBProvider: '',
             currentCreatedInventoryInfo: {},
         };
-        this.handleTabClick = this.handleTabClick.bind(this);
-        this.setActiveTab = this.setActiveTab.bind(this);
+        this.goBack = this.goBack.bind(this);
         this.setDBaaSServiceStatus = this.setDBaaSServiceStatus.bind(this);
         this.setSelectedDBProvider = this.setSelectedDBProvider.bind(this);
         this.setCurrentCreatedInventoryInfo = this.setCurrentCreatedInventoryInfo.bind(this);
     }
 
-    setCurrentCreatedInventoryInfo(inventoryInfo){
-        if(!_.isEmpty(inventoryInfo)) {
-            this.setState({currentCreatedInventoryInfo: inventoryInfo});
+    goBack() {
+        window.history.back();
+    };
+
+    setCurrentCreatedInventoryInfo(inventoryInfo) {
+        if (!_.isEmpty(inventoryInfo)) {
+            this.setState({ currentCreatedInventoryInfo: inventoryInfo });
         } else {
             console.error("Failed to created inventory");
         }
     }
 
-    handleTabClick(event, tabIndex) {
-        this.setState({
-            activeTabKey: tabIndex
-        });
-    };
-
-    setActiveTab(tabIndex) {
-        this.setState({
-            activeTabKey: tabIndex
-        });
-    }
-
     setSelectedDBProvider(dbProvider) {
+        console.log(dbProvider);
         if (dbProvider) {
-            this.setState({selectedDBProvider: dbProvider})
+            this.setState({ selectedDBProvider: dbProvider })
         } else {
             console.error("No DB Provider Selected");
         }
@@ -61,63 +53,34 @@ class DBaasImportPage extends React.Component {
 
         return (
             <div>
-                <div className="section-header-div">
+                <div className="section-header-div extra-bottom-margin">
                     <div className="section-padding-top">&nbsp;</div>
                     <div className="section-padding-left">&nbsp;</div>
                     <div className="section-breadcrumb">
-                        <span className="breadcrumb-link">DBaaS Connect DataBase Account</span>
+                        <span className="breadcrumb-link" onClick={this.goBack}>Database-as-a-Service</span>
                         <span className="breadcrumb-chevron"> > </span>
-                        Database Provider Details
+                        Create Provider Account
                     </div>
-                    <div className="section-title extra-bottom-margin">DBaaS Connect DataBase Account</div>
+                    <div className="section-title">Create Provider Account</div>
+                    <div className="section-subtitle">Creating a Provider Account resource allows provider clound instances to be imported</div>
                 </div>
-                <Tabs activeKey={activeTabKey} onSelect={this.handleTabClick} className="extra-bottom-margin">
-                    <Tab eventKey={0} title={<TabTitleText>Database Provider</TabTitleText>}>
-                        <section
-                            className="pf-c-tab-content pf-m-padding"
-                            id="tab1-panel"
-                            role="tabpanel"
-                            tabIndex="0"
-                        >
-                            <div className="pf-c-tab-content__body">
-                                <div className="section-title">
-                                    Select Database Provider
-                                </div>
-                                <VendorForm setActiveTab={this.setActiveTab} setSelectedDBProvider={this.setSelectedDBProvider} />
-                            </div>
-                        </section>
-                    </Tab>
-                    <Tab eventKey={1} title={<TabTitleText>Credentials</TabTitleText>}>
-                        <section
-                            className="pf-c-tab-content pf-m-padding"
-                            id="tab1-panel"
-                            role="tabpanel"
-                            tabIndex="1"
-                        >
-                            <div className="pf-c-tab-content__body">
-                                <div className="section-title">
-                                    Account Credentials
-                                </div>
-                                <CredentialsForm setActiveTab={this.setActiveTab} setDBaaSServiceStatus={this.setDBaaSServiceStatus} selectedDBProvider={selectedDBProvider} setCurrentCreatedInventoryInfo={this.setCurrentCreatedInventoryInfo} />
-                            </div>
-                        </section>
-                    </Tab>
-                    <Tab eventKey={2} title={<TabTitleText>Instances</TabTitleText>}>
-                        <section
-                            className="pf-c-tab-content pf-m-padding"
-                            id="tab1-panel"
-                            role="tabpanel"
-                            tabIndex="2"
-                        >
-                            <div className="pf-c-tab-content__body">
-                                <div className="section-title">
-                                    Database Instances
-                                </div>
-                                <InstancesForm dbaaSServiceStatus={isDBaaSServiceUp} selectedDBProvider={selectedDBProvider} currentCreatedInventoryInfo={currentCreatedInventoryInfo} storeFetchInventoryTimerID={this.storeFetchInventoryTimerID} />
-                            </div>
-                        </section>
-                    </Tab>
-                </Tabs>
+                {!isDBaaSServiceUp ?
+                    <section className="pf-c-tab-content pf-m-padding">
+                        <div className="pf-c-tab-content__body">
+                            <label className="text-field-label">Database Provider</label>
+                            <VendorForm showCredentialForm={this.showCredentialForm} setSelectedDBProvider={this.setSelectedDBProvider} />
+                        </div>
+                        <div className="pf-c-tab-content__body">
+                            <CredentialsForm setDBaaSServiceStatus={this.setDBaaSServiceStatus} selectedDBProvider={selectedDBProvider} setCurrentCreatedInventoryInfo={this.setCurrentCreatedInventoryInfo} />
+                        </div>
+                    </section>
+                    :
+                    <section className="pf-c-tab-content pf-m-padding">
+                        <div className="pf-c-tab-content__body">
+                            <InstancesForm dbaaSServiceStatus={isDBaaSServiceUp} selectedDBProvider={selectedDBProvider} currentCreatedInventoryInfo={currentCreatedInventoryInfo} />
+                        </div>
+                    </section>
+                }
             </div>
         );
     }
