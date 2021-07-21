@@ -34,7 +34,6 @@ class DBaasImportPage extends React.Component {
     }
 
     setSelectedDBProvider(dbProvider) {
-        console.log(dbProvider);
         if (dbProvider) {
             this.setState({ selectedDBProvider: dbProvider })
         } else {
@@ -62,7 +61,7 @@ class DBaasImportPage extends React.Component {
                         Create Provider Account
                     </div>
                     <div className="section-title">Create Provider Account</div>
-                    <div className="section-subtitle">Creating a Provider Account resource allows provider clound instances to be imported</div>
+                    <div className="section-subtitle">Creating a Provider Account resource allows provider cloud instances to be imported</div>
                 </div>
                 {!isDBaaSServiceUp ?
                     <section className="pf-c-tab-content pf-m-padding">
