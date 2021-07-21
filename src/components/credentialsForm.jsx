@@ -24,8 +24,7 @@ class CredentialsForm extends React.Component {
         event.preventDefault();
 
         let secretName = "dbaas-vendor-credentials-" + Date.now();
-        let inventoryName = "dbaas-inventory-" + Date.now();
-        const { selectedDBProvider } = this.props;
+        const { selectedDBProvider, inventoryName } = this.props;
 
         let newSecret = {
             apiVersion: "v1",
@@ -160,7 +159,7 @@ class CredentialsForm extends React.Component {
         return (
             selectedDBProvider ?
                 <div>
-                    <div className="section-subtitle" >Account Credentials</div>
+                    <div className="section-subtitle extra-top-margin" >Account Credentials</div>
                     <form
                         id="credentials-form"
                         onSubmit={this.handleSubmit}

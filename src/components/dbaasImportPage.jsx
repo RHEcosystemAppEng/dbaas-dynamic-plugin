@@ -14,11 +14,17 @@ class DBaasImportPage extends React.Component {
             isDBaaSServiceUp: false,
             selectedDBProvider: '',
             currentCreatedInventoryInfo: {},
+            inventoryName: ''
         };
+        this.setInventoryName = this.setInventoryName.bind(this);
         this.goBack = this.goBack.bind(this);
         this.setDBaaSServiceStatus = this.setDBaaSServiceStatus.bind(this);
         this.setSelectedDBProvider = this.setSelectedDBProvider.bind(this);
         this.setCurrentCreatedInventoryInfo = this.setCurrentCreatedInventoryInfo.bind(this);
+    }
+
+    setInventoryName(name) {
+        this.setState({ inventoryName: name });
     }
 
     goBack() {
@@ -48,7 +54,7 @@ class DBaasImportPage extends React.Component {
     }
 
     render() {
-        const { activeTabKey, isDBaaSServiceUp, selectedDBProvider, currentCreatedInventoryInfo } = this.state;
+        const { activeTabKey, isDBaaSServiceUp, selectedDBProvider, currentCreatedInventoryInfo, inventoryName } = this.state;
 
         return (
             <div>
@@ -66,11 +72,10 @@ class DBaasImportPage extends React.Component {
                 {!isDBaaSServiceUp ?
                     <section className="pf-c-tab-content pf-m-padding">
                         <div className="pf-c-tab-content__body">
-                            <label className="text-field-label">Database Provider</label>
-                            <VendorForm showCredentialForm={this.showCredentialForm} setSelectedDBProvider={this.setSelectedDBProvider} />
+                            <VendorForm setInventoryName={this.setInventoryName} showCredentialForm={this.showCredentialForm} setSelectedDBProvider={this.setSelectedDBProvider} />
                         </div>
                         <div className="pf-c-tab-content__body">
-                            <CredentialsForm setDBaaSServiceStatus={this.setDBaaSServiceStatus} selectedDBProvider={selectedDBProvider} setCurrentCreatedInventoryInfo={this.setCurrentCreatedInventoryInfo} />
+                            <CredentialsForm inventoryName={inventoryName} setDBaaSServiceStatus={this.setDBaaSServiceStatus} selectedDBProvider={selectedDBProvider} setCurrentCreatedInventoryInfo={this.setCurrentCreatedInventoryInfo} />
                         </div>
                     </section>
                     :
