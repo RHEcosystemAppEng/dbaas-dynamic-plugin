@@ -1,9 +1,10 @@
 import React from "react";
 import * as _ from 'lodash';
-
+import { Button } from '@patternfly/react-core';
 class CredentialsForm extends React.Component {
     constructor(props) {
         super(props);
+        this.handleCancel = this.handleCancel.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
 
         this.state = {
@@ -14,6 +15,10 @@ class CredentialsForm extends React.Component {
             postResponse: "",
         };
     }
+
+    handleCancel = () => {
+        window.history.back();
+    };
 
     handleSubmit = async (event) => {
         event.preventDefault();
@@ -102,8 +107,6 @@ class CredentialsForm extends React.Component {
             .then((response) => response.json())
             .then((data) => {
                 this.props.setCurrentCreatedInventoryInfo(data);
-                this.setState({ postResponse: data })
-
                 let patchPayload = [
                     {
                         "op": "add",
@@ -113,7 +116,7 @@ class CredentialsForm extends React.Component {
                                 "apiVersion": "dbaas.redhat.com/v1alpha1",
                                 "kind": "DBaaSInventory",
                                 "name": inventoryName,
-                                "uid": this.state.postResponse.metadata.uid,
+                                "uid": data.metadata.uid,
                                 "controller": true,
                                 "blockOwnerDeletion": false,
                             }
@@ -149,61 +152,71 @@ class CredentialsForm extends React.Component {
             })
 
         this.props.setDBaaSServiceStatus();
-        this.props.setActiveTab(2)
     };
 
     render() {
+        const { selectedDBProvider } = this.props;
+
         return (
-            <form
-                id="credentials-form"
-                onSubmit={this.handleSubmit}
-            >
-                <div className="radio-div">
-                    <label className="text-field-label" htmlFor="orgId">
-                        Organization ID
-                    </label>
-                    <br />
-                    <input
-                        id="orgId"
-                        className="text-field"
-                        value={this.state.orgId}
-                        name="orgId"
-                        onChange={(event) => this.setState({ orgId: event.target.value })}
-                    />
-                    <br />
-                    <label className="text-field-label" htmlFor="orgPublicKey">
-                        Organization Public Key
-                    </label>
-                    <br />
-                    <input
-                        id="orgPublicKey"
-                        className="text-field"
-                        value={this.state.orgPublicKey}
-                        name="orgPublicKey"
-                        onChange={(event) =>
-                            this.setState({ orgPublicKey: event.target.value })
-                        }
-                    />
-                    <br />
-                    <label className="text-field-label" htmlFor="orgPrivateKey">
-                        Organization Private Key
-                    </label>
-                    <br />
-                    <input
-                        id="orgPrivateKey"
-                        className="text-field"
-                        value={this.state.orgPrivateKey}
-                        name="orgPrivateKey"
-                        onChange={(event) =>
-                            this.setState({ orgPrivateKey: event.target.value })
-                        }
-                    />
-                    <br />
-                    <button id="credential-select-button" className="select-button">
-                        Submit
-                    </button>
+            selectedDBProvider ?
+                <div>
+                    <div className="section-subtitle" >Account Credentials</div>
+                    <form
+                        id="credentials-form"
+                        onSubmit={this.handleSubmit}
+                    >
+                        <div className="radio-div">
+                            <label className="text-field-label" htmlFor="orgId">
+                                Organization ID
+                            </label>
+                            <br />
+                            <input
+                                id="orgId"
+                                className="text-field"
+                                value={this.state.orgId}
+                                name="orgId"
+                                onChange={(event) => this.setState({ orgId: event.target.value })}
+                            />
+                            <br />
+                            <label className="text-field-label" htmlFor="orgPublicKey">
+                                Organization Public Key
+                            </label>
+                            <br />
+                            <input
+                                id="orgPublicKey"
+                                className="text-field"
+                                value={this.state.orgPublicKey}
+                                name="orgPublicKey"
+                                onChange={(event) =>
+                                    this.setState({ orgPublicKey: event.target.value })
+                                }
+                            />
+                            <br />
+                            <label className="text-field-label" htmlFor="orgPrivateKey">
+                                Organization Private Key
+                            </label>
+                            <br />
+                            <input
+                                id="orgPrivateKey"
+                                className="text-field"
+                                value={this.state.orgPrivateKey}
+                                name="orgPrivateKey"
+                                onChange={(event) =>
+                                    this.setState({ orgPrivateKey: event.target.value })
+                                }
+                            />
+                            <br />
+                            <Button variant="primary" type="submit" className="submit-button">
+                                Create
+                            </Button>
+                            <Button variant="secondary" onClick={this.handleCancel}>
+                                Cancel
+                            </Button>
+                        </div>
+                    </form>
                 </div>
-            </form>
+
+                : null
         );
     }
 }

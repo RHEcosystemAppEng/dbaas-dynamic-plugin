@@ -24,8 +24,8 @@ class InstancesForm extends React.Component {
         };
     }
 
-    componentDidUpdate(prevProps) {
-        if (this.props.dbaaSServiceStatus !== prevProps.dbaaSServiceStatus && this.state.inventory.instances.length == 0 && !this.state.hasInstanceUpdated) {
+    componentDidMount() {
+        if (this.props.dbaaSServiceStatus && this.state.inventory.instances.length == 0 && !this.state.hasInstanceUpdated) {
             this.fetchInventoryTimerID = setInterval(() => {
                 this.fetchInventory();
             }, 3000);
@@ -85,7 +85,13 @@ class InstancesForm extends React.Component {
             }
 
         } else {
-            setTimeout(() => { console.error("Could not connect with DB provider") }, 30000);
+            setTimeout(() => {
+                this.setState({
+                    fetchInstancesFailed: true,
+                    statusMsg: "Could not connect with DB provider",
+                    showResults: true
+                })
+            }, 30000);
         }
     }
 
@@ -105,7 +111,7 @@ class InstancesForm extends React.Component {
                 <EmptyState>
                     <EmptyStateIcon variant="container" component={Spinner} />
                     <Title size="lg" headingLevel="h3">
-                        Fetching inventory...
+                        Creating Provider Account...
                     </Title>
                 </EmptyState>
             )
