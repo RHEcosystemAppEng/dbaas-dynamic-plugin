@@ -100,7 +100,7 @@ class ProviderAccountForm extends React.Component {
                     },
                 },
                 spec: {
-                    provider: {
+                    providerRef: {
                         name: selectedDBProvider
                     },
                     credentialsRef: {
