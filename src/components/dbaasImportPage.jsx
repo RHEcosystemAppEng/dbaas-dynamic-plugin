@@ -3,7 +3,7 @@ import * as _ from 'lodash';
 import "./_dbaas-import-view.css";
 import { Breadcrumb, BreadcrumbItem } from '@patternfly/react-core';
 import VendorForm from './vendorForm';
-import CredentialsForm from './credentialsForm';
+import ProviderAccountForm from './providerAccountForm';
 import InstancesForm from './instancesForm';
 import { MONGODB_PROVIDER_NAME } from "../const";
 
@@ -12,19 +12,11 @@ class DBaasImportPage extends React.Component {
         super(props);
         this.state = {
             isDBaaSServiceUp: false,
-            selectedDBProvider: '',
             currentCreatedInventoryInfo: {},
-            inventoryName: ''
         };
-        this.setInventoryName = this.setInventoryName.bind(this);
         this.goBack = this.goBack.bind(this);
         this.setDBaaSServiceStatus = this.setDBaaSServiceStatus.bind(this);
-        this.setSelectedDBProvider = this.setSelectedDBProvider.bind(this);
         this.setCurrentCreatedInventoryInfo = this.setCurrentCreatedInventoryInfo.bind(this);
-    }
-
-    setInventoryName(name) {
-        this.setState({ inventoryName: name });
     }
 
     goBack() {
@@ -39,14 +31,6 @@ class DBaasImportPage extends React.Component {
         }
     }
 
-    setSelectedDBProvider(dbProvider) {
-        if (dbProvider) {
-            this.setState({ selectedDBProvider: dbProvider })
-        } else {
-            console.error("No DB Provider Selected");
-        }
-    }
-
     setDBaaSServiceStatus() {
         this.setState({
             isDBaaSServiceUp: true
@@ -54,7 +38,7 @@ class DBaasImportPage extends React.Component {
     }
 
     render() {
-        const { activeTabKey, isDBaaSServiceUp, selectedDBProvider, currentCreatedInventoryInfo, inventoryName } = this.state;
+        const { activeTabKey, isDBaaSServiceUp, currentCreatedInventoryInfo } = this.state;
 
         return (
             <div>
@@ -72,16 +56,13 @@ class DBaasImportPage extends React.Component {
                 {!isDBaaSServiceUp ?
                     <section className="pf-c-tab-content pf-m-padding">
                         <div className="pf-c-tab-content__body">
-                            <VendorForm setInventoryName={this.setInventoryName} showCredentialForm={this.showCredentialForm} setSelectedDBProvider={this.setSelectedDBProvider} />
-                        </div>
-                        <div className="pf-c-tab-content__body">
-                            <CredentialsForm inventoryName={inventoryName} setDBaaSServiceStatus={this.setDBaaSServiceStatus} selectedDBProvider={selectedDBProvider} setCurrentCreatedInventoryInfo={this.setCurrentCreatedInventoryInfo} />
+                            <ProviderAccountForm setDBaaSServiceStatus={this.setDBaaSServiceStatus} setCurrentCreatedInventoryInfo={this.setCurrentCreatedInventoryInfo} />
                         </div>
                     </section>
                     :
                     <section className="pf-c-tab-content pf-m-padding">
                         <div className="pf-c-tab-content__body">
-                            <InstancesForm dbaaSServiceStatus={isDBaaSServiceUp} selectedDBProvider={selectedDBProvider} currentCreatedInventoryInfo={currentCreatedInventoryInfo} />
+                            <InstancesForm dbaaSServiceStatus={isDBaaSServiceUp} currentCreatedInventoryInfo={currentCreatedInventoryInfo} />
                         </div>
                     </section>
                 }

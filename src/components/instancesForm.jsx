@@ -55,8 +55,6 @@ class InstancesForm extends React.Component {
     };
 
     parsePayload = (responseJson) => {
-        let { selectedDBProvider } = this.props;
-
         if (responseJson?.status?.conditions[0]?.type === "SpecSynced") {
             if (responseJson?.status?.conditions[0]?.status === "False") {
                 this.setState({

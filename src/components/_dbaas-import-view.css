@@ -121,6 +121,10 @@
     line-height: 21px;
   }
 
+  .no-bottom-padding {
+    padding-bottom: 0px !important;
+  }
+
   .extra-bottom-margin {
     margin-bottom: 20px !important;
   }
