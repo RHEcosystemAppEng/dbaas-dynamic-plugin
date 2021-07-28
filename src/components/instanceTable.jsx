@@ -5,7 +5,8 @@ import {
     TableHeader,
     TableBody,
     RowSelectVariant,
-    wrappable
+    wrappable,
+    cellWidth
 } from '@patternfly/react-table';
 import {
     Title,
@@ -14,17 +15,31 @@ import {
     Spinner,
     Button,
     Alert,
-    AlertActionCloseButton
+    AlertActionCloseButton,
+    Bullseye,
+    EmptyStateVariant
 } from '@patternfly/react-core';
+
+const TableEmptyState = () => {
+    return (
+        <Bullseye>
+            <EmptyState variant={EmptyStateVariant.small}>
+                <Title headingLevel="h2" size="lg">
+                    No database instances found
+                </Title>
+            </EmptyState>
+        </Bullseye>
+    );
+};
 class InstanceTable extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
             currentNS: window.location.pathname.split('/')[3],
             columns: [
-                { title: 'ID', transforms: [wrappable] },
-                { title: 'Instance', transforms: [wrappable] },
-                { title: 'Provider', transforms: [wrappable] },
+                { title: 'ID', transforms: [wrappable, cellWidth(30)] },
+                { title: 'Instance', transforms: [wrappable, cellWidth(30)] },
+                { title: 'Provider', transforms: [wrappable, cellWidth(30)] },
             ],
             rows: [],
             selectedInstance: {},
@@ -55,11 +70,23 @@ class InstanceTable extends React.Component {
 
     getRows(data) {
         let rowList = [];
-        if (data) {
+        if (data && data.length > 0) {
             _.forEach(data, rowData => {
                 rowList.push({ cells: [rowData.instanceID, rowData.name, rowData.provider] })
             })
-        };
+        } else {
+            rowList.push(
+                {
+                    heightAuto: true,
+                    cells: [
+                        {
+                            props: { colSpan: 8 },
+                            title: <TableEmptyState />
+                        }
+                    ]
+                }
+            )
+        }
 
         this.setState({ rows: rowList });
     };
