@@ -31,9 +31,9 @@ class DBaasImportPage extends React.Component {
         }
     }
 
-    setDBaaSServiceStatus() {
+    setDBaaSServiceStatus(isUp) {
         this.setState({
-            isDBaaSServiceUp: true
+            isDBaaSServiceUp: isUp
         });
     }
 
@@ -45,6 +45,7 @@ class DBaasImportPage extends React.Component {
                 <div className="section-header-div extra-bottom-margin">
                     <div className="section-padding-top">&nbsp;</div>
                     <div className="section-padding-left">&nbsp;</div>
+                    <div className="section-padding-right">&nbsp;</div>
                     <div className="section-breadcrumb">
                         <span className="breadcrumb-link" onClick={this.goBack}>Database-as-a-Service</span>
                         <span className="breadcrumb-chevron"> > </span>
@@ -54,17 +55,9 @@ class DBaasImportPage extends React.Component {
                     <div className="section-subtitle">Creating a Provider Account resource allows provider cloud instances to be imported</div>
                 </div>
                 {!isDBaaSServiceUp ?
-                    <section className="pf-c-tab-content pf-m-padding">
-                        <div className="pf-c-tab-content__body">
-                            <ProviderAccountForm setDBaaSServiceStatus={this.setDBaaSServiceStatus} setCurrentCreatedInventoryInfo={this.setCurrentCreatedInventoryInfo} />
-                        </div>
-                    </section>
+                    <ProviderAccountForm setDBaaSServiceStatus={this.setDBaaSServiceStatus} setCurrentCreatedInventoryInfo={this.setCurrentCreatedInventoryInfo} />
                     :
-                    <section className="pf-c-tab-content pf-m-padding">
-                        <div className="pf-c-tab-content__body">
-                            <InstancesForm dbaaSServiceStatus={isDBaaSServiceUp} currentCreatedInventoryInfo={currentCreatedInventoryInfo} />
-                        </div>
-                    </section>
+                    <InstancesForm dbaaSServiceStatus={isDBaaSServiceUp} currentCreatedInventoryInfo={currentCreatedInventoryInfo} />
                 }
             </div>
         );

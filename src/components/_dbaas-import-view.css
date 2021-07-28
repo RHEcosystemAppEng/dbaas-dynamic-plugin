@@ -1,8 +1,3 @@
-
-  form {
-    display: flex;
-  }
-  
   .section-padding-top {
     width: 100%;
     height: 40px;
@@ -10,6 +5,12 @@
   
   .section-padding-left {
     float: left;
+    height: 1000px;
+    width: 40px;
+  }
+
+  .section-padding-right {
+    float: right;
     height: 1000px;
     width: 40px;
   }
@@ -139,4 +140,16 @@
 
   .inventory-tabs {
     margin-top: 20px;
+  }
+
+  .success-icon {
+    color: #3E8635 !important;
+  }
+
+  .warning-icon {
+    color: #F0AB00 !important;
+  }
+
+  .instance-table {
+    display: flex !important;
   }
