@@ -1,7 +1,7 @@
 import React from "react";
 import * as _ from 'lodash';
 import { Button, Alert, Form, FormGroup, TextInput, ActionGroup, FormSelect, FormSelectOption, FormSelectOptionGroup } from '@patternfly/react-core';
-import { MONGODB_PROVIDER_NAME, CRUNCHY_PROVIDER_NAME } from "../const";
+import { MONGODB_PROVIDER_RESOURCE_NAME, CRUNCHY_PROVIDER_RESOURCE_NAME } from "../const";
 
 class ProviderAccountForm extends React.Component {
     constructor(props) {
@@ -15,8 +15,8 @@ class ProviderAccountForm extends React.Component {
             selectedDBProvider: '',
             dbProviderOptions: [
                 { value: '', label: 'Select provider' },
-                { value: MONGODB_PROVIDER_NAME, label: 'MongoDB Atlas' },
-                { value: CRUNCHY_PROVIDER_NAME, label: 'Crunchy Bridge' },
+                { value: MONGODB_PROVIDER_RESOURCE_NAME, label: 'MongoDB Atlas' },
+                { value: CRUNCHY_PROVIDER_RESOURCE_NAME, label: 'Crunchy Bridge' },
             ],
             orgId: "",
             orgPublicKey: "",
@@ -155,7 +155,7 @@ class ProviderAccountForm extends React.Component {
                             if (data.status === "Failure") {
                                 this.setState({ showError: true, error: data });
                             } else {
-                                this.props.setDBaaSServiceStatus();
+                                this.props.setDBaaSServiceStatus(true);
                             }
                         })
                         .catch((err) => {
@@ -194,7 +194,7 @@ class ProviderAccountForm extends React.Component {
                 {selectedDBProvider
                     ?
                     <React.Fragment>
-                        <div className="section-subtitle extra-top-margin no-botton-padding" >Account Credentials</div>
+                        <div className="section-subtitle extra-top-margin no-bottom-padding" >Account Credentials</div>
                         <FormGroup label="Organization ID" fieldId="organization-id" isRequired>
                             <TextInput
                                 isRequired

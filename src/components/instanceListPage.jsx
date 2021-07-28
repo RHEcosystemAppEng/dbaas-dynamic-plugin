@@ -14,7 +14,7 @@ import FormHeader from './form/formHeader';
 import FlexForm from './form/flexForm';
 import FormBody from './form/formBody';
 import InstanceTable from './instanceTable';
-import { MONGODB_PROVIDER_NAME, CRUNCHY_PROVIDER_NAME, MONGODB_PROVIDER_TYPE, CRUNCHY_PROVIDER_TYPE } from '../const';
+import { MONGODB_PROVIDER_RESOURCE_NAME, CRUNCHY_PROVIDER_RESOURCE_NAME, MONGODB_PROVIDER_TYPE, CRUNCHY_PROVIDER_TYPE } from '../const';
 
 const InstanceListPage = () => {
   const [showResults, setShowResults] = React.useState(false);
@@ -28,10 +28,10 @@ const InstanceListPage = () => {
   const parseSelectedDBProvider = () => {
     let dbProviderType = _.last(window.location.pathname.split('/'));
     if (dbProviderType === MONGODB_PROVIDER_TYPE) {
-      setSelectedDBProvider(MONGODB_PROVIDER_NAME);
+      setSelectedDBProvider(MONGODB_PROVIDER_RESOURCE_NAME);
     }
     if (dbProviderType === CRUNCHY_PROVIDER_TYPE) {
-      setSelectedDBProvider(CRUNCHY_PROVIDER_NAME);
+      setSelectedDBProvider(CRUNCHY_PROVIDER_RESOURCE_NAME);
     }
   };
 
@@ -45,14 +45,14 @@ const InstanceListPage = () => {
 
     if (responseJson.items) {
       let filteredInventories = _.filter(responseJson.items, inventory => {
-        return inventory.spec?.provider?.name === selectedDBProvider && inventory.status?.conditions[0]?.status !== "False" && inventory.status?.conditions[0]?.type === "SpecSynced"
+        return inventory.spec?.providerRef?.name === selectedDBProvider && inventory.status?.conditions[0]?.status !== "False" && inventory.status?.conditions[0]?.type === "SpecSynced"
       })
       filteredInventories.forEach((inventory, index) => {
         let obj = { id: 0, name: "", instances: [] };
         obj.id = index;
         obj.name = inventory.metadata.name;
         inventory.status?.instances?.map((instance) => {
-          return instance.provider = inventory.spec?.provider?.name;
+          return instance.provider = inventory.spec?.providerRef?.name;
         })
         obj.instances = inventory.status?.instances;
         inventories.push(obj);

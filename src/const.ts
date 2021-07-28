@@ -3,7 +3,8 @@ export const FLAG_DBAAS = 'FLAG_DBAAS';
 export const API_GROUP = 'dbaas.redhat.com';
 export const API_VERSION = 'v1';
 
-export const DBaaSServiceCRName = 'dbaasinventory-sample';
+export const DBaaSInventoryCRName = 'dbaas.redhat.com~v1alpha1~DBaaSInventory';
+export const DBaaSOperatorName = 'dbaas-operator.v0.0.2';
 
 
 // Currently placeholders
@@ -12,8 +13,11 @@ export const mongoDBIcon = `data:image/svg+xml,%3Csvg height='64' viewBox='0 0 3
 export const APITokenLengthMinimum = 500;
 export const MONGODB_PROVIDER_NAME = 'Red Hat DBaaS / MongoDB Atlas';
 export const MONGODB_PROVIDER_TYPE = 'mongodb-atlas';
+export const MONGODB_PROVIDER_RESOURCE_NAME = 'atlas-provider-registration';
 export const CRUNCHY_PROVIDER_NAME = 'Red Hat DBaaS / Crunchy Bridge';
 export const CRUNCHY_PROVIDER_TYPE = 'crunchy-bridge';
+export const CRUNCHY_PROVIDER_RESOURCE_NAME = 'crunchy-bridge-registration';
+
 
 
 

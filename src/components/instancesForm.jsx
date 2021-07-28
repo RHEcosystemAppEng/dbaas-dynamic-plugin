@@ -5,9 +5,13 @@ import {
     Title,
     EmptyState,
     EmptyStateIcon,
-    Spinner
+    Spinner,
+    EmptyStateBody,
+    EmptyStateSecondaryActions,
+    Button
 } from '@patternfly/react-core';
-import TimesCircleIcon from '@patternfly/react-icons/dist/js/icons/times-circle-icon';
+import { InfoCircleIcon, CheckCircleIcon } from '@patternfly/react-icons';
+import { DBaaSInventoryCRName, DBaaSOperatorName } from "../const";
 class InstancesForm extends React.Component {
     constructor(props) {
         super(props);
@@ -22,6 +26,9 @@ class InstancesForm extends React.Component {
             fetchInstancesFailed: false,
             statusMsg: ''
         };
+        this.editInventoryInfo = this.editInventoryInfo.bind(this);
+        this.handleCancel = this.handleCancel.bind(this);
+        this.goToInventoryListPage = this.goToInventoryListPage.bind(this);
     }
 
     componentDidMount() {
@@ -72,7 +79,7 @@ class InstancesForm extends React.Component {
                     })
                 } else {
                     responseJson?.status?.instances.map(instance => {
-                        instance.provider = responseJson?.spec?.provider?.name
+                        instance.provider = responseJson?.spec?.providerRef?.name
                     })
                     this.setState({
                         inventory: { instances: responseJson?.status?.instances },
@@ -93,13 +100,22 @@ class InstancesForm extends React.Component {
         }
     }
 
-    handleTabClick = (event, tabIndex) => {
-        event.preventDefault();
-        this.setState({
-            activeTabKey: tabIndex
-        });
+    editInventoryInfo = () => {
+        const { currentNS } = this.state;
+        const { currentCreatedInventoryInfo } = this.props;
+
+        window.location.pathname = `/k8s/ns/${currentNS}/clusterserviceversions/${DBaaSOperatorName}/${DBaaSInventoryCRName}/${currentCreatedInventoryInfo?.metadata?.name}`;
+    }
+
+    handleCancel = () => {
+        window.history.back();
     };
 
+    goToInventoryListPage = () => {
+        const { currentNS } = this.state;
+
+        window.location.pathname = `/k8s/ns/${currentNS}/operators.coreos.com~v1alpha1~ClusterServiceVersion/${DBaaSOperatorName}/${DBaaSInventoryCRName}`;
+    }
 
     render() {
         const { showResults, inventory, activeTabKey, fetchInstancesFailed, noInstances, statusMsg } = this.state;
@@ -118,20 +134,37 @@ class InstancesForm extends React.Component {
         if (showResults && fetchInstancesFailed || noInstances) {
             return (
                 <EmptyState>
-                    <EmptyStateIcon variant="container" component={TimesCircleIcon} />
-                    <Title size="lg" headingLevel="h3">
-                        {statusMsg}
+                    <EmptyStateIcon variant="container" component={InfoCircleIcon} className="warning-icon" />
+                    <Title headingLevel="h2" size="md">
+                        {`Database instances fetch failed - ${statusMsg}`}
                     </Title>
+                    <EmptyStateBody>
+                        The Provider Account resource has been created but the database instances could not be fetched. Edit this resource to try again.
+                    </EmptyStateBody>
+                    <Button variant="primary" onClick={this.editInventoryInfo}>Edit Provider Account</Button>
+                    <EmptyStateSecondaryActions>
+                        <Button variant="link" onClick={this.handleCancel}>Close</Button>
+                    </EmptyStateSecondaryActions>
                 </EmptyState>
             )
         }
 
         return (
-            <form id="instances-form">
-                <div className="instance-table">
+            <React.Fragment>
+                <EmptyState>
+                    <EmptyStateIcon variant="container" component={CheckCircleIcon} className="success-icon" />
+                    <Title headingLevel="h2" size="md">
+                        Database instances fetched successfully
+                    </Title>
+                    <EmptyStateBody>
+                        The Provider Account resource has been created and the database instances shown below have been exposed for developer import.
+                    </EmptyStateBody>
+                    <Button variant="primary" onClick={this.goToInventoryListPage}>View Provider Accounts</Button>
+                </EmptyState>
+                <div style={{ "display": "flex" }}>
                     <InstanceTable isLoading={!showResults} data={inventory} isSelectable={false} />
                 </div>
-            </form>
+            </React.Fragment>
         );
     }
 }

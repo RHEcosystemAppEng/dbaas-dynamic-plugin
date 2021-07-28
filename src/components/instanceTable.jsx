@@ -144,13 +144,13 @@ class InstanceTable extends React.Component {
                     <EmptyStateIcon variant="container" component={Spinner} />
                     <Title size="lg" headingLevel="h3">
                         Fetching instances from Atlas...
-          </Title>
+                    </Title>
                 </EmptyState>
             )
         }
 
         return (
-            <div>
+            <React.Fragment>
                 {this.state.alert.isActive ? (<Alert variant={alert.type} title={alert.msg} actionClose={<AlertActionCloseButton onClose={this.closeAlert} />} />) : null}
                 <Table
                     onSelect={isSelectable ? this.onSelect : null}
@@ -168,11 +168,11 @@ class InstanceTable extends React.Component {
                     <div className={isLoading ? "hide" : null}>
                         <Button id="instance-select-button" variant="primary" onClick={this.handleSubmit} isDisabled={_.isEmpty(this.state.selectedInstance)}>
                             Connect
-                    </Button>
+                        </Button>
                     </div>
                     :
                     null}
-            </div>
+            </React.Fragment>
         );
     }
 }
