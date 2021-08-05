@@ -11,13 +11,42 @@ class DBaasImportPage extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
+            currentNS: window.location.pathname.split('/')[3],
             isDBaaSServiceUp: false,
             currentCreatedInventoryInfo: {},
+            providerInfo: {}
         };
+        this.fetchProviderInfo = this.fetchProviderInfo.bind(this);
         this.goBack = this.goBack.bind(this);
         this.setDBaaSServiceStatus = this.setDBaaSServiceStatus.bind(this);
         this.setCurrentCreatedInventoryInfo = this.setCurrentCreatedInventoryInfo.bind(this);
     }
+
+    componentDidMount() {
+        this.fetchProviderInfo();
+    }
+
+    fetchProviderInfo = () => {
+        let requestOpts = {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json",
+            },
+        };
+
+        fetch(
+            '/api/kubernetes/apis/dbaas.redhat.com/v1alpha1/dbaasproviders',
+            requestOpts
+        )
+            .then((response) => response.json())
+            .then((data) => {
+                this.setState({providerInfo: data});
+            })
+            .catch((err) => {
+                console.error(err);
+            });;
+    };
 
     goBack() {
         window.history.back();
@@ -38,7 +67,7 @@ class DBaasImportPage extends React.Component {
     }
 
     render() {
-        const { activeTabKey, isDBaaSServiceUp, currentCreatedInventoryInfo } = this.state;
+        const { activeTabKey, isDBaaSServiceUp, currentCreatedInventoryInfo, providerInfo } = this.state;
 
         return (
             <div>
@@ -55,7 +84,7 @@ class DBaasImportPage extends React.Component {
                     <div className="section-subtitle">Creating a Provider Account resource allows provider cloud instances to be imported</div>
                 </div>
                 {!isDBaaSServiceUp ?
-                    <ProviderAccountForm setDBaaSServiceStatus={this.setDBaaSServiceStatus} setCurrentCreatedInventoryInfo={this.setCurrentCreatedInventoryInfo} />
+                    <ProviderAccountForm dbProviderInfo={providerInfo} setDBaaSServiceStatus={this.setDBaaSServiceStatus} setCurrentCreatedInventoryInfo={this.setCurrentCreatedInventoryInfo} />
                     :
                     <InstancesForm dbaaSServiceStatus={isDBaaSServiceUp} currentCreatedInventoryInfo={currentCreatedInventoryInfo} />
                 }
