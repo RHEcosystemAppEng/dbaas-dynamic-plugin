@@ -6,25 +6,42 @@ import { MONGODB_PROVIDER_RESOURCE_NAME, CRUNCHY_PROVIDER_RESOURCE_NAME } from "
 class ProviderAccountForm extends React.Component {
     constructor(props) {
         super(props);
+        this.handleDBProviderSelection = this.handleDBProviderSelection.bind(this);
         this.handleCancel = this.handleCancel.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
 
         this.state = {
+            credentials: {},
             currentNS: window.location.pathname.split('/')[3],
             inventoryName: 'my-db-provider-account',
-            selectedDBProvider: '',
+            selectedDBProvider: {},
             dbProviderOptions: [
-                { value: '', label: 'Select provider' },
-                { value: MONGODB_PROVIDER_RESOURCE_NAME, label: 'MongoDB Atlas' },
-                { value: CRUNCHY_PROVIDER_RESOURCE_NAME, label: 'Crunchy Bridge' },
+                { value: '', label: 'Select provider' }
             ],
-            orgId: "",
-            orgPublicKey: "",
-            orgPrivateKey: "",
             postResponse: "",
             showError: false,
-            error: {}
+            error: {},
         };
+    }
+
+    componentDidUpdate(prevProps) {
+        if (!_.isEmpty(this.props.dbProviderInfo) && prevProps.dbProviderInfo !== this.props.dbProviderInfo) {
+            let dbProviderList = [];
+            this.props.dbProviderInfo.items.forEach(dbProvider => {
+                dbProviderList.push({ value: dbProvider?.metadata?.name, label: dbProvider?.spec?.provider?.displayName })
+            });
+            this.setState({ dbProviderOptions: this.state.dbProviderOptions.concat(dbProviderList) });
+        }
+    }
+
+    handleDBProviderSelection = value => {
+        if (!_.isEmpty(this.props.dbProviderInfo)) {
+            let provider = _.find(this.props.dbProviderInfo.items, dbProvider => {
+                return dbProvider.metadata?.name === value;
+            });
+            this.setState({ selectedDBProvider: provider });
+        }
+
     }
 
     handleCancel = () => {
@@ -35,7 +52,7 @@ class ProviderAccountForm extends React.Component {
         event.preventDefault();
 
         let secretName = "dbaas-vendor-credentials-" + Date.now();
-        const { selectedDBProvider, inventoryName } = this.state;
+        const { selectedDBProvider, inventoryName, credentials } = this.state;
 
         let newSecret = {
             apiVersion: "v1",
@@ -48,11 +65,7 @@ class ProviderAccountForm extends React.Component {
                     type: "dbaas-vendor-credentials",
                 },
             },
-            stringData: {
-                orgId: this.state.orgId.toString("base64"),
-                publicApiKey: this.state.orgPublicKey.toString("base64"),
-                privateApiKey: this.state.orgPrivateKey.toString("base64"),
-            },
+            stringData: credentials,
             type: "Opaque",
         };
 
@@ -101,7 +114,7 @@ class ProviderAccountForm extends React.Component {
                 },
                 spec: {
                     providerRef: {
-                        name: selectedDBProvider
+                        name: selectedDBProvider.metadata?.name
                     },
                     credentialsRef: {
                         name: secretName,
@@ -170,7 +183,7 @@ class ProviderAccountForm extends React.Component {
     };
 
     render() {
-        const { selectedDBProvider, showError, error, inventoryName, dbProviderOptions } = this.state;
+        const { selectedDBProvider, showError, error, inventoryName, dbProviderOptions, credentials } = this.state;
 
         return (
             <Form id="provider-account-form" isWidthLimited onSubmit={this.handleSubmit} >
@@ -185,46 +198,32 @@ class ProviderAccountForm extends React.Component {
                     />
                 </FormGroup>
                 <FormGroup label="Database provider" fieldId="db-provider">
-                    <FormSelect value={selectedDBProvider} onChange={value => { this.setState({ selectedDBProvider: value }) }} aria-label="Database Provider">
+                    <FormSelect value={selectedDBProvider.metadata?.name} onChange={this.handleDBProviderSelection} aria-label="Database Provider">
                         {dbProviderOptions.map((option, index) => (
                             <FormSelectOption key={index} value={option.value} label={option.label} />
                         ))}
                     </FormSelect>
                 </FormGroup>
-                {selectedDBProvider
+                {!_.isEmpty(selectedDBProvider)
                     ?
                     <React.Fragment>
                         <div className="section-subtitle extra-top-margin no-bottom-padding" >Account Credentials</div>
-                        <FormGroup label="Organization ID" fieldId="organization-id" isRequired>
-                            <TextInput
-                                isRequired
-                                type="text"
-                                id="organization-id"
-                                name="organization-id"
-                                value={this.state.orgId}
-                                onChange={value => this.setState({ orgId: value })}
-                            />
-                        </FormGroup>
-                        <FormGroup label="Organization Public Key" fieldId="organization-public-key" isRequired>
-                            <TextInput
-                                isRequired
-                                type="text"
-                                id="organization-public-key"
-                                name="organization-public-key"
-                                value={this.state.orgPublicKey}
-                                onChange={value => this.setState({ orgPublicKey: value })}
-                            />
-                        </FormGroup>
-                        <FormGroup label="Organization Private Key" fieldId="organization-private-key" isRequired>
-                            <TextInput
-                                isRequired
-                                type="text"
-                                id="organization-private-key"
-                                name="organization-private-key"
-                                value={this.state.orgPrivateKey}
-                                onChange={value => this.setState({ orgPrivateKey: value })}
-                            />
-                        </FormGroup>
+                        {selectedDBProvider.spec?.credentialFields.map(field => {
+                            return <FormGroup label={field.displayName} fieldId={field.key} isRequired={field.required}>
+                                <TextInput
+                                    isRequired={field.required}
+                                    type={field.type === "maskedstring" ? "password" : "text"}
+                                    id={field.key}
+                                    name={field.key}
+                                    value={credentials[field.key]}
+                                    onChange={value => this.setState(prevState => {
+                                        let newCredentials = Object.assign({}, prevState.credentials);
+                                        newCredentials[field.key] = value.toString("base64");
+                                        return { credentials: newCredentials };
+                                    })}
+                                />
+                            </FormGroup>
+                        })}
                     </React.Fragment>
                     :
                     null
@@ -246,7 +245,7 @@ class ProviderAccountForm extends React.Component {
                     :
                     null}
                 <ActionGroup>
-                    <Button variant="primary" type="submit" className="submit-button" isDisabled={selectedDBProvider.length === 0}>
+                    <Button variant="primary" type="submit" className="submit-button" isDisabled={_.isEmpty(selectedDBProvider)}>
                         Create
                     </Button>
                     <Button variant="secondary" onClick={this.handleCancel}>
