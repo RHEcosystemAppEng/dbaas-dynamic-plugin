@@ -5,7 +5,6 @@ import { Breadcrumb, BreadcrumbItem } from '@patternfly/react-core';
 import VendorForm from './vendorForm';
 import ProviderAccountForm from './providerAccountForm';
 import InstancesForm from './instancesForm';
-import { MONGODB_PROVIDER_NAME } from "../const";
 
 class DBaasImportPage extends React.Component {
     constructor(props) {
