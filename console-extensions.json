@@ -18,8 +18,8 @@
     "properties": {
       "id": "dbaasAddAction",
       "href": "/catalog?catalogType=dbaas-new",
-      "label": "%dbaas-plugin~DBaaS%",
-      "description": "%dbaas-plugin~Provide database related services.%",
+      "label": "%dbaas-plugin~Connected Database%",
+      "description": "%dbaas-plugin~Select a cloud database provider to connect%",
       "icon": { "$codeRef": "constants.dbaasServicesIcon" },
       "accessReview": [
         { "group": "apps.openshift.io", "resource": "deploymentconfigs", "verb": "create" },
@@ -33,8 +33,8 @@
     "type": "console.catalog/item-type",
     "properties": {
       "type": "dbaas-new",
-      "title": "%dbaas-plugin~Connected Database Providers%",
-      "catalogDescription": "%dbaas-plugin~See a list of connected database providers%",
+      "title": "%dbaas-plugin~Connected Database%",
+      "catalogDescription": "%dbaas-plugin~See a list of connected cloud database provider%",
       "typeDescription": "%dbaas-plugin~DBaaS%"
     },
     "flags": {
@@ -67,7 +67,10 @@
     "type": "console.page/route",
     "properties": {
       "exact": true,
-      "path": "/dbaas/ns/:ns/mongodb-atlas",
+      "path": [
+        "/dbaas/ns/:ns/mongodb-atlas-registration",
+        "/dbaas/ns/:ns/crunchy-bridge-registration"
+      ],
       "component": {
         "$codeRef": "instanceListPage"
       }

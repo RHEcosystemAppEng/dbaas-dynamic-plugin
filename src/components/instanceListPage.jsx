@@ -14,7 +14,6 @@ import FormHeader from './form/formHeader';
 import FlexForm from './form/flexForm';
 import FormBody from './form/formBody';
 import InstanceTable from './instanceTable';
-import { MONGODB_PROVIDER_RESOURCE_NAME, CRUNCHY_PROVIDER_RESOURCE_NAME, MONGODB_PROVIDER_TYPE, CRUNCHY_PROVIDER_TYPE } from '../const';
 
 const InstanceListPage = () => {
   const [showResults, setShowResults] = React.useState(false);
@@ -22,17 +21,12 @@ const InstanceListPage = () => {
   const [activeTabKey, setActiveTabKey] = React.useState(0);
   const [selectedDBProvider, setSelectedDBProvider] = React.useState('');
   const currentNS = window.location.pathname.split('/')[3];
- 
+
 
 
   const parseSelectedDBProvider = () => {
     let dbProviderType = _.last(window.location.pathname.split('/'));
-    if (dbProviderType === MONGODB_PROVIDER_TYPE) {
-      setSelectedDBProvider(MONGODB_PROVIDER_RESOURCE_NAME);
-    }
-    if (dbProviderType === CRUNCHY_PROVIDER_TYPE) {
-      setSelectedDBProvider(CRUNCHY_PROVIDER_RESOURCE_NAME);
-    }
+    setSelectedDBProvider(dbProviderType);
   };
 
   const handleTabClick = (event, tabIndex) => {

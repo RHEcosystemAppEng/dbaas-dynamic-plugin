@@ -1,7 +1,6 @@
 import React from "react";
 import * as _ from 'lodash';
 import { Button, Alert, Form, FormGroup, TextInput, ActionGroup, FormSelect, FormSelectOption, FormSelectOptionGroup } from '@patternfly/react-core';
-import { MONGODB_PROVIDER_RESOURCE_NAME, CRUNCHY_PROVIDER_RESOURCE_NAME } from "../const";
 
 class ProviderAccountForm extends React.Component {
     constructor(props) {
