@@ -74,7 +74,7 @@ class InstancesForm extends React.Component {
                 if (_.isEmpty(responseJson?.status?.instances)) {
                     this.setState({
                         noInstances: true,
-                        statusMsg: "No DB Instance in this inventory",
+                        statusMsg: "No database instance in this Provider Account",
                         showResults: true
                     })
                 } else {
@@ -93,7 +93,7 @@ class InstancesForm extends React.Component {
             setTimeout(() => {
                 this.setState({
                     fetchInstancesFailed: true,
-                    statusMsg: "Could not connect with DB provider",
+                    statusMsg: "Could not connect with database provider",
                     showResults: true
                 })
             }, 30000);
