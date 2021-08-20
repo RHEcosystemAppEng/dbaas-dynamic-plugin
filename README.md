@@ -1,8 +1,5 @@
 # DBaaS Dynamic Plugin
 
-This project emulates a standalone repository hosting a sample
-[dynamic plugin](https://github.com/openshift/console/tree/master/frontend/packages/console-dynamic-plugin-sdk/README.md) for OpenShift Console.
-
 ## Local development
 
 1. `yarn build` to build the plugin, generating output to `dist` directory
@@ -24,8 +21,13 @@ the script, for example:
 ```sh
 yarn http-server -a 127.0.0.1
 ```
+3. Go to OCP Console that running locally and use the flowing command to run Bridge.
 
-See the plugin development section in
+```
+source ./contrib/oc-environment.sh && go run cmd/bridge/main.go -plugins dbaas-dynamic-plugin=http://127.0.0.1:9001/
+```
+
+For more details, see the plugin development section in
 [Console Dynamic Plugins README](https://github.com/openshift/console/tree/master/frontend/packages/console-dynamic-plugin-sdk/README.md) for details
 on how to run Bridge using local plugins.
 
