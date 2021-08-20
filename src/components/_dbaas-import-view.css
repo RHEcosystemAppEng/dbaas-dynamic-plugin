@@ -134,12 +134,16 @@
     margin-top: 10px !important;
   }
 
-  .instance-table-container {
-    margin: 20px;
+  .extra-left-margin {
+    margin-left: 10px !important;
   }
 
-  .inventory-tabs {
-    margin-top: 20px;
+  .no-top-margin {
+    margin-top: 0px !important;
+  }
+
+  .instance-table-container {
+    margin: 30px;
   }
 
   .success-icon {
@@ -152,4 +156,8 @@
 
   .instance-table {
     display: flex !important;
+  }
+
+  .provider-account-selection {
+    width: 50%;
   }

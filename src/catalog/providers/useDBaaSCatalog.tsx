@@ -31,11 +31,11 @@ const useDBaaSCatalog: ExtensionHook<CatalogItem[]> = ({
           provider: t(provider.spec?.provider?.name),
           tags: ['mongodb', 'crunchy'],
           icon: {
-            url:  `data:image/png;base64,${provider.spec?.provider?.icon?.base64data}`,
+            url:  `data:${provider.spec?.provider?.icon?.mediatype};base64,${provider.spec?.provider?.icon?.base64data}`,
           },
           cta: {
             label: t("Connect"),
-            href: `/dbaas/ns/${namespace}/${provider.metadata?.name}`,
+            href: `/k8s/ns/${namespace}/${provider.metadata?.name}`,
           },
           details: {
             descriptions: [
