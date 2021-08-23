@@ -1,5 +1,5 @@
 // import { K8sKind } from '@openshift-console/dynamic-plugin-sdk';
-import { API_GROUP, API_VERSION } from '../const';
+import { API_GROUP, API_VERSION } from '../const'
 
 export const DBaaSServiceModel: any = {
   apiGroup: API_GROUP,
@@ -12,4 +12,4 @@ export const DBaaSServiceModel: any = {
   abbr: 'DBAASS',
   namespaced: true,
   crd: true,
-};
+}
