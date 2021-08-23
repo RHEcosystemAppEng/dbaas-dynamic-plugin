@@ -1,3 +1,3 @@
-export { CATALOG_TYPE } from './const';
+export { CATALOG_TYPE } from './const'
 
-export { default as dbaasProvider } from './providers/useDBaaSCatalog';
+export { default as dbaasProvider } from './providers/useDBaaSCatalog'

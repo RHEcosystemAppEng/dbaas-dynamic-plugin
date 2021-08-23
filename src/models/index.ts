@@ -1,1 +1,1 @@
-export * from './dbaas';
+export * from './dbaas'
