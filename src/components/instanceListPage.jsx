@@ -13,7 +13,7 @@ import {
   FormSelect,
   FormSelectOption,
   Button,
-  Alert
+  Alert,
 } from '@patternfly/react-core'
 import { InfoCircleIcon } from '@patternfly/react-icons'
 import './_dbaas-import-view.css'
@@ -92,17 +92,19 @@ const InstanceListPage = () => {
     setSelectedDBProvider(dbProviderType)
   }
 
-  const parsePayload = (responseJson) => {
+  async function fetchInstances() {
     let inventories = []
+    let inventoryItems = await fetchInventoryItems()
 
-    if (responseJson.items?.length > 0) {
-      let filteredInventories = _.filter(responseJson.items, (inventory) => {
+    if (inventoryItems.length > 0) {
+      let filteredInventories = _.filter(inventoryItems, (inventory) => {
         return inventory.spec?.providerRef?.name === selectedDBProvider
       })
       filteredInventories.forEach((inventory, index) => {
-        let obj = { id: 0, name: '', instances: [], status: {} }
+        let obj = { id: 0, name: '', namespace: '', instances: [], status: {} }
         obj.id = index
         obj.name = inventory.metadata.name
+        obj.namespace = inventory.metadata.namespace
         obj.status = inventory.status
 
         if (
@@ -131,7 +133,79 @@ const InstanceListPage = () => {
     }
   }
 
-  const fetchInstances = () => {
+  async function fetchInventoryItems() {
+    let inventoryItems = []
+    let newBody = {
+      apiVersion: 'authorization.k8s.io/v1',
+      kind: 'SelfSubjectRulesReview',
+      spec: {
+        namespace: '*',
+      },
+    }
+    var requestOpts = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify(newBody),
+    }
+    await fetch('/api/kubernetes/apis/authorization.k8s.io/v1/selfsubjectrulesreviews', requestOpts)
+      .then(status)
+      .then(json)
+      .then(parseTenantRulesReview)
+      .then(fetchInventoryNamespaces)
+      .then(fetchInventoriesByNamespace)
+      .then((inventories) => inventoryItems.push(...inventories))
+      .catch(function (error) {
+        console.error(error)
+      })
+    return inventoryItems
+  }
+
+  function parseTenantRulesReview(responseJson) {
+    let tenantNames = []
+    if (responseJson.status.resourceRules?.length > 0) {
+      let resourceRule = { verbs: [], apiGroups: [], resources: [], resourceNames: [] }
+      let availableRules = _.filter(responseJson.status.resourceRules, (rule) => {
+        resourceRule = rule
+        if (resourceRule.verbs && resourceRule.resources && resourceRule.resourceNames) {
+          if (resourceRule.resourceNames.length > 0) {
+            return resourceRule.resources.includes('dbaastenants') && resourceRule.verbs.includes('get')
+          }
+        }
+      })
+      availableRules.forEach((rule) => {
+        rule.resourceNames.forEach((tenantName) => {
+          if (!tenantNames.includes(tenantName)) {
+            tenantNames.push(tenantName)
+          }
+        })
+      })
+    }
+    return tenantNames
+  }
+
+  async function fetchInventoryNamespaces(tenantNames = []) {
+    let inventoryNamespaces = []
+    let promises = []
+    tenantNames.forEach((tenantName) => {
+      promises.push(
+        fetchTenant(tenantName).then((data) => {
+          return data.spec.inventoryNamespace
+        })
+      )
+    })
+    await Promise.all(promises)
+      .then((namespaces) => (inventoryNamespaces = namespaces))
+      .catch(function (error) {
+        console.error(error)
+      })
+    let uniqInventoryNamespaces = [...new Set(inventoryNamespaces)]
+    return uniqInventoryNamespaces
+  }
+
+  async function fetchTenant(tenantName) {
     var requestOpts = {
       method: 'GET',
       headers: {
@@ -139,12 +213,199 @@ const InstanceListPage = () => {
         Accept: 'application/json',
       },
     }
-    fetch(
-      '/api/kubernetes/apis/dbaas.redhat.com/v1alpha1/namespaces/' + currentNS + '/dbaasinventories?limit=250',
+    return fetch('/api/kubernetes/apis/dbaas.redhat.com/v1alpha1/dbaastenants/' + tenantName, requestOpts)
+      .then(status)
+      .then(json)
+  }
+
+  async function fetchInventoriesByNamespace(inventoryNamespaces = []) {
+    let promises = []
+    let inventoryItems = []
+
+    inventoryNamespaces.forEach((namespace) => {
+      if (namespace) {
+        promises.push(inventoriesFromRulesReview(namespace))
+      }
+    })
+    await Promise.all(promises)
+      .then((inventoryByNS) => {
+        inventoryByNS.forEach((inventoryArrays) => inventoryArrays.forEach((value) => inventoryItems.push(...value)))
+      })
+      .catch(function (error) {
+        console.error(error)
+      })
+
+    return inventoryItems
+  }
+
+  async function isListAllowed(namespace) {
+    let listAllowed = false
+
+    let rulesBody = {
+      apiVersion: 'authorization.k8s.io/v1',
+      kind: 'SelfSubjectAccessReview',
+      spec: {
+        resourceAttributes: {
+          group: 'dbaas.redhat.com',
+          resource: 'dbaasinventories',
+          verb: 'list',
+          namespace: namespace,
+        },
+      },
+    }
+    var requestOpts = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify(rulesBody),
+    }
+    listAllowed = await fetch('/api/kubernetes/apis/authorization.k8s.io/v1/selfsubjectaccessreviews', requestOpts)
+      .then(status)
+      .then(json)
+      .then((data) => {
+        return data.status.allowed
+      })
+      .catch(function (error) {
+        console.error(error)
+      })
+
+    return listAllowed
+  }
+
+  async function inventoriesFromRulesReview(namespace) {
+    let inventoryItems = []
+    let promises = []
+    let listAllowed = await isListAllowed(namespace)
+
+    if (listAllowed) {
+      var requestOpts = {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+      }
+      promises.push(
+        fetch(
+          '/api/kubernetes/apis/dbaas.redhat.com/v1alpha1/namespaces/' + namespace + '/dbaasinventories?limit=250',
+          requestOpts
+        )
+          .then(status)
+          .then(json)
+          .then((data) => {
+            return data.items
+          })
+      )
+    } else {
+      let accessBody = {
+        apiVersion: 'authorization.k8s.io/v1',
+        kind: 'SelfSubjectRulesReview',
+        spec: {
+          namespace: namespace,
+        },
+      }
+      var requestOpts = {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify(accessBody),
+      }
+      promises.push(
+        fetch('/api/kubernetes/apis/authorization.k8s.io/v1/selfsubjectrulesreviews', requestOpts)
+          .then(status)
+          .then(json)
+          .then(parseInventoryRulesReview)
+          .then((inventoryNames) => fetchInventories(inventoryNames, namespace))
+          .then((inventories) => {
+            return inventories
+          })
+      )
+    }
+    await Promise.all(promises)
+      .then((inventories) => (inventoryItems = inventories))
+      .catch(function (error) {
+        console.error(error)
+      })
+    return inventoryItems
+  }
+
+  const parseInventoryRulesReview = (responseJson) => {
+    let inventoryNames = []
+    let resourceRule = { verbs: [], apiGroups: [], resources: [], resourceNames: [] }
+    if (responseJson.status.resourceRules?.length > 0) {
+      let availableRules = _.filter(responseJson.status.resourceRules, (rule) => {
+        resourceRule = rule
+        if (resourceRule.verbs && resourceRule.resources && resourceRule.resourceNames) {
+          if (resourceRule.resourceNames.length > 0) {
+            return resourceRule.resources.includes('dbaasinventories') && resourceRule.verbs.includes('get')
+          }
+        }
+      })
+      availableRules.forEach((rule) => {
+        rule.resourceNames.forEach((inventoryName) => {
+          if (!inventoryNames.includes(inventoryName)) {
+            inventoryNames.push(inventoryName)
+          }
+        })
+      })
+    }
+    return inventoryNames
+  }
+
+  async function fetchInventories(inventoryNames, namespace) {
+    let promises = []
+    let inventoryItems = []
+    if (typeof inventoryNames === 'object') {
+      inventoryNames.forEach((inventoryName) => {
+        if (inventoryName && namespace) {
+          promises.push(inventoryFetch(inventoryName, namespace))
+        }
+      })
+    }
+    await Promise.all(promises)
+      .then((inventories) => {
+        inventoryItems.push(...inventories)
+      })
+      .catch(function (error) {
+        console.error(error)
+      })
+    return inventoryItems
+  }
+
+  async function inventoryFetch(inventoryName, namespace) {
+    var inventory
+    var requestOpts = {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+    }
+    return fetch(
+      '/api/kubernetes/apis/dbaas.redhat.com/v1alpha1/namespaces/' + namespace + '/dbaasinventories/' + inventoryName,
       requestOpts
     )
-      .then((response) => response.json())
-      .then((data) => parsePayload(data))
+      .then(status)
+      .then(json)
+      .then((data) => {
+        return data
+      })
+  }
+
+  function status(response) {
+    if (response.status >= 200 && response.status < 300) {
+      return Promise.resolve(response)
+    } else {
+      return Promise.reject(new Error(response.statusText))
+    }
+  }
+
+  function json(response) {
+    return response.json()
   }
 
   React.useEffect(() => {
@@ -176,7 +437,12 @@ const InstanceListPage = () => {
                   Database instances retrieval failed
                 </Title>
                 <EmptyStateBody>Database instances could not be retrieved. Please try again.</EmptyStateBody>
-                <Alert variant="danger" isInline title="An error occured" className="co-alert co-break-word extra-top-margin">
+                <Alert
+                  variant="danger"
+                  isInline
+                  title="An error occured"
+                  className="co-alert co-break-word extra-top-margin"
+                >
                   <div>{statusMsg}</div>
                 </Alert>
                 <Button variant="primary" onClick={handleTryAgain}>

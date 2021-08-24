@@ -9,7 +9,7 @@ import {
   EmptyStateBody,
   EmptyStateSecondaryActions,
   Button,
-  Alert
+  Alert,
 } from '@patternfly/react-core'
 import { InfoCircleIcon, CheckCircleIcon } from '@patternfly/react-icons'
 import { DBaaSInventoryCRName, DBaaSOperatorName } from '../const'
@@ -146,7 +146,7 @@ class InstancesForm extends React.Component {
             resource to try again.
           </EmptyStateBody>
           <Alert variant="danger" isInline title="An error occured" className="co-alert co-break-word extra-top-margin">
-              <div>{statusMsg}</div>
+            <div>{statusMsg}</div>
           </Alert>
           <Button variant="primary" onClick={this.editInventoryInfo}>
             Edit Provider Account
