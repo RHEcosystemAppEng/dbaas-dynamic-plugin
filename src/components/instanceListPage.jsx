@@ -13,6 +13,7 @@ import {
   FormSelect,
   FormSelectOption,
   Button,
+  Alert
 } from '@patternfly/react-core'
 import { InfoCircleIcon } from '@patternfly/react-icons'
 import './_dbaas-import-view.css'
@@ -172,9 +173,12 @@ const InstanceListPage = () => {
               <EmptyState>
                 <EmptyStateIcon variant="container" component={InfoCircleIcon} className="warning-icon" />
                 <Title headingLevel="h2" size="md">
-                  {`Database instances fetch failed - ${statusMsg}`}
+                  Database instances retrieval failed
                 </Title>
-                <EmptyStateBody>Database instances could not be fetched. Please try again.</EmptyStateBody>
+                <EmptyStateBody>Database instances could not be retrieved. Please try again.</EmptyStateBody>
+                <Alert variant="danger" isInline title="An error occured" className="co-alert co-break-word extra-top-margin">
+                  <div>{statusMsg}</div>
+                </Alert>
                 <Button variant="primary" onClick={handleTryAgain}>
                   Try Again
                 </Button>
