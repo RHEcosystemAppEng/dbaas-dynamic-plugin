@@ -109,8 +109,8 @@ class InstanceTable extends React.Component {
       apiVersion: 'dbaas.redhat.com/v1alpha1',
       kind: 'DBaaSConnection',
       metadata: {
-        //k8s only accept lowercase metadata.name
-        name: this.state.selectedInstance.name.toLowerCase(),
+        //k8s only accept lowercase metadata.name and add instanceID to avoid same name
+        name: `${this.state.selectedInstance.name.toLowerCase()}-${this.state.selectedInstance.instanceID.toLowerCase()}`,
         namespace: this.state.currentNS,
       },
       spec: {
