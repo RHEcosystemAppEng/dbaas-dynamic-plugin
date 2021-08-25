@@ -9,6 +9,7 @@ import {
   EmptyStateBody,
   EmptyStateSecondaryActions,
   Button,
+  Alert
 } from '@patternfly/react-core'
 import { InfoCircleIcon, CheckCircleIcon } from '@patternfly/react-icons'
 import { DBaaSInventoryCRName, DBaaSOperatorName } from '../const'
@@ -138,12 +139,15 @@ class InstancesForm extends React.Component {
         <EmptyState>
           <EmptyStateIcon variant="container" component={InfoCircleIcon} className="warning-icon" />
           <Title headingLevel="h2" size="md">
-            {`Database instances fetch failed - ${statusMsg}`}
+            Database instances retrieval failed
           </Title>
           <EmptyStateBody>
             The Provider Account resource has been created but the database instances could not be fetched. Edit this
             resource to try again.
           </EmptyStateBody>
+          <Alert variant="danger" isInline title="An error occured" className="co-alert co-break-word extra-top-margin">
+              <div>{statusMsg}</div>
+          </Alert>
           <Button variant="primary" onClick={this.editInventoryInfo}>
             Edit Provider Account
           </Button>
