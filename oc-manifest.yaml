@@ -1,32 +1,32 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: console-dynamic-foo
+  name: dbaas-dynamic-plugin
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: console-dynamic-foo
-  namespace: console-dynamic-foo
+  name: dbaas-dynamic-plugin
+  namespace: dbaas-dynamic-plugin
   labels:
-    app: console-dynamic-foo
-    app.kubernetes.io/component: console-dynamic-foo
-    app.kubernetes.io/instance: console-dynamic-foo
-    app.kubernetes.io/part-of: console-dynamic-foo
-    app.openshift.io/runtime-namespace: console-dynamic-foo
+    app: dbaas-dynamic-plugin
+    app.kubernetes.io/component: dbaas-dynamic-plugin
+    app.kubernetes.io/instance: dbaas-dynamic-plugin
+    app.kubernetes.io/part-of: dbaas-dynamic-plugin
+    app.openshift.io/runtime-namespace: dbaas-dynamic-plugin
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: console-dynamic-foo
+      app: dbaas-dynamic-plugin
   template:
     metadata:
       labels:
-        app: console-dynamic-foo
+        app: dbaas-dynamic-plugin
     spec:
       containers:
-        - name: console-dynamic-foo
-          image: quay.io/rawagner/console-dynamic-foo
+        - name: dbaas-dynamic-plugin
+          image: quay.io/ecosystem-appeng/dbaas-dynamic-plugin
           ports:
             - containerPort: 9001
               protocol: TCP
@@ -57,13 +57,13 @@ kind: Service
 metadata:
   annotations:
     service.alpha.openshift.io/serving-cert-secret-name: console-serving-cert
-  name: console-dynamic-foo
-  namespace: console-dynamic-foo
+  name: dbaas-dynamic-plugin
+  namespace: dbaas-dynamic-plugin
   labels:
-    app: console-dynamic-foo
-    app.kubernetes.io/component: console-dynamic-foo
-    app.kubernetes.io/instance: console-dynamic-foo
-    app.kubernetes.io/part-of: console-dynamic-foo
+    app: dbaas-dynamic-plugin
+    app.kubernetes.io/component: dbaas-dynamic-plugin
+    app.kubernetes.io/instance: dbaas-dynamic-plugin
+    app.kubernetes.io/part-of: dbaas-dynamic-plugin
 spec:
   ports:
     - name: 9001-tcp
@@ -71,18 +71,18 @@ spec:
       port: 9001
       targetPort: 9001
   selector:
-    app: console-dynamic-foo
+    app: dbaas-dynamic-plugin
   type: ClusterIP
   sessionAffinity: None
 ---
 apiVersion: console.openshift.io/v1alpha1
 kind: ConsolePlugin
 metadata:
-  name: console-dynamic-foo
+  name: dbaas-dynamic-plugin
 spec:
-  displayName: 'OpenShift Console Demo Plugin'
+  displayName: 'OpenShift DataBase as a Service Dynamic Plugin'
   service:
-    name: console-dynamic-foo
-    namespace: console-dynamic-foo
+    name: dbaas-dynamic-plugin
+    namespace: dbaas-dynamic-plugin
     port: 9001
     basePath: '/'
