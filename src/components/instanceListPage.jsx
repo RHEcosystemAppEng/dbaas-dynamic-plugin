@@ -94,7 +94,7 @@ const InstanceListPage = () => {
 
   async function fetchInstances() {
     let inventories = []
-    let inventoryItems = await fetchInventoryItems()
+    let inventoryItems = await fetchInventoriesByNSAndRules()
 
     if (inventoryItems.length > 0) {
       let filteredInventories = _.filter(inventoryItems, (inventory) => {
@@ -133,7 +133,7 @@ const InstanceListPage = () => {
     }
   }
 
-  async function fetchInventoryItems() {
+  async function fetchInventoriesByNSAndRules() {
     let inventoryItems = []
     let newBody = {
       apiVersion: 'authorization.k8s.io/v1',
@@ -153,37 +153,38 @@ const InstanceListPage = () => {
     await fetch('/api/kubernetes/apis/authorization.k8s.io/v1/selfsubjectrulesreviews', requestOpts)
       .then(status)
       .then(json)
-      .then(parseTenantRulesReview)
+      .then((responseJson) => parseRulesReview(responseJson, 'dbaastenants'))
       .then(fetchInventoryNamespaces)
       .then(fetchInventoriesByNamespace)
       .then((inventories) => inventoryItems.push(...inventories))
       .catch(function (error) {
-        console.error(error)
+        setFetchInstancesFailed(true)
+        setStatusMsg(error)
       })
     return inventoryItems
   }
 
-  function parseTenantRulesReview(responseJson) {
-    let tenantNames = []
+  function parseRulesReview(responseJson, dbaasKindPlural) {
+    let dbaasKindNames = []
     if (responseJson.status.resourceRules?.length > 0) {
       let resourceRule = { verbs: [], apiGroups: [], resources: [], resourceNames: [] }
       let availableRules = _.filter(responseJson.status.resourceRules, (rule) => {
         resourceRule = rule
         if (resourceRule.verbs && resourceRule.resources && resourceRule.resourceNames) {
           if (resourceRule.resourceNames.length > 0) {
-            return resourceRule.resources.includes('dbaastenants') && resourceRule.verbs.includes('get')
+            return resourceRule.resources.includes(dbaasKindPlural) && resourceRule.verbs.includes('get')
           }
         }
       })
       availableRules.forEach((rule) => {
-        rule.resourceNames.forEach((tenantName) => {
-          if (!tenantNames.includes(tenantName)) {
-            tenantNames.push(tenantName)
+        rule.resourceNames.forEach((dbaasKindName) => {
+          if (!dbaasKindNames.includes(dbaasKindName)) {
+            dbaasKindNames.push(dbaasKindName)
           }
         })
       })
     }
-    return tenantNames
+    return dbaasKindNames
   }
 
   async function fetchInventoryNamespaces(tenantNames = []) {
@@ -199,7 +200,8 @@ const InstanceListPage = () => {
     await Promise.all(promises)
       .then((namespaces) => (inventoryNamespaces = namespaces))
       .catch(function (error) {
-        console.error(error)
+        setFetchInstancesFailed(true)
+        setStatusMsg(error)
       })
     let uniqInventoryNamespaces = [...new Set(inventoryNamespaces)]
     return uniqInventoryNamespaces
@@ -232,7 +234,8 @@ const InstanceListPage = () => {
         inventoryByNS.forEach((inventoryArrays) => inventoryArrays.forEach((value) => inventoryItems.push(...value)))
       })
       .catch(function (error) {
-        console.error(error)
+        setFetchInstancesFailed(true)
+        setStatusMsg(error)
       })
 
     return inventoryItems
@@ -268,7 +271,8 @@ const InstanceListPage = () => {
         return data.status.allowed
       })
       .catch(function (error) {
-        console.error(error)
+        setFetchInstancesFailed(true)
+        setStatusMsg(error)
       })
 
     return listAllowed
@@ -318,7 +322,7 @@ const InstanceListPage = () => {
         fetch('/api/kubernetes/apis/authorization.k8s.io/v1/selfsubjectrulesreviews', requestOpts)
           .then(status)
           .then(json)
-          .then(parseInventoryRulesReview)
+          .then((responseJson) => parseRulesReview(responseJson, 'dbaasinventories'))
           .then((inventoryNames) => fetchInventories(inventoryNames, namespace))
           .then((inventories) => {
             return inventories
@@ -328,32 +332,10 @@ const InstanceListPage = () => {
     await Promise.all(promises)
       .then((inventories) => (inventoryItems = inventories))
       .catch(function (error) {
-        console.error(error)
+        setFetchInstancesFailed(true)
+        setStatusMsg(error)
       })
     return inventoryItems
-  }
-
-  const parseInventoryRulesReview = (responseJson) => {
-    let inventoryNames = []
-    let resourceRule = { verbs: [], apiGroups: [], resources: [], resourceNames: [] }
-    if (responseJson.status.resourceRules?.length > 0) {
-      let availableRules = _.filter(responseJson.status.resourceRules, (rule) => {
-        resourceRule = rule
-        if (resourceRule.verbs && resourceRule.resources && resourceRule.resourceNames) {
-          if (resourceRule.resourceNames.length > 0) {
-            return resourceRule.resources.includes('dbaasinventories') && resourceRule.verbs.includes('get')
-          }
-        }
-      })
-      availableRules.forEach((rule) => {
-        rule.resourceNames.forEach((inventoryName) => {
-          if (!inventoryNames.includes(inventoryName)) {
-            inventoryNames.push(inventoryName)
-          }
-        })
-      })
-    }
-    return inventoryNames
   }
 
   async function fetchInventories(inventoryNames, namespace) {
@@ -371,7 +353,8 @@ const InstanceListPage = () => {
         inventoryItems.push(...inventories)
       })
       .catch(function (error) {
-        console.error(error)
+        setFetchInstancesFailed(true)
+        setStatusMsg(error)
       })
     return inventoryItems
   }
