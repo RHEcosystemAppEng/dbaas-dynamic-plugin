@@ -24,6 +24,7 @@ import FormBody from './form/formBody'
 import InstanceTable from './instanceTable'
 import InstanceListFilter from './instanceListFilter'
 import { crunchyProviderType, mongoProviderType, crunchyProviderName, mongoProviderName } from '../const'
+import { getCSRFToken } from '../utils'
 
 const InstanceListPage = () => {
   const { t } = useTranslation()
@@ -147,6 +148,7 @@ const InstanceListPage = () => {
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
+        'X-CSRFToken': getCSRFToken(),
       },
       body: JSON.stringify(newBody),
     }
@@ -261,6 +263,7 @@ const InstanceListPage = () => {
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
+        'X-CSRFToken': getCSRFToken(),
       },
       body: JSON.stringify(rulesBody),
     }
@@ -315,6 +318,7 @@ const InstanceListPage = () => {
         headers: {
           'Content-Type': 'application/json',
           Accept: 'application/json',
+          'X-CSRFToken': getCSRFToken(),
         },
         body: JSON.stringify(accessBody),
       }
