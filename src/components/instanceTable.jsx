@@ -13,6 +13,7 @@ import {
   EmptyStateVariant,
   ActionGroup,
 } from '@patternfly/react-core'
+import { getCSRFToken } from '../utils'
 
 const TableEmptyState = () => {
   return (
@@ -127,6 +128,7 @@ class InstanceTable extends React.Component {
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
+        'X-CSRFToken': getCSRFToken(),
       },
       body: JSON.stringify(newBody),
     }

@@ -11,6 +11,7 @@ import {
   FormSelectOption,
   FormSelectOptionGroup,
 } from '@patternfly/react-core'
+import { getCSRFToken } from '../utils'
 
 class ProviderAccountForm extends React.Component {
   constructor(props) {
@@ -80,6 +81,7 @@ class ProviderAccountForm extends React.Component {
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
+        'X-CSRFToken': getCSRFToken(),
       },
       body: JSON.stringify(newSecret),
     }
@@ -102,6 +104,7 @@ class ProviderAccountForm extends React.Component {
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
+        'X-CSRFToken': getCSRFToken(),
       },
       body: JSON.stringify({
         apiVersion: 'dbaas.redhat.com/v1alpha1',
@@ -157,6 +160,7 @@ class ProviderAccountForm extends React.Component {
             headers: {
               'Content-Type': 'application/json-patch+json',
               Accept: 'application/json',
+              'X-CSRFToken': getCSRFToken(),
             },
             body: JSON.stringify(patchPayload),
           }

@@ -1,8 +1,6 @@
 import React from 'react'
 import * as _ from 'lodash'
 import './_dbaas-import-view.css'
-import { Breadcrumb, BreadcrumbItem } from '@patternfly/react-core'
-import VendorForm from './vendorForm'
 import ProviderAccountForm from './providerAccountForm'
 import InstancesForm from './instancesForm'
 
