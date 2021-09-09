@@ -18,8 +18,8 @@
     "properties": {
       "id": "dbaasAddAction",
       "href": "/catalog?catalogType=dbaas-new",
-      "label": "%dbaas-plugin~Connected Database%",
-      "description": "%dbaas-plugin~Select a cloud database provider to connect%",
+      "label": "Connected Database",
+      "description": "Select a cloud database provider to connect",
       "icon": { "$codeRef": "constants.dbaasServicesIcon" },
       "accessReview": [
         { "group": "apps.openshift.io", "resource": "deploymentconfigs", "verb": "create" },
@@ -33,9 +33,9 @@
     "type": "console.catalog/item-type",
     "properties": {
       "type": "dbaas-new",
-      "title": "%dbaas-plugin~Connected Database%",
-      "catalogDescription": "%dbaas-plugin~See a list of connected cloud database provider%",
-      "typeDescription": "%dbaas-plugin~DBaaS%"
+      "title": "Connected Database",
+      "catalogDescription": "See a list of connected cloud database provider",
+      "typeDescription": "DBaaS"
     },
     "flags": {
       "required": []

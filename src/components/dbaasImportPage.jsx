@@ -66,16 +66,7 @@ class DBaasImportPage extends React.Component {
     return (
       <div>
         <div className="section-header-div extra-bottom-margin">
-          <div className="section-padding-top">&nbsp;</div>
           <div className="section-padding-left">&nbsp;</div>
-          <div className="section-padding-right">&nbsp;</div>
-          <div className="section-breadcrumb">
-            <span className="breadcrumb-link" onClick={this.goBack}>
-              Database-as-a-Service
-            </span>
-            <span className="breadcrumb-chevron"> > </span>
-            Create Provider Account
-          </div>
           <div className="section-title">Create Provider Account</div>
           <div className="section-subtitle">
             Creating a Provider Account resource allows provider cloud instances to be imported
