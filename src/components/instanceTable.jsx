@@ -32,9 +32,8 @@ class InstanceTable extends React.Component {
     this.state = {
       currentNS: window.location.pathname.split('/')[3],
       columns: [
-        { title: 'ID', transforms: [wrappable, cellWidth(30)] },
-        { title: 'Instance', transforms: [wrappable, cellWidth(30)] },
-        { title: 'Provider', transforms: [wrappable, cellWidth(30)] },
+        { title: 'ID', transforms: [wrappable, cellWidth(45)] },
+        { title: 'Instance', transforms: [wrappable, cellWidth(45)] },
       ],
       rows: [],
       selectedInstance: {},
@@ -77,7 +76,7 @@ class InstanceTable extends React.Component {
     let rowList = []
     if (data && data.length > 0) {
       _.forEach(data, (rowData) => {
-        rowList.push({ cells: [rowData.instanceID, rowData.name, rowData.provider] })
+        rowList.push({ cells: [rowData.instanceID, rowData.name] })
       })
     } else {
       rowList.push({
@@ -182,6 +181,7 @@ class InstanceTable extends React.Component {
     return (
       <React.Fragment>
         <Table
+          id="instance-table"
           onSelect={isSelectable ? this.onSelect : null}
           selectVariant={isSelectable ? RowSelectVariant.radio : null}
           aria-label="Instance Table"

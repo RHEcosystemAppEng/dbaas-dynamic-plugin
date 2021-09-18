@@ -21,6 +21,7 @@ import { useTranslation } from 'react-i18next'
 import FormHeader from './form/formHeader'
 import FlexForm from './form/flexForm'
 import FormBody from './form/formBody'
+import InstanceConnectionStatusTable from './instanceConnectionStatusTable'
 import InstanceTable from './instanceTable'
 import InstanceListFilter from './instanceListFilter'
 import { crunchyProviderType, mongoProviderType, crunchyProviderName, mongoProviderName } from '../const'
@@ -37,6 +38,8 @@ const InstanceListPage = () => {
   const [selectedDBProvider, setSelectedDBProvider] = React.useState('')
   const [dbProviderName, setDBProviderName] = React.useState()
   const [selectedInventory, setSelectedInventory] = React.useState({})
+  const [dbaasConnectionList, setDbaasConnectionList] = React.useState([])
+
   const currentNS = window.location.pathname.split('/')[3]
 
   const dbProviderTitle = (
@@ -55,6 +58,31 @@ const InstanceListPage = () => {
 
   const handleCancel = () => {
     window.history.back()
+  }
+
+  const parseDBaaSConnections = (dbaasConnections) => {
+    let connectionList = []
+
+    if (dbaasConnections && dbaasConnections.length > 0) {
+      dbaasConnections.forEach((dbaasConnection) => {
+        if (
+          selectedInventory?.instances?.find((instance) => instance.instanceID === dbaasConnection.spec?.instanceID)
+        ) {
+          let connectionObj = {
+            instanceID: dbaasConnection.spec?.instanceID,
+            instanceName: dbaasConnection.metadata?.name,
+            connectionStatus: dbaasConnection?.status?.conditions[0]?.reason,
+            errMsg: 'N/A',
+            application: {},
+          }
+          if (dbaasConnection?.status?.conditions[0]?.status !== 'True') {
+            connectionObj.errMsg = dbaasConnection?.status?.conditions[0]?.message
+          }
+          connectionList.push(connectionObj)
+        }
+      })
+    }
+    setDbaasConnectionList(connectionList)
   }
 
   const checkInventoryStatus = (inventory) => {
@@ -91,6 +119,24 @@ const InstanceListPage = () => {
       setDBProviderName(mongoProviderName)
     }
     setSelectedDBProvider(dbProviderType)
+  }
+
+  const fetchDBaaSConnections = () => {
+    const requestOpts = {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+    }
+    fetch(
+      '/api/kubernetes/apis/dbaas.redhat.com/v1alpha1/namespaces/' + currentNS + '/dbaasconnections?limit=250',
+      requestOpts
+    )
+      .then((response) => response.json())
+      .then((data) => {
+        parseDBaaSConnections(data.items)
+      })
   }
 
   async function fetchInstances() {
@@ -400,6 +446,10 @@ const InstanceListPage = () => {
     fetchInstances()
   }, [currentNS, selectedDBProvider])
 
+  React.useEffect(() => {
+    fetchDBaaSConnections()
+  }, [currentNS, selectedDBProvider, selectedInventory])
+
   return (
     <FlexForm className="instance-table-container">
       <FormBody flexLayout>
@@ -449,11 +499,18 @@ const InstanceListPage = () => {
                     onChange={handleInventorySelection}
                     aria-label="Provider Account"
                   >
-                    {inventories.map((inventory) => (
+                    {inventories?.map((inventory) => (
                       <FormSelectOption key={inventory.id} value={inventory.name} label={inventory.name} />
                     ))}
                   </FormSelect>
                 </FormGroup>
+                <FormGroup
+                  label="Database Instance Connection Status"
+                  fieldId="database-instance-connection-status-table"
+                />
+                <FormSection fullWidth flexLayout className="no-top-margin">
+                  <InstanceConnectionStatusTable isLoading={!showResults} connections={dbaasConnectionList} />
+                </FormSection>
                 <FormGroup label="Database Instance" fieldId="instance-id-filter">
                   <InstanceListFilter textInputIDValue={textInputIDValue} setTextInputIDValue={setTextInputIDValue} />
                 </FormGroup>
