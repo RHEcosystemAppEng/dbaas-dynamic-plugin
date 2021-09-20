@@ -24,7 +24,6 @@ class InstanceConnectionStatusTable extends React.Component {
         { title: 'Instance', transforms: [wrappable, cellWidth(30)] },
         { title: 'Status', transforms: [wrappable, cellWidth(30)] },
         { title: 'Application', transforms: [wrappable, cellWidth(30)] },
-        { title: 'Details', transforms: [wrappable, cellWidth(30)] },
       ],
       rows: [],
     }
@@ -54,8 +53,7 @@ class InstanceConnectionStatusTable extends React.Component {
             rowData.instanceID,
             rowData.instanceName,
             rowData.connectionStatus,
-            rowData.application,
-            rowData.errMsg,
+            rowData.application?.name ? rowData.application?.name : 'N/A',
           ],
         })
       })

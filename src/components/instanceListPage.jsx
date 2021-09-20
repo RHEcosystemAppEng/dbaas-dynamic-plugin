@@ -39,6 +39,8 @@ const InstanceListPage = () => {
   const [dbProviderName, setDBProviderName] = React.useState()
   const [selectedInventory, setSelectedInventory] = React.useState({})
   const [dbaasConnectionList, setDbaasConnectionList] = React.useState([])
+  const [serviceBindingList, setServiceBindingList] = React.useState([])
+  const [connectionAndServiceBindingList, setConnectionAndServiceBindingList] = React.useState([])
 
   const currentNS = window.location.pathname.split('/')[3]
 
@@ -60,11 +62,24 @@ const InstanceListPage = () => {
     window.history.back()
   }
 
-  const parseDBaaSConnections = (dbaasConnections) => {
-    let connectionList = []
+  const isDbaasConnectionUsed = (serviceBinding, dbaasConnection) => {
+    let usedDBaaSConnect = serviceBinding.spec?.services?.find((service) => {
+      return service.kind === 'DBaaSConnection' && service.name === dbaasConnection.metadata?.name
+    })
+    if (usedDBaaSConnect) {
+      return true
+    } else {
+      return false
+    }
+  }
 
-    if (dbaasConnections && dbaasConnections.length > 0) {
-      dbaasConnections.forEach((dbaasConnection) => {
+  const mapDBaaSConnectionsAndServiceBindings = () => {
+    let newDbaasConnectionList = dbaasConnectionList
+    let newServiceBindingList = serviceBindingList
+    let newConnectionAndServiceBindingList = []
+
+    if (newDbaasConnectionList.length > 0 && newServiceBindingList.length > 0) {
+      newDbaasConnectionList.forEach((dbaasConnection) => {
         if (
           selectedInventory?.instances?.find((instance) => instance.instanceID === dbaasConnection.spec?.instanceID)
         ) {
@@ -78,11 +93,27 @@ const InstanceListPage = () => {
           if (dbaasConnection?.status?.conditions[0]?.status !== 'True') {
             connectionObj.errMsg = dbaasConnection?.status?.conditions[0]?.message
           }
-          connectionList.push(connectionObj)
+
+          if (
+            newServiceBindingList.find((serviceBinding) => {
+              return isDbaasConnectionUsed(serviceBinding, dbaasConnection)
+            })
+          ) {
+            newServiceBindingList.forEach((serviceBinding) => {
+              if (isDbaasConnectionUsed(serviceBinding, dbaasConnection)) {
+                let newConnectionObj = _.extend({}, connectionObj)
+                newConnectionObj.application = serviceBinding.spec?.application
+                newConnectionAndServiceBindingList.push(newConnectionObj)
+              }
+            })
+          } else {
+            newConnectionAndServiceBindingList.push(connectionObj)
+          }
         }
       })
     }
-    setDbaasConnectionList(connectionList)
+
+    setConnectionAndServiceBindingList(newConnectionAndServiceBindingList)
   }
 
   const checkInventoryStatus = (inventory) => {
@@ -121,6 +152,26 @@ const InstanceListPage = () => {
     setSelectedDBProvider(dbProviderType)
   }
 
+  const fetchServiceBindings = () => {
+    const requestOpts = {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+    }
+    fetch(
+      '/api/kubernetes/apis/binding.operators.coreos.com/v1alpha1/namespaces/' +
+        currentNS +
+        '/servicebindings?limit=250',
+      requestOpts
+    )
+      .then((response) => response.json())
+      .then((data) => {
+        setServiceBindingList(data.items)
+      })
+  }
+
   const fetchDBaaSConnections = () => {
     const requestOpts = {
       method: 'GET',
@@ -135,7 +186,7 @@ const InstanceListPage = () => {
     )
       .then((response) => response.json())
       .then((data) => {
-        parseDBaaSConnections(data.items)
+        setDbaasConnectionList(data.items)
       })
   }
 
@@ -448,7 +499,12 @@ const InstanceListPage = () => {
 
   React.useEffect(() => {
     fetchDBaaSConnections()
+    fetchServiceBindings()
   }, [currentNS, selectedDBProvider, selectedInventory])
+
+  React.useEffect(() => {
+    mapDBaaSConnectionsAndServiceBindings()
+  }, [dbaasConnectionList, serviceBindingList])
 
   return (
     <FlexForm className="instance-table-container">
@@ -509,7 +565,10 @@ const InstanceListPage = () => {
                   fieldId="database-instance-connection-status-table"
                 />
                 <FormSection fullWidth flexLayout className="no-top-margin">
-                  <InstanceConnectionStatusTable isLoading={!showResults} connections={dbaasConnectionList} />
+                  <InstanceConnectionStatusTable
+                    isLoading={!showResults}
+                    connections={connectionAndServiceBindingList}
+                  />
                 </FormSection>
                 <FormGroup label="Database Instance" fieldId="instance-id-filter">
                   <InstanceListFilter textInputIDValue={textInputIDValue} setTextInputIDValue={setTextInputIDValue} />

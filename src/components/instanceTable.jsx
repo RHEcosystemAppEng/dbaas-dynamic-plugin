@@ -76,7 +76,7 @@ class InstanceTable extends React.Component {
     let rowList = []
     if (data && data.length > 0) {
       _.forEach(data, (rowData) => {
-        rowList.push({ cells: [rowData.instanceID, rowData.name] })
+        rowList.push({ cells: [rowData.instanceID, `${rowData.name}-${rowData.instanceID}`] })
       })
     } else {
       rowList.push({
