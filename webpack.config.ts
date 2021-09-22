@@ -3,6 +3,16 @@
 import * as webpack from 'webpack';
 import * as path from 'path';
 import { ConsoleRemotePlugin } from '@openshift-console/dynamic-plugin-sdk/webpack';
+import * as dotenv from 'dotenv';
+
+// call dotenv and it will return an Object with a parsed key 
+const env = dotenv.config().parsed;
+
+// reduce it to a nice object.
+const envKeys = Object.keys(env).reduce((prev, next) => {
+  prev[`process.env.${next}`] = JSON.stringify(env[next]);
+  return prev;
+}, {});
 
 const config: webpack.Configuration = {
   mode: 'development',
@@ -43,7 +53,10 @@ const config: webpack.Configuration = {
       },
     ],
   },
-  plugins: [new ConsoleRemotePlugin()],
+  plugins: [
+    new ConsoleRemotePlugin(),
+    new webpack.DefinePlugin(envKeys)
+  ],
   devtool: 'source-map',
   optimization: {
     chunkIds: 'named',
