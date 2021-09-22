@@ -212,17 +212,21 @@ class ProviderAccountForm extends React.Component {
           />
         </FormGroup>
         {this.state.showResults ? (
-          <FormGroup label="Database provider" fieldId="db-provider">
-            <FormSelect
-              value={selectedDBProvider.metadata?.name}
-              onChange={this.handleDBProviderSelection}
-              aria-label="Database Provider"
-            >
-              {dbProviderOptions.map((option, index) => (
-                <FormSelectOption key={index} value={option.value} label={option.label} />
-              ))}
-            </FormSelect>
-          </FormGroup>
+          <div>
+            {!_.isEmpty(this.state.inventoryNamespaces) ? (
+              <FormGroup label="Database provider" fieldId="db-provider">
+                <FormSelect
+                  value={selectedDBProvider.metadata?.name}
+                  onChange={this.handleDBProviderSelection}
+                  aria-label="Database Provider"
+                >
+                  {dbProviderOptions.map((option, index) => (
+                    <FormSelectOption key={index} value={option.value} label={option.label} />
+                  ))}
+                </FormSelect>
+              </FormGroup>
+            ) : null}
+          </div>
         ) : (
           <Alert
             variant="warning"
