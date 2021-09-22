@@ -21,6 +21,7 @@ import { useTranslation } from 'react-i18next'
 import FormHeader from './form/formHeader'
 import FlexForm from './form/flexForm'
 import FormBody from './form/formBody'
+import InstanceConnectionStatusTable from './instanceConnectionStatusTable'
 import InstanceTable from './instanceTable'
 import InstanceListFilter from './instanceListFilter'
 import { crunchyProviderType, mongoProviderType, crunchyProviderName, mongoProviderName } from '../const'
@@ -37,6 +38,10 @@ const InstanceListPage = () => {
   const [selectedDBProvider, setSelectedDBProvider] = React.useState('')
   const [dbProviderName, setDBProviderName] = React.useState()
   const [selectedInventory, setSelectedInventory] = React.useState({})
+  const [dbaasConnectionList, setDbaasConnectionList] = React.useState([])
+  const [serviceBindingList, setServiceBindingList] = React.useState([])
+  const [connectionAndServiceBindingList, setConnectionAndServiceBindingList] = React.useState([])
+
   const currentNS = window.location.pathname.split('/')[3]
 
   const dbProviderTitle = (
@@ -55,6 +60,60 @@ const InstanceListPage = () => {
 
   const handleCancel = () => {
     window.history.back()
+  }
+
+  const isDbaasConnectionUsed = (serviceBinding, dbaasConnection) => {
+    let usedDBaaSConnect = serviceBinding.spec?.services?.find((service) => {
+      return service.kind === 'DBaaSConnection' && service.name === dbaasConnection.metadata?.name
+    })
+    if (usedDBaaSConnect) {
+      return true
+    } else {
+      return false
+    }
+  }
+
+  const mapDBaaSConnectionsAndServiceBindings = () => {
+    let newDbaasConnectionList = dbaasConnectionList
+    let newServiceBindingList = serviceBindingList
+    let newConnectionAndServiceBindingList = []
+
+    if (newDbaasConnectionList.length > 0 && newServiceBindingList.length > 0) {
+      newDbaasConnectionList.forEach((dbaasConnection) => {
+        if (
+          selectedInventory?.instances?.find((instance) => instance.instanceID === dbaasConnection.spec?.instanceID)
+        ) {
+          let connectionObj = {
+            instanceID: dbaasConnection.spec?.instanceID,
+            instanceName: dbaasConnection.metadata?.name,
+            connectionStatus: dbaasConnection?.status?.conditions[0]?.reason,
+            errMsg: 'N/A',
+            application: {},
+          }
+          if (dbaasConnection?.status?.conditions[0]?.status !== 'True') {
+            connectionObj.errMsg = dbaasConnection?.status?.conditions[0]?.message
+          }
+
+          if (
+            newServiceBindingList.find((serviceBinding) => {
+              return isDbaasConnectionUsed(serviceBinding, dbaasConnection)
+            })
+          ) {
+            newServiceBindingList.forEach((serviceBinding) => {
+              if (isDbaasConnectionUsed(serviceBinding, dbaasConnection)) {
+                let newConnectionObj = _.extend({}, connectionObj)
+                newConnectionObj.application = serviceBinding.spec?.application
+                newConnectionAndServiceBindingList.push(newConnectionObj)
+              }
+            })
+          } else {
+            newConnectionAndServiceBindingList.push(connectionObj)
+          }
+        }
+      })
+    }
+
+    setConnectionAndServiceBindingList(newConnectionAndServiceBindingList)
   }
 
   const checkInventoryStatus = (inventory) => {
@@ -91,6 +150,44 @@ const InstanceListPage = () => {
       setDBProviderName(mongoProviderName)
     }
     setSelectedDBProvider(dbProviderType)
+  }
+
+  const fetchServiceBindings = () => {
+    const requestOpts = {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+    }
+    fetch(
+      '/api/kubernetes/apis/binding.operators.coreos.com/v1alpha1/namespaces/' +
+        currentNS +
+        '/servicebindings?limit=250',
+      requestOpts
+    )
+      .then((response) => response.json())
+      .then((data) => {
+        setServiceBindingList(data.items)
+      })
+  }
+
+  const fetchDBaaSConnections = () => {
+    const requestOpts = {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+    }
+    fetch(
+      '/api/kubernetes/apis/dbaas.redhat.com/v1alpha1/namespaces/' + currentNS + '/dbaasconnections?limit=250',
+      requestOpts
+    )
+      .then((response) => response.json())
+      .then((data) => {
+        setDbaasConnectionList(data.items)
+      })
   }
 
   async function fetchInstances() {
@@ -400,6 +497,15 @@ const InstanceListPage = () => {
     fetchInstances()
   }, [currentNS, selectedDBProvider])
 
+  React.useEffect(() => {
+    fetchDBaaSConnections()
+    fetchServiceBindings()
+  }, [currentNS, selectedDBProvider, selectedInventory])
+
+  React.useEffect(() => {
+    mapDBaaSConnectionsAndServiceBindings()
+  }, [dbaasConnectionList, serviceBindingList])
+
   return (
     <FlexForm className="instance-table-container">
       <FormBody flexLayout>
@@ -449,11 +555,21 @@ const InstanceListPage = () => {
                     onChange={handleInventorySelection}
                     aria-label="Provider Account"
                   >
-                    {inventories.map((inventory) => (
+                    {inventories?.map((inventory) => (
                       <FormSelectOption key={inventory.id} value={inventory.name} label={inventory.name} />
                     ))}
                   </FormSelect>
                 </FormGroup>
+                <FormGroup
+                  label="Database Instance Connection Status"
+                  fieldId="database-instance-connection-status-table"
+                />
+                <FormSection fullWidth flexLayout className="no-top-margin">
+                  <InstanceConnectionStatusTable
+                    isLoading={!showResults}
+                    connections={connectionAndServiceBindingList}
+                  />
+                </FormSection>
                 <FormGroup label="Database Instance" fieldId="instance-id-filter">
                   <InstanceListFilter textInputIDValue={textInputIDValue} setTextInputIDValue={setTextInputIDValue} />
                 </FormGroup>
