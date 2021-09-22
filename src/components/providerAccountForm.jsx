@@ -224,10 +224,15 @@ class ProviderAccountForm extends React.Component {
             </FormSelect>
           </FormGroup>
         ) : (
-          <Alert variant="warning" isInline title="Invalid Tenant Namespace" className="co-alert co-break-word">
+          <Alert
+            variant="warning"
+            isInline
+            title="Invalid Namespace for Provider Account Creation"
+            className="co-alert co-break-word"
+          >
             {!_.isEmpty(this.state.inventoryNamespaces) ? (
               <div>
-                Switch to one of these valid namespaces and retry:
+                Switch to one of these valid Tenant namespaces and retry:
                 <ul>
                   {_.map(this.state.inventoryNamespaces, (namespace, index) => (
                     <li key={index}>{namespace}</li>
