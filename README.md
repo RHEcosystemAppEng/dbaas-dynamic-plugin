@@ -2,7 +2,7 @@
 
 ## Local development
 
-1. Add `.env` file to the root directory, add `DBAAS_OPERATOR_VERSION=OPETATOR_NAME_AND_VERSION` to the file, replace the `OPETATOR_NAME_AND_VERSION` with correct value, for example, `dbaas-operator.v0.0.1`
+1. Add `.env` file to the root directory, add `DBAAS_OPERATOR_VERSION=OPERATOR_NAME_AND_VERSION` to the file, replace the `OPERATOR_NAME_AND_VERSION` with correct value, for example, `dbaas-operator.v0.0.1`
 2. `yarn build` to build the plugin, generating output to `dist` directory
 3. `yarn http-server` to start an HTTP server hosting the generated assets
 
