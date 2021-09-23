@@ -76,7 +76,7 @@ class InstanceTable extends React.Component {
     let rowList = []
     if (data && data.length > 0) {
       _.forEach(data, (rowData) => {
-        rowList.push({ cells: [rowData.instanceID, `${rowData.name}-${rowData.instanceID}`] })
+        rowList.push({ cells: [rowData.instanceID, rowData.name}] })
       })
     } else {
       rowList.push({
@@ -110,7 +110,7 @@ class InstanceTable extends React.Component {
       kind: 'DBaaSConnection',
       metadata: {
         //k8s only accept lowercase metadata.name and add instanceID to avoid same name
-        name: `${this.state.selectedInstance.name.toLowerCase()}-${this.state.selectedInstance.instanceID.toLowerCase()}`,
+        name: `${this.state.selectedInstance.name.toLowerCase()}-${Date.now()}`,
         namespace: this.state.currentNS,
       },
       spec: {
