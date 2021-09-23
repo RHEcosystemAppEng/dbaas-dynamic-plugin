@@ -177,7 +177,7 @@ const InstanceListPage = () => {
   const [fetchInstancesFailed, setFetchInstancesFailed] = React.useState(false)
   const [textInputIDValue, setTextInputIDValue] = React.useState('')
   const [showResults, setShowResults] = React.useState(false)
-  const [inventories, setInventories] = React.useState()
+  const [inventories, setInventories] = React.useState([])
   const [selectedDBProvider, setSelectedDBProvider] = React.useState('')
   const [dbProviderName, setDBProviderName] = React.useState()
   const [selectedInventory, setSelectedInventory] = React.useState({})
@@ -566,8 +566,8 @@ const InstanceListPage = () => {
                     onChange={handleInventorySelection}
                     aria-label="Provider Account"
                   >
-                    {inventories?.map((inventory) => (
-                      <FormSelectOption key={inventory.id} value={inventory.name} label={inventory.name} />
+                    {inventories?.map((inventory, index) => (
+                      <FormSelectOption key={index} value={inventory.name} label={inventory.name} />
                     ))}
                   </FormSelect>
                 </FormGroup>
