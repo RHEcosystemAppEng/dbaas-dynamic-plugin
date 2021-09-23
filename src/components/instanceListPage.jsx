@@ -27,6 +27,149 @@ import InstanceListFilter from './instanceListFilter'
 import { crunchyProviderType, mongoProviderType, crunchyProviderName, mongoProviderName } from '../const'
 import { getCSRFToken } from '../utils'
 
+export async function fetchInventoryNamespaces() {
+  let inventoryNamespaces = []
+  let listAllowed = await isListAllowed('dbaastenants', '')
+
+  if (listAllowed) {
+    var requestOpts = {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+    }
+    await fetch('/api/kubernetes/apis/dbaas.redhat.com/v1alpha1/dbaastenants?limit=250', requestOpts)
+      .then(status)
+      .then(json)
+      .then((tenantList) =>
+        tenantList.items.forEach((tenant) => inventoryNamespaces.push(tenant.spec.inventoryNamespace))
+      )
+  } else {
+    let newBody = {
+      apiVersion: 'authorization.k8s.io/v1',
+      kind: 'SelfSubjectRulesReview',
+      spec: {
+        namespace: '*',
+      },
+    }
+    var requestOpts = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+        'X-CSRFToken': getCSRFToken(),
+      },
+      body: JSON.stringify(newBody),
+    }
+    await fetch('/api/kubernetes/apis/authorization.k8s.io/v1/selfsubjectrulesreviews', requestOpts)
+      .then(status)
+      .then(json)
+      .then((responseJson) => parseRulesReview(responseJson, 'dbaastenants'))
+      .then(fetchInventoryNSfromTenants)
+      .then((inventoryNS) => (inventoryNamespaces = inventoryNS))
+  }
+  let uniqInventoryNamespaces = [...new Set(inventoryNamespaces)]
+  return uniqInventoryNamespaces
+}
+
+async function isListAllowed(dbaasKindPlural, namespace) {
+  let listAllowed = false
+
+  let rulesBody = {
+    apiVersion: 'authorization.k8s.io/v1',
+    kind: 'SelfSubjectAccessReview',
+    spec: {
+      resourceAttributes: {
+        group: 'dbaas.redhat.com',
+        resource: dbaasKindPlural,
+        verb: 'list',
+        namespace: namespace,
+      },
+    },
+  }
+  var requestOpts = {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+      'X-CSRFToken': getCSRFToken(),
+    },
+    body: JSON.stringify(rulesBody),
+  }
+  listAllowed = await fetch('/api/kubernetes/apis/authorization.k8s.io/v1/selfsubjectaccessreviews', requestOpts)
+    .then(status)
+    .then(json)
+    .then((data) => {
+      return data.status.allowed
+    })
+
+  return listAllowed
+}
+
+function parseRulesReview(responseJson, dbaasKindPlural) {
+  let dbaasKindNames = []
+  if (responseJson.status.resourceRules?.length > 0) {
+    let resourceRule = { verbs: [], apiGroups: [], resources: [], resourceNames: [] }
+    let availableRules = _.filter(responseJson.status.resourceRules, (rule) => {
+      resourceRule = rule
+      if (resourceRule.verbs && resourceRule.resources && resourceRule.resourceNames) {
+        if (resourceRule.resourceNames.length > 0) {
+          return resourceRule.resources.includes(dbaasKindPlural) && resourceRule.verbs.includes('get')
+        }
+      }
+    })
+    availableRules.forEach((rule) => {
+      rule.resourceNames.forEach((dbaasKindName) => {
+        if (!dbaasKindNames.includes(dbaasKindName)) {
+          dbaasKindNames.push(dbaasKindName)
+        }
+      })
+    })
+  }
+  return dbaasKindNames
+}
+
+async function fetchInventoryNSfromTenants(tenantNames = []) {
+  let inventoryNamespaces = []
+  let promises = []
+  tenantNames.forEach((tenantName) => {
+    promises.push(
+      fetchTenant(tenantName).then((data) => {
+        return data.spec.inventoryNamespace
+      })
+    )
+  })
+  await Promise.all(promises).then((namespaces) => (inventoryNamespaces = namespaces))
+  let uniqInventoryNamespaces = [...new Set(inventoryNamespaces)]
+  return uniqInventoryNamespaces
+}
+
+async function fetchTenant(tenantName) {
+  var requestOpts = {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    },
+  }
+  return fetch('/api/kubernetes/apis/dbaas.redhat.com/v1alpha1/dbaastenants/' + tenantName, requestOpts)
+    .then(status)
+    .then(json)
+}
+
+function status(response) {
+  if (response.status >= 200 && response.status < 300) {
+    return Promise.resolve(response)
+  } else {
+    return Promise.reject(new Error(response.statusText))
+  }
+}
+
+function json(response) {
+  return response.json()
+}
+
 const InstanceListPage = () => {
   const { t } = useTranslation()
   const [noInstances, setNoInstances] = React.useState(false)
@@ -232,91 +375,9 @@ const InstanceListPage = () => {
   }
 
   async function fetchInventoriesByNSAndRules() {
-    let inventoryItems = []
-    let newBody = {
-      apiVersion: 'authorization.k8s.io/v1',
-      kind: 'SelfSubjectRulesReview',
-      spec: {
-        namespace: '*',
-      },
-    }
-    var requestOpts = {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-        'X-CSRFToken': getCSRFToken(),
-      },
-      body: JSON.stringify(newBody),
-    }
-    await fetch('/api/kubernetes/apis/authorization.k8s.io/v1/selfsubjectrulesreviews', requestOpts)
-      .then(status)
-      .then(json)
-      .then((responseJson) => parseRulesReview(responseJson, 'dbaastenants'))
-      .then(fetchInventoryNamespaces)
-      .then(fetchInventoriesByNamespace)
-      .then((inventories) => inventoryItems.push(...inventories))
-      .catch(function (error) {
-        setFetchInstancesFailed(true)
-        setStatusMsg(error)
-      })
+    let inventoryNamespaces = await fetchInventoryNamespaces()
+    let inventoryItems = await fetchInventoriesByNamespace(inventoryNamespaces)
     return inventoryItems
-  }
-
-  function parseRulesReview(responseJson, dbaasKindPlural) {
-    let dbaasKindNames = []
-    if (responseJson.status.resourceRules?.length > 0) {
-      let resourceRule = { verbs: [], apiGroups: [], resources: [], resourceNames: [] }
-      let availableRules = _.filter(responseJson.status.resourceRules, (rule) => {
-        resourceRule = rule
-        if (resourceRule.verbs && resourceRule.resources && resourceRule.resourceNames) {
-          if (resourceRule.resourceNames.length > 0) {
-            return resourceRule.resources.includes(dbaasKindPlural) && resourceRule.verbs.includes('get')
-          }
-        }
-      })
-      availableRules.forEach((rule) => {
-        rule.resourceNames.forEach((dbaasKindName) => {
-          if (!dbaasKindNames.includes(dbaasKindName)) {
-            dbaasKindNames.push(dbaasKindName)
-          }
-        })
-      })
-    }
-    return dbaasKindNames
-  }
-
-  async function fetchInventoryNamespaces(tenantNames = []) {
-    let inventoryNamespaces = []
-    let promises = []
-    tenantNames.forEach((tenantName) => {
-      promises.push(
-        fetchTenant(tenantName).then((data) => {
-          return data.spec.inventoryNamespace
-        })
-      )
-    })
-    await Promise.all(promises)
-      .then((namespaces) => (inventoryNamespaces = namespaces))
-      .catch(function (error) {
-        setFetchInstancesFailed(true)
-        setStatusMsg(error)
-      })
-    let uniqInventoryNamespaces = [...new Set(inventoryNamespaces)]
-    return uniqInventoryNamespaces
-  }
-
-  async function fetchTenant(tenantName) {
-    var requestOpts = {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-      },
-    }
-    return fetch('/api/kubernetes/apis/dbaas.redhat.com/v1alpha1/dbaastenants/' + tenantName, requestOpts)
-      .then(status)
-      .then(json)
   }
 
   async function fetchInventoriesByNamespace(inventoryNamespaces = []) {
@@ -340,48 +401,10 @@ const InstanceListPage = () => {
     return inventoryItems
   }
 
-  async function isListAllowed(namespace) {
-    let listAllowed = false
-
-    let rulesBody = {
-      apiVersion: 'authorization.k8s.io/v1',
-      kind: 'SelfSubjectAccessReview',
-      spec: {
-        resourceAttributes: {
-          group: 'dbaas.redhat.com',
-          resource: 'dbaasinventories',
-          verb: 'list',
-          namespace: namespace,
-        },
-      },
-    }
-    var requestOpts = {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-        'X-CSRFToken': getCSRFToken(),
-      },
-      body: JSON.stringify(rulesBody),
-    }
-    listAllowed = await fetch('/api/kubernetes/apis/authorization.k8s.io/v1/selfsubjectaccessreviews', requestOpts)
-      .then(status)
-      .then(json)
-      .then((data) => {
-        return data.status.allowed
-      })
-      .catch(function (error) {
-        setFetchInstancesFailed(true)
-        setStatusMsg(error)
-      })
-
-    return listAllowed
-  }
-
   async function inventoriesFromRulesReview(namespace) {
     let inventoryItems = []
     let promises = []
-    let listAllowed = await isListAllowed(namespace)
+    let listAllowed = await isListAllowed('dbaasinventories', namespace)
 
     if (listAllowed) {
       var requestOpts = {
@@ -478,18 +501,6 @@ const InstanceListPage = () => {
       .then((data) => {
         return data
       })
-  }
-
-  function status(response) {
-    if (response.status >= 200 && response.status < 300) {
-      return Promise.resolve(response)
-    } else {
-      return Promise.reject(new Error(response.statusText))
-    }
-  }
-
-  function json(response) {
-    return response.json()
   }
 
   React.useEffect(() => {
