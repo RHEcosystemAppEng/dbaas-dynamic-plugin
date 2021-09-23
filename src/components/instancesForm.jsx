@@ -12,11 +12,11 @@ import {
   Alert,
 } from '@patternfly/react-core'
 import { InfoCircleIcon, CheckCircleIcon } from '@patternfly/react-icons'
-import { DBaaSInventoryCRName, DBaaSOperatorName } from '../const'
+import { DBaaSInventoryCRName } from '../const'
 class InstancesForm extends React.Component {
   constructor(props) {
     super(props)
-    this.DBaaSOperatorNameWithVersion = window.DBAAS_OPERATOR_VERSION || DBaaSOperatorName
+    this.DBaaSOperatorNameWithVersion = props.csv?.metadata?.name || window.DBAAS_OPERATOR_VERSION
     this.fetchInventoryTimerID = 0
     this.state = {
       currentNS: window.location.pathname.split('/')[3],
