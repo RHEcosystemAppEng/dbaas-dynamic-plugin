@@ -2,9 +2,8 @@
 
 ## Local development
 
-1. Add `.env` file to the root directory, add `DBAAS_OPERATOR_VERSION=OPERATOR_NAME_AND_VERSION` to the file, replace the `OPERATOR_NAME_AND_VERSION` with correct value, for example, `dbaas-operator.v0.0.1`
-2. `yarn build` to build the plugin, generating output to `dist` directory
-3. `yarn http-server` to start an HTTP server hosting the generated assets
+1. `yarn build` to build the plugin, generating output to `dist` directory
+2. `yarn http-server` to start an HTTP server hosting the generated assets
 
 ```
 Starting up http-server, serving ./dist
@@ -22,7 +21,7 @@ the script, for example:
 ```sh
 yarn http-server -a 127.0.0.1
 ```
-4. Go to OCP Console that running locally and use the flowing command to run Bridge.
+3. Go to OCP Console that running locally and use the flowing command to run Bridge.
 
 ```
 source ./contrib/oc-environment.sh && go run cmd/bridge/main.go -plugins dbaas-dynamic-plugin=http://127.0.0.1:9001/
