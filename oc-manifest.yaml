@@ -26,7 +26,7 @@ spec:
     spec:
       containers:
         - name: dbaas-dynamic-plugin
-          image: quay.io/ecosystem-appeng/dbaas-dynamic-plugin
+          image: quay.io/yuzhao583/dbaas-dynamic-plugin
           ports:
             - containerPort: 9001
               protocol: TCP
@@ -41,7 +41,7 @@ spec:
               mountPath: /var/serving-cert
           env:
             - name: DBAAS_OPERATOR_VERSION
-              value: 'dbaas-operator.v0.0.1'
+              value: 'dbaas-operator.v0.1.1'
       volumes:
         - name: console-serving-cert
           secret:

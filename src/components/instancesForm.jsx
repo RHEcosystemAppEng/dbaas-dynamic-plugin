@@ -31,7 +31,6 @@ class InstancesForm extends React.Component {
     this.editInventoryInfo = this.editInventoryInfo.bind(this)
     this.handleCancel = this.handleCancel.bind(this)
     this.goToInventoryListPage = this.goToInventoryListPage.bind(this)
-    this.getDbaaSOperatorVersion = this.getDbaaSOperatorVersion.bind(this)
   }
 
   componentDidMount() {
@@ -44,14 +43,6 @@ class InstancesForm extends React.Component {
 
   componentWillUnmount() {
     clearInterval(this.fetchInventoryTimerID)
-  }
-
-  getDbaaSOperatorVersion = () => {
-    if (window && window.DBAAS_OPERATOR_VERSION) {
-      return window.DBAAS_OPERATOR_VERSION
-    } else {
-      return process.env.DBAAS_OPERATOR_VERSION
-    }
   }
 
   fetchInventory = () => {
