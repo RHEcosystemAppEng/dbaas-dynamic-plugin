@@ -21,6 +21,7 @@ the script, for example:
 ```sh
 yarn http-server -a 127.0.0.1
 ```
+
 3. Go to OCP Console that running locally and use the flowing command to run Bridge.
 
 ```
@@ -32,15 +33,19 @@ For more details, see the plugin development section in
 on how to run Bridge using local plugins.
 
 ## Using Console's API
+
 OpenShift Console exposes API via global window object in runtime. In order to use the API you need to configure [webpack externals](https://webpack.js.org/configuration/externals).
 
 1. in webpack.config.js add [externals configuration](https://github.com/rawagner/console-dynamic-foo/blob/wp_externals/webpack.config.ts#L40-L42)
+
 ```
 externals: {
   '@openshift-console/dynamic-plugin-sdk/api': 'api',
 }
 ```
+
 2. Add path mapping to [tsconfig.json](https://github.com/rawagner/console-dynamic-foo/blob/wp_externals/tsconfig.json#L11-L14) - this step is needed because TS does not yet support node's package exports
+
 ```
 "paths": {
   "@openshift-console/dynamic-plugin-sdk/api": ["node_modules/@openshift-console/dynamic-plugin-sdk/lib/api/api"],
@@ -52,11 +57,10 @@ After following the steps above you will be able to import API in your component
 ```
 import { useK8sWatchResource } from '@openshift-console/dynamic-plugin-sdk/api';
 ```
+
 See the usage in [Foo component](https://github.com/rawagner/console-dynamic-foo/blob/wp_externals/src/components/Foo.tsx)
 
 Every imported component/function from `@openshift-console/dynamic-plugin-sdk/api` will be replaced in runtime by an actual implementation.
-
-
 
 ## Deployment on cluster
 
@@ -97,11 +101,11 @@ Following commands should be executed in Console repository root.
 
 1. Build the image:
    ```sh
-   docker build -f Dockerfile -t quay.io/$USER/dbaas-dynamic-plugin .
+   USER=<quay user/org> yarn img-build
    ```
 2. Run the image:
    ```sh
-   docker run -it -p 9001:9001 quay.io/$USER/dbaas-dynamic-plugin
+   USER=<quay user/org> yarn img-run
    ```
 3. Push the image to image registry:
    ```sh

@@ -201,7 +201,7 @@ class InstanceTable extends React.Component {
         </Table>
         {isSelectable ? (
           <div className={isLoading ? 'hide' : null}>
-             {connectionAndServiceBindingList ? (
+            {connectionAndServiceBindingList ? (
               <ExpandableSection
                 toggleText={
                   isInstanceConnectionStatusTableExpanded ? 'Hide connected instances' : 'Show connected instances'
