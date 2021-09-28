@@ -84,7 +84,7 @@ class InstanceTable extends React.Component {
     let rowList = []
     if (data && data.length > 0) {
       _.forEach(data, (rowData) => {
-        rowList.push({ cells: [rowData.instanceID, rowData.name] })
+        rowList.push({ cells: [rowData.instanceID, `${rowData.name}-${rowData.instanceID.slice(-10)}`] })
       })
     } else {
       rowList.push({
@@ -117,8 +117,8 @@ class InstanceTable extends React.Component {
       apiVersion: 'dbaas.redhat.com/v1alpha1',
       kind: 'DBaaSConnection',
       metadata: {
-        //k8s only accept lowercase metadata.name and add instanceID to avoid same name
-        name: `${this.state.selectedInstance.name.toLowerCase()}-${Date.now()}`,
+        //k8s only accept lowercase metadata.name and add last 10 chars of the instanceID to avoid same name
+        name: `${this.state.selectedInstance.name.toLowerCase()}-${this.state.selectedInstance.instanceID.slice(-10)}`,
         namespace: this.state.currentNS,
       },
       spec: {
@@ -201,6 +201,17 @@ class InstanceTable extends React.Component {
         </Table>
         {isSelectable ? (
           <div className={isLoading ? 'hide' : null}>
+             {connectionAndServiceBindingList ? (
+              <ExpandableSection
+                toggleText={
+                  isInstanceConnectionStatusTableExpanded ? 'Hide connected instances' : 'Show connected instances'
+                }
+                onToggle={this.onInstanceConnectionStatusTableToggle}
+                isExpanded={isInstanceConnectionStatusTableExpanded}
+              >
+                <InstanceConnectionStatusTable isLoading={isLoading} connections={connectionAndServiceBindingList} />
+              </ExpandableSection>
+            ) : null}
             {showError ? (
               <Alert variant="danger" isInline title={error.reason} className="co-alert co-break-word">
                 {error.details?.causes ? (
@@ -213,17 +224,6 @@ class InstanceTable extends React.Component {
                   <div>{error.message}</div>
                 )}
               </Alert>
-            ) : null}
-            {connectionAndServiceBindingList ? (
-              <ExpandableSection
-                toggleText={
-                  isInstanceConnectionStatusTableExpanded ? 'Hide connected instances' : 'Show connected instances'
-                }
-                onToggle={this.onInstanceConnectionStatusTableToggle}
-                isExpanded={isInstanceConnectionStatusTableExpanded}
-              >
-                <InstanceConnectionStatusTable isLoading={isLoading} connections={connectionAndServiceBindingList} />
-              </ExpandableSection>
             ) : null}
             <ActionGroup>
               <Button
