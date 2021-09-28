@@ -12,7 +12,9 @@ import {
   Bullseye,
   EmptyStateVariant,
   ActionGroup,
+  ExpandableSection,
 } from '@patternfly/react-core'
+import InstanceConnectionStatusTable from './instanceConnectionStatusTable'
 import { getCSRFToken } from '../utils'
 
 const TableEmptyState = () => {
@@ -39,7 +41,9 @@ class InstanceTable extends React.Component {
       selectedInstance: {},
       showError: false,
       error: {},
+      isInstanceConnectionStatusTableExpanded: false,
     }
+    this.onInstanceConnectionStatusTableToggle = this.onInstanceConnectionStatusTableToggle.bind(this)
     this.onSelect = this.onSelect.bind(this)
     this.getRows = this.getRows.bind(this)
     this.submitInstances = this.submitInstances.bind(this)
@@ -67,6 +71,10 @@ class InstanceTable extends React.Component {
     this.getRows(this.props.data.instances)
   }
 
+  onInstanceConnectionStatusTableToggle() {
+    this.setState({ isInstanceConnectionStatusTableExpanded: !this.state.isInstanceConnectionStatusTableExpanded })
+  }
+
   toTopologyView() {
     const { currentNS } = this.state
     window.location.pathname = `/topology/ns/${currentNS}?view=graph`
@@ -76,7 +84,7 @@ class InstanceTable extends React.Component {
     let rowList = []
     if (data && data.length > 0) {
       _.forEach(data, (rowData) => {
-        rowList.push({ cells: [rowData.instanceID, rowData.name}] })
+        rowList.push({ cells: [rowData.instanceID, rowData.name] })
       })
     } else {
       rowList.push({
@@ -164,8 +172,8 @@ class InstanceTable extends React.Component {
   }
 
   render() {
-    const { columns, rows, error, showError } = this.state
-    const { isSelectable, isLoading } = this.props
+    const { columns, rows, error, showError, isInstanceConnectionStatusTableExpanded } = this.state
+    const { isSelectable, isLoading, connectionAndServiceBindingList } = this.props
 
     if (isLoading) {
       return (
@@ -205,6 +213,17 @@ class InstanceTable extends React.Component {
                   <div>{error.message}</div>
                 )}
               </Alert>
+            ) : null}
+            {connectionAndServiceBindingList ? (
+              <ExpandableSection
+                toggleText={
+                  isInstanceConnectionStatusTableExpanded ? 'Hide connected instances' : 'Show connected instances'
+                }
+                onToggle={this.onInstanceConnectionStatusTableToggle}
+                isExpanded={isInstanceConnectionStatusTableExpanded}
+              >
+                <InstanceConnectionStatusTable isLoading={isLoading} connections={connectionAndServiceBindingList} />
+              </ExpandableSection>
             ) : null}
             <ActionGroup>
               <Button
