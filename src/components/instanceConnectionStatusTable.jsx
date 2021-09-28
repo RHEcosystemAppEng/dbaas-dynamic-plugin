@@ -1,7 +1,16 @@
 import React from 'react'
 import _ from 'lodash'
 import { Table, TableHeader, TableBody, wrappable, cellWidth } from '@patternfly/react-table'
-import { Title, EmptyState, EmptyStateIcon, Spinner, Bullseye, EmptyStateVariant } from '@patternfly/react-core'
+import {
+  Title,
+  EmptyState,
+  EmptyStateIcon,
+  Spinner,
+  Bullseye,
+  EmptyStateVariant,
+  List,
+  ListItem,
+} from '@patternfly/react-core'
 
 const TableEmptyState = () => {
   return (
@@ -53,7 +62,20 @@ class InstanceConnectionStatusTable extends React.Component {
             rowData.instanceID,
             rowData.instanceName,
             rowData.connectionStatus,
-            rowData.application?.name ? rowData.application?.name : 'N/A',
+            rowData.applications?.length > 0
+              ? {
+                  title: (
+                    <React.Fragment>
+                      <List isPlain>
+                        {rowData.applications.map((app) => (
+                          <ListItem>{app.name}</ListItem>
+                        ))}
+                      </List>
+                    </React.Fragment>
+                  ),
+                  props: { column: 'Branches' },
+                }
+              : '-',
           ],
         })
       })

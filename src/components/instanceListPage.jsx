@@ -14,6 +14,7 @@ import {
   FormSelectOption,
   Button,
   Alert,
+  ExpandableSection,
 } from '@patternfly/react-core'
 import { InfoCircleIcon } from '@patternfly/react-icons'
 import './_dbaas-import-view.css'
@@ -21,7 +22,6 @@ import { useTranslation } from 'react-i18next'
 import FormHeader from './form/formHeader'
 import FlexForm from './form/flexForm'
 import FormBody from './form/formBody'
-import InstanceConnectionStatusTable from './instanceConnectionStatusTable'
 import InstanceTable from './instanceTable'
 import InstanceListFilter from './instanceListFilter'
 import { crunchyProviderType, mongoProviderType, crunchyProviderName, mongoProviderName } from '../const'
@@ -227,16 +227,15 @@ const InstanceListPage = () => {
           selectedInventory?.instances?.find((instance) => instance.instanceID === dbaasConnection.spec?.instanceID)
         ) {
           let connectionObj = {
-            instanceID: dbaasConnection.spec?.instanceID,
-            instanceName: dbaasConnection.metadata?.name,
-            connectionStatus: dbaasConnection?.status?.conditions[0]?.reason,
+            instanceID: dbaasConnection?.spec?.instanceID,
+            instanceName: dbaasConnection?.metadata?.name,
+            connectionStatus: _.isEmpty(dbaasConnection?.status) ? '-' : dbaasConnection?.status?.conditions[0]?.reason,
             errMsg: 'N/A',
-            application: {},
+            applications: [],
           }
-          if (dbaasConnection?.status?.conditions[0]?.status !== 'True') {
+          if (!_.isEmpty(dbaasConnection?.status) && dbaasConnection?.status?.conditions[0]?.status !== 'True') {
             connectionObj.errMsg = dbaasConnection?.status?.conditions[0]?.message
           }
-
           if (
             newServiceBindingList.find((serviceBinding) => {
               return isDbaasConnectionUsed(serviceBinding, dbaasConnection)
@@ -245,13 +244,11 @@ const InstanceListPage = () => {
             newServiceBindingList.forEach((serviceBinding) => {
               if (isDbaasConnectionUsed(serviceBinding, dbaasConnection)) {
                 let newConnectionObj = _.extend({}, connectionObj)
-                newConnectionObj.application = serviceBinding.spec?.application
-                newConnectionAndServiceBindingList.push(newConnectionObj)
+                newConnectionObj.applications.push(serviceBinding.spec?.application)
               }
             })
-          } else {
-            newConnectionAndServiceBindingList.push(connectionObj)
           }
+          newConnectionAndServiceBindingList.push(connectionObj)
         }
       })
     }
@@ -571,21 +568,12 @@ const InstanceListPage = () => {
                     ))}
                   </FormSelect>
                 </FormGroup>
-                <FormGroup
-                  label="Database Instance Connection Status"
-                  fieldId="database-instance-connection-status-table"
-                />
-                <FormSection fullWidth flexLayout className="no-top-margin">
-                  <InstanceConnectionStatusTable
-                    isLoading={!showResults}
-                    connections={connectionAndServiceBindingList}
-                  />
-                </FormSection>
                 <FormGroup label="Database Instance" fieldId="instance-id-filter">
                   <InstanceListFilter textInputIDValue={textInputIDValue} setTextInputIDValue={setTextInputIDValue} />
                 </FormGroup>
                 <FormSection fullWidth flexLayout className="no-top-margin">
                   <InstanceTable
+                    connectionAndServiceBindingList={connectionAndServiceBindingList}
                     isLoading={!showResults}
                     data={selectedInventory}
                     isSelectable={selectedInventory?.instances?.length > 0 && filteredInstances.length > 0}
