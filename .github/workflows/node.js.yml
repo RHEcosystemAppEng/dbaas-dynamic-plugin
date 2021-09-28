@@ -27,5 +27,6 @@ jobs:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
     - run: npm install --global yarn@1.22.10
+    - run: yarn install
     - run: yarn build-dev
     - run: git diff --exit-code
