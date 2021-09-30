@@ -109,7 +109,7 @@ Following commands should be executed in Console repository root.
    ```
 3. Push the image to image registry:
    ```sh
-   docker push quay.io/$USER/dbaas-dynamic-plugin
+   USER=<quay user/org> yarn img-push
    ```
 
 Update and apply `oc-manifest.yaml` to use a custom plugin image.
