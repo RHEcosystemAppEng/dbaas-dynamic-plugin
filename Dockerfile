@@ -11,6 +11,7 @@ USER 65532:65532
 WORKDIR /app
 COPY --from=BUILD_IMAGE /usr/src/app/dist ./dist
 COPY --from=BUILD_IMAGE /usr/src/app/node_modules ./node_modules
+COPY --from=BUILD_IMAGE /usr/src/app/http-server.sh ./http-server.sh
 
 EXPOSE 9001
-CMD ./node_modules/.bin/http-server ./dist -p 9001 -c-1
+ENTRYPOINT [ "./http-server.sh", "./dist" ]
