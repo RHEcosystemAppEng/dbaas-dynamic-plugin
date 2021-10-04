@@ -39,6 +39,9 @@ spec:
             - name: console-serving-cert
               readOnly: true
               mountPath: /var/serving-cert
+          env:
+            - name: DBAAS_OPERATOR_VERSION
+              value: 'dbaas-operator.v0.1.1'
       volumes:
         - name: console-serving-cert
           secret:

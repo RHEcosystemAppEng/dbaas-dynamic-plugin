@@ -3,6 +3,7 @@ import * as _ from 'lodash'
 import './_dbaas-import-view.css'
 import ProviderAccountForm from './providerAccountForm'
 import InstancesForm from './instancesForm'
+import { DBaaSOperatorName } from '../const'
 
 class DBaasImportPage extends React.Component {
   constructor(props) {
@@ -12,7 +13,9 @@ class DBaasImportPage extends React.Component {
       isDBaaSServiceUp: false,
       currentCreatedInventoryInfo: {},
       providerInfo: {},
+      dbaasCSV: {},
     }
+    this.fetchCSV = this.fetchCSV.bind(this)
     this.fetchProviderInfo = this.fetchProviderInfo.bind(this)
     this.goBack = this.goBack.bind(this)
     this.setDBaaSServiceStatus = this.setDBaaSServiceStatus.bind(this)
@@ -21,6 +24,37 @@ class DBaasImportPage extends React.Component {
 
   componentDidMount() {
     this.fetchProviderInfo()
+    this.fetchCSV()
+  }
+
+  fetchCSV = () => {
+    const { currentNS } = this.state
+    let requestOpts = {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+    }
+
+    fetch(
+      '/api/kubernetes/apis/operators.coreos.com/v1alpha1/namespaces/' +
+        currentNS +
+        '/clusterserviceversions?limit=250',
+      requestOpts
+    )
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.items?.length > 0) {
+          let dbaasCSV = data.items.find((csv) => {
+            return csv?.metadata?.name.includes(DBaaSOperatorName)
+          })
+          this.setState({ dbaasCSV: dbaasCSV })
+        }
+      })
+      .catch((err) => {
+        console.error(err)
+      })
   }
 
   fetchProviderInfo = () => {
@@ -61,7 +95,7 @@ class DBaasImportPage extends React.Component {
   }
 
   render() {
-    const { activeTabKey, isDBaaSServiceUp, currentCreatedInventoryInfo, providerInfo } = this.state
+    const { activeTabKey, isDBaaSServiceUp, currentCreatedInventoryInfo, providerInfo, dbaasCSV } = this.state
 
     return (
       <div>
@@ -82,6 +116,7 @@ class DBaasImportPage extends React.Component {
           <InstancesForm
             dbaaSServiceStatus={isDBaaSServiceUp}
             currentCreatedInventoryInfo={currentCreatedInventoryInfo}
+            csv={dbaasCSV}
           />
         )}
       </div>

@@ -12,10 +12,11 @@ import {
   Alert,
 } from '@patternfly/react-core'
 import { InfoCircleIcon, CheckCircleIcon } from '@patternfly/react-icons'
-import { DBaaSInventoryCRName, DBaaSOperatorName } from '../const'
+import { DBaaSInventoryCRName } from '../const'
 class InstancesForm extends React.Component {
   constructor(props) {
     super(props)
+    this.DBaaSOperatorNameWithVersion = props.csv?.metadata?.name || window.DBAAS_OPERATOR_VERSION
     this.fetchInventoryTimerID = 0
     this.state = {
       currentNS: window.location.pathname.split('/')[3],
@@ -107,7 +108,7 @@ class InstancesForm extends React.Component {
     const { currentNS } = this.state
     const { currentCreatedInventoryInfo } = this.props
 
-    window.location.pathname = `/k8s/ns/${currentNS}/clusterserviceversions/${DBaaSOperatorName}/${DBaaSInventoryCRName}/${currentCreatedInventoryInfo?.metadata?.name}`
+    window.location.pathname = `/k8s/ns/${currentNS}/clusterserviceversions/${this.DBaaSOperatorNameWithVersion}/${DBaaSInventoryCRName}/${currentCreatedInventoryInfo?.metadata?.name}`
   }
 
   handleCancel = () => {
@@ -117,7 +118,7 @@ class InstancesForm extends React.Component {
   goToInventoryListPage = () => {
     const { currentNS } = this.state
 
-    window.location.pathname = `/k8s/ns/${currentNS}/operators.coreos.com~v1alpha1~ClusterServiceVersion/${DBaaSOperatorName}/${DBaaSInventoryCRName}`
+    window.location.pathname = `/k8s/ns/${currentNS}/operators.coreos.com~v1alpha1~ClusterServiceVersion/${this.DBaaSOperatorNameWithVersion}/${DBaaSInventoryCRName}`
   }
 
   render() {
