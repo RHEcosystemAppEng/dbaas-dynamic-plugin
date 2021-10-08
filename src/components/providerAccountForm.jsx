@@ -10,6 +10,7 @@ import {
   FormSelect,
   FormSelectOption,
   FormSelectOptionGroup,
+  ValidatedOptions,
 } from '@patternfly/react-core'
 import { getCSRFToken } from '../utils'
 import { fetchInventoryNamespaces } from './instanceListPage'
@@ -20,6 +21,8 @@ class ProviderAccountForm extends React.Component {
     this.handleDBProviderSelection = this.handleDBProviderSelection.bind(this)
     this.handleCancel = this.handleCancel.bind(this)
     this.handleSubmit = this.handleSubmit.bind(this)
+    this.validateField = this.validateField.bind(this)
+    this.validateForm = this.validateForm.bind(this)
 
     this.state = {
       credentials: {},
@@ -32,6 +35,7 @@ class ProviderAccountForm extends React.Component {
       showError: false,
       showResults: true,
       error: {},
+      isFormValid: false,
     }
   }
 
@@ -50,11 +54,40 @@ class ProviderAccountForm extends React.Component {
     }
   }
 
+  validateForm = () => {
+    let isValid = _.every(this.state.selectedDBProvider?.spec?.credentialFields, (field) => {
+      return field.isValid === ValidatedOptions.default
+    })
+    this.setState({ isFormValid: isValid })
+  }
+
+  validateField = (value, field) => {
+    let newProviderObj = _.extend({}, this.state.selectedDBProvider)
+    let currentField = _.find(newProviderObj?.spec?.credentialFields, (credentialField) => {
+      return credentialField.key === field.key
+    })
+
+    if (currentField) {
+      if (_.isEmpty(value)) {
+        currentField.isValid = ValidatedOptions.error
+      } else {
+        currentField.isValid = ValidatedOptions.default
+      }
+    }
+
+    this.setState({ selectedDBProvider: newProviderObj })
+  }
+
   handleDBProviderSelection = (value) => {
     if (!_.isEmpty(this.props.dbProviderInfo)) {
       let provider = _.find(this.props.dbProviderInfo.items, (dbProvider) => {
         return dbProvider.metadata?.name === value
       })
+      if (provider?.spec?.credentialFields) {
+        provider.spec.credentialFields.forEach((field) => {
+          field.isValid = ''
+        })
+      }
       this.setState({ selectedDBProvider: provider })
     }
   }
@@ -197,7 +230,8 @@ class ProviderAccountForm extends React.Component {
   }
 
   render() {
-    const { selectedDBProvider, showError, error, inventoryName, dbProviderOptions, credentials } = this.state
+    const { selectedDBProvider, showError, error, inventoryName, dbProviderOptions, credentials, isFormValid } =
+      this.state
 
     return (
       <Form id="provider-account-form" isWidthLimited onSubmit={this.handleSubmit}>
@@ -253,20 +287,33 @@ class ProviderAccountForm extends React.Component {
             <div className="section-subtitle extra-top-margin no-bottom-padding">Account Credentials</div>
             {selectedDBProvider.spec?.credentialFields.map((field) => {
               return (
-                <FormGroup label={field.displayName} fieldId={field.key} isRequired={field.required}>
+                <FormGroup
+                  label={field.displayName}
+                  fieldId={field.key}
+                  isRequired={field.required}
+                  helperTextInvalid="This is a required field"
+                  validated={field.isValid}
+                >
                   <TextInput
                     isRequired={field.required}
                     type={field.type === 'maskedstring' ? 'password' : 'text'}
                     id={field.key}
                     name={field.key}
                     value={credentials[field.key]}
-                    onChange={(value) =>
+                    validated={field.isValid}
+                    onChange={(value) => {
                       this.setState((prevState) => {
                         let newCredentials = Object.assign({}, prevState.credentials)
                         newCredentials[field.key] = value.toString('base64')
                         return { credentials: newCredentials }
                       })
-                    }
+                      this.validateField(value, field)
+                      this.validateForm()
+                    }}
+                    onBlur={(event) => {
+                      this.validateField(event.target.value, field)
+                      this.validateForm()
+                    }}
                   />
                 </FormGroup>
               )
@@ -287,7 +334,12 @@ class ProviderAccountForm extends React.Component {
           </Alert>
         ) : null}
         <ActionGroup>
-          <Button variant="primary" type="submit" className="submit-button" isDisabled={_.isEmpty(selectedDBProvider)}>
+          <Button
+            variant="primary"
+            type="submit"
+            className="submit-button"
+            isDisabled={_.isEmpty(selectedDBProvider) || !isFormValid}
+          >
             Create
           </Button>
           <Button variant="secondary" onClick={this.handleCancel}>
