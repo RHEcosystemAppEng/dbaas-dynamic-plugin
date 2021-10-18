@@ -100,7 +100,9 @@ class ProviderAccountForm extends React.Component {
     event.preventDefault()
 
     let secretName = 'dbaas-vendor-credentials-' + Date.now()
-    const { selectedDBProvider, inventoryName, credentials } = this.state
+    const { selectedDBProvider, inventoryName, credentials, isFormValid } = this.state
+
+    if (!isFormValid) return
 
     let newSecret = {
       apiVersion: 'v1',
