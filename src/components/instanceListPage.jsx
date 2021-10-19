@@ -18,7 +18,6 @@ import {
 } from '@patternfly/react-core'
 import { InfoCircleIcon } from '@patternfly/react-icons'
 import './_dbaas-import-view.css'
-import { useTranslation } from 'react-i18next'
 import FormHeader from './form/formHeader'
 import FlexForm from './form/flexForm'
 import FormBody from './form/formBody'
@@ -171,7 +170,6 @@ function json(response) {
 }
 
 const InstanceListPage = () => {
-  const { t } = useTranslation()
   const [noInstances, setNoInstances] = React.useState(false)
   const [statusMsg, setStatusMsg] = React.useState('')
   const [fetchInstancesFailed, setFetchInstancesFailed] = React.useState(false)
@@ -189,7 +187,7 @@ const InstanceListPage = () => {
 
   const dbProviderTitle = (
     <div>
-      Connect {dbProviderName} <Label className="ocs-preview-badge extra-left-margin">{t('Alpha')}</Label>
+      Connect {dbProviderName} <Label className="ocs-preview-badge extra-left-margin">Alpha</Label>
     </div>
   )
   const filteredInstances = React.useMemo(
@@ -221,7 +219,7 @@ const InstanceListPage = () => {
     let newServiceBindingList = serviceBindingList
     let newConnectionAndServiceBindingList = []
 
-    if (newDbaasConnectionList.length > 0 && newServiceBindingList.length > 0) {
+    if (newDbaasConnectionList.length > 0) {
       newDbaasConnectionList.forEach((dbaasConnection) => {
         if (
           selectedInventory?.instances?.find((instance) => instance.instanceID === dbaasConnection.spec?.instanceID)

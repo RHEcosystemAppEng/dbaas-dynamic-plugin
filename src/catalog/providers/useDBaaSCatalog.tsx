@@ -1,14 +1,11 @@
 import * as React from 'react'
-import { useTranslation } from 'react-i18next'
 import { TextContent, Text, TextVariants } from '@patternfly/react-core'
 import { CatalogItem } from '@openshift-console/dynamic-plugin-sdk'
 import { ExtensionHook } from '../../types'
-import { useK8sWatchResource } from '@openshift-console/dynamic-plugin-sdk/api'
+import { useK8sWatchResource } from '@openshift-console/dynamic-plugin-sdk'
 import { CATALOG_TYPE, DBAAS_PROVIDER_KIND } from '../const'
 
 const useDBaaSCatalog: ExtensionHook<CatalogItem[]> = ({ namespace }): [CatalogItem[], boolean, any] => {
-  const { t } = useTranslation()
-
   const [dbaasProviders, loaded, errorMsg] = useK8sWatchResource({
     kind: DBAAS_PROVIDER_KIND,
     isList: false,
@@ -21,17 +18,17 @@ const useDBaaSCatalog: ExtensionHook<CatalogItem[]> = ({ namespace }): [CatalogI
 
     const providerCards: CatalogItem[] = (dbaasProviders as any).items?.map((provider) => {
       return {
-        name: t(provider.spec?.provider?.displayName),
+        name: provider.spec?.provider?.displayName,
         type: CATALOG_TYPE,
         uid: provider.metadata?.uid,
-        description: t(provider.spec?.provider?.displayDescription),
-        provider: t(provider.spec?.provider?.name),
+        description: provider.spec?.provider?.displayDescription,
+        provider: provider.spec?.provider?.name,
         tags: ['mongodb', 'crunchy'],
         icon: {
           url: `data:${provider.spec?.provider?.icon?.mediatype};base64,${provider.spec?.provider?.icon?.base64data}`,
         },
         cta: {
-          label: t('Connect'),
+          label: 'Connect',
           href: `/k8s/ns/${namespace}/${provider.metadata?.name}`,
         },
         details: {
@@ -39,7 +36,7 @@ const useDBaaSCatalog: ExtensionHook<CatalogItem[]> = ({ namespace }): [CatalogI
             {
               value: (
                 <TextContent>
-                  <Text component={TextVariants.p}>{t(provider.spec?.provider?.displayDescription)}</Text>
+                  <Text component={TextVariants.p}>{provider.spec?.provider?.displayDescription}</Text>
                 </TextContent>
               ),
             },
