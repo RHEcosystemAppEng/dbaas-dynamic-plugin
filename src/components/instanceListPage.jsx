@@ -500,7 +500,9 @@ const InstanceListPage = () => {
 
   React.useEffect(() => {
     parseSelectedDBProvider()
-    fetchInstances()
+    if (!_.isEmpty(selectedDBProvider)) {
+      fetchInstances()
+    }
   }, [currentNS, selectedDBProvider])
 
   React.useEffect(() => {
