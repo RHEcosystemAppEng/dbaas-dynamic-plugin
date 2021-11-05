@@ -195,6 +195,13 @@ const InstanceListPage = () => {
     [selectedInventory.instances, textInputIDValue]
   )
 
+  const disableNSSelection = () => {
+    const namespaceMenuToggleEle = document.getElementsByClassName('co-namespace-dropdown__menu-toggle')[0]
+    if (namespaceMenuToggleEle) {
+      namespaceMenuToggleEle.setAttribute('disabled', 'true')
+    }
+  }
+
   const handleTryAgain = () => {
     location.reload()
   }
@@ -230,6 +237,7 @@ const InstanceListPage = () => {
             connectionStatus: _.isEmpty(dbaasConnection?.status) ? '-' : dbaasConnection?.status?.conditions[0]?.reason,
             errMsg: 'N/A',
             applications: [],
+            namespace: _.isEmpty(dbaasConnection?.metadata?.namespace) ? '-' : dbaasConnection?.metadata?.namespace,
           }
           if (!_.isEmpty(dbaasConnection?.status) && dbaasConnection?.status?.conditions[0]?.status !== 'True') {
             connectionObj.errMsg = dbaasConnection?.status?.conditions[0]?.message
@@ -499,6 +507,7 @@ const InstanceListPage = () => {
   }
 
   React.useEffect(() => {
+    disableNSSelection()
     parseSelectedDBProvider()
     if (!_.isEmpty(selectedDBProvider)) {
       fetchInstances()

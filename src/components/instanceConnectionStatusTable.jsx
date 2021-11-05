@@ -32,6 +32,7 @@ class InstanceConnectionStatusTable extends React.Component {
         { title: 'ID', transforms: [wrappable, cellWidth(30)] },
         { title: 'Instance', transforms: [wrappable, cellWidth(30)] },
         { title: 'Status', transforms: [wrappable, cellWidth(30)] },
+        { title: 'Namespace', transforms: [wrappable, cellWidth(30)] },
         { title: 'Application', transforms: [wrappable, cellWidth(30)] },
       ],
       rows: [],
@@ -62,6 +63,7 @@ class InstanceConnectionStatusTable extends React.Component {
             rowData.instanceID,
             rowData.instanceName,
             rowData.connectionStatus,
+            rowData.namespace,
             rowData.applications?.length > 0
               ? {
                   title: (
