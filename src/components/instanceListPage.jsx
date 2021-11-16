@@ -72,7 +72,7 @@ export async function fetchInventoryNamespaces() {
   return uniqInventoryNamespaces
 }
 
-async function isListAllowed(dbaasKindPlural, namespace) {
+async function isListAllowed(group, kindPlural, namespace) {
   let listAllowed = false
 
   let rulesBody = {
@@ -80,8 +80,8 @@ async function isListAllowed(dbaasKindPlural, namespace) {
     kind: 'SelfSubjectAccessReview',
     spec: {
       resourceAttributes: {
-        group: 'dbaas.redhat.com',
-        resource: dbaasKindPlural,
+        group: group,
+        resource: kindPlural,
         verb: 'list',
         namespace: namespace,
       },
@@ -106,27 +106,27 @@ async function isListAllowed(dbaasKindPlural, namespace) {
   return listAllowed
 }
 
-function parseRulesReview(responseJson, dbaasKindPlural) {
-  let dbaasKindNames = []
+function parseRulesReview(responseJson, kindPlural) {
+  let kindNames = []
   if (responseJson.status.resourceRules?.length > 0) {
     let resourceRule = { verbs: [], apiGroups: [], resources: [], resourceNames: [] }
     let availableRules = _.filter(responseJson.status.resourceRules, (rule) => {
       resourceRule = rule
       if (resourceRule.verbs && resourceRule.resources && resourceRule.resourceNames) {
         if (resourceRule.resourceNames.length > 0) {
-          return resourceRule.resources.includes(dbaasKindPlural) && resourceRule.verbs.includes('get')
+          return resourceRule.resources.includes(kindPlural) && resourceRule.verbs.includes('get')
         }
       }
     })
     availableRules.forEach((rule) => {
-      rule.resourceNames.forEach((dbaasKindName) => {
-        if (!dbaasKindNames.includes(dbaasKindName)) {
-          dbaasKindNames.push(dbaasKindName)
+      rule.resourceNames.forEach((kindName) => {
+        if (!kindNames.includes(kindName)) {
+          kindNames.push(kindName)
         }
       })
     })
   }
-  return dbaasKindNames
+  return kindNames
 }
 
 async function fetchInventoryNSfromTenants(tenantNames = []) {
@@ -212,7 +212,11 @@ const InstanceListPage = () => {
 
   const isDbaasConnectionUsed = (serviceBinding, dbaasConnection) => {
     let usedDBaaSConnect = serviceBinding.spec?.services?.find((service) => {
-      return service.kind === 'DBaaSConnection' && service.name === dbaasConnection.metadata?.name
+      return (
+        serviceBinding.metadata?.namespace === dbaasConnection.metadata?.namespace &&
+        service.kind === 'DBaaSConnection' &&
+        service.name === dbaasConnection.metadata?.name
+      )
     })
     if (usedDBaaSConnect) {
       return true
@@ -298,42 +302,57 @@ const InstanceListPage = () => {
     setSelectedDBProvider(dbProviderType)
   }
 
-  const fetchServiceBindings = () => {
-    const requestOpts = {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-      },
-    }
-    fetch(
-      '/api/kubernetes/apis/binding.operators.coreos.com/v1alpha1/namespaces/' +
-        currentNS +
-        '/servicebindings?limit=250',
-      requestOpts
-    )
-      .then((response) => response.json())
-      .then((data) => {
-        setServiceBindingList(data.items)
-      })
+  async function fetchServiceBindings() {
+    let serviceBindings = await fetchObjectsClusterOrNS('binding.operators.coreos.com', 'v1alpha1', 'servicebindings')
+    setServiceBindingList(serviceBindings)
   }
 
-  const fetchDBaaSConnections = () => {
-    const requestOpts = {
+  async function fetchDBaaSConnections() {
+    let connections = await fetchObjectsClusterOrNS('dbaas.redhat.com', 'v1alpha1', 'dbaasconnections')
+    setDbaasConnectionList(connections)
+  }
+
+  async function fetchObjectsClusterOrNS(group, version, kindPlural) {
+    let objectArray = []
+    let listAllowed = await isListAllowed(group, kindPlural, '')
+    if (listAllowed) {
+      var requestOpts = {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+      }
+      await fetch('/api/kubernetes/apis/' + group + '/' + version + '/' + kindPlural + '?limit=250', requestOpts)
+        .then(status)
+        .then(json)
+        .then((list) => {
+          objectArray = list.items
+        })
+    } else {
+      let namespaces = await fetchProjects()
+      await fetchObjectsByNamespace(group, version, kindPlural, namespaces).then((objects) => {
+        objectArray = objects
+      })
+    }
+    return objectArray
+  }
+
+  async function fetchProjects() {
+    let projectNames = []
+    var requestOpts = {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
       },
     }
-    fetch(
-      '/api/kubernetes/apis/dbaas.redhat.com/v1alpha1/namespaces/' + currentNS + '/dbaasconnections?limit=250',
-      requestOpts
-    )
-      .then((response) => response.json())
-      .then((data) => {
-        setDbaasConnectionList(data.items)
-      })
+    await fetch('/api/kubernetes/apis/project.openshift.io/v1/projects?limit=250', requestOpts)
+      .then(status)
+      .then(json)
+      .then((projectList) => projectList.items.forEach((project) => projectNames.push(project.metadata.name)))
+
+    return projectNames
   }
 
   async function fetchInstances() {
@@ -379,35 +398,39 @@ const InstanceListPage = () => {
 
   async function fetchInventoriesByNSAndRules() {
     let inventoryNamespaces = await fetchInventoryNamespaces()
-    let inventoryItems = await fetchInventoriesByNamespace(inventoryNamespaces)
+    let inventoryItems = await fetchObjectsByNamespace(
+      'dbaas.redhat.com',
+      'v1alpha1',
+      'dbaasinventories',
+      inventoryNamespaces
+    ).catch(function (error) {
+      setFetchInstancesFailed(true)
+      setStatusMsg(error)
+    })
+
     return inventoryItems
   }
 
-  async function fetchInventoriesByNamespace(inventoryNamespaces = []) {
+  async function fetchObjectsByNamespace(group, version, kindPlural, namespaces = []) {
     let promises = []
-    let inventoryItems = []
+    let items = []
 
-    inventoryNamespaces.forEach((namespace) => {
+    namespaces.forEach((namespace) => {
       if (namespace) {
-        promises.push(inventoriesFromRulesReview(namespace))
+        promises.push(objectsFromRulesReview(group, version, kindPlural, namespace))
       }
     })
-    await Promise.all(promises)
-      .then((inventoryByNS) => {
-        inventoryByNS.forEach((inventoryArrays) => inventoryArrays.forEach((value) => inventoryItems.push(...value)))
-      })
-      .catch(function (error) {
-        setFetchInstancesFailed(true)
-        setStatusMsg(error)
-      })
+    await Promise.all(promises).then((objectByNS) => {
+      objectByNS.forEach((objectArrays) => objectArrays.forEach((value) => items.push(...value)))
+    })
 
-    return inventoryItems
+    return items
   }
 
-  async function inventoriesFromRulesReview(namespace) {
-    let inventoryItems = []
+  async function objectsFromRulesReview(group, version, kindPlural, namespace) {
+    let items = []
     let promises = []
-    let listAllowed = await isListAllowed('dbaasinventories', namespace)
+    let listAllowed = await isListAllowed(group, kindPlural, namespace)
 
     if (listAllowed) {
       var requestOpts = {
@@ -419,7 +442,15 @@ const InstanceListPage = () => {
       }
       promises.push(
         fetch(
-          '/api/kubernetes/apis/dbaas.redhat.com/v1alpha1/namespaces/' + namespace + '/dbaasinventories?limit=250',
+          '/api/kubernetes/apis/' +
+            group +
+            '/' +
+            version +
+            '/namespaces/' +
+            namespace +
+            '/' +
+            kindPlural +
+            '?limit=250',
           requestOpts
         )
           .then(status)
@@ -449,44 +480,34 @@ const InstanceListPage = () => {
         fetch('/api/kubernetes/apis/authorization.k8s.io/v1/selfsubjectrulesreviews', requestOpts)
           .then(status)
           .then(json)
-          .then((responseJson) => parseRulesReview(responseJson, 'dbaasinventories'))
-          .then((inventoryNames) => fetchInventories(inventoryNames, namespace))
-          .then((inventories) => {
-            return inventories
+          .then((responseJson) => parseRulesReview(responseJson, kindPlural))
+          .then((objectNames) => fetchObjects(objectNames, namespace, group, version, kindPlural))
+          .then((objects) => {
+            return objects
           })
       )
     }
-    await Promise.all(promises)
-      .then((inventories) => (inventoryItems = inventories))
-      .catch(function (error) {
-        setFetchInstancesFailed(true)
-        setStatusMsg(error)
-      })
-    return inventoryItems
+    await Promise.all(promises).then((objects) => (items = objects))
+    return items
   }
 
-  async function fetchInventories(inventoryNames, namespace) {
+  async function fetchObjects(objectNames, namespace, group, version, kindPlural) {
     let promises = []
-    let inventoryItems = []
-    if (typeof inventoryNames === 'object') {
-      inventoryNames.forEach((inventoryName) => {
-        if (inventoryName && namespace) {
-          promises.push(inventoryFetch(inventoryName, namespace))
+    let items = []
+    if (typeof objectNames === 'object') {
+      objectNames.forEach((objectName) => {
+        if (objectName && namespace) {
+          promises.push(fetchObject(objectName, namespace, group, version, kindPlural))
         }
       })
     }
-    await Promise.all(promises)
-      .then((inventories) => {
-        inventoryItems.push(...inventories)
-      })
-      .catch(function (error) {
-        setFetchInstancesFailed(true)
-        setStatusMsg(error)
-      })
-    return inventoryItems
+    await Promise.all(promises).then((objects) => {
+      items.push(...objects)
+    })
+    return items
   }
 
-  async function inventoryFetch(inventoryName, namespace) {
+  async function fetchObject(objectName, namespace, group, version, kindPlural) {
     var inventory
     var requestOpts = {
       method: 'GET',
@@ -496,7 +517,16 @@ const InstanceListPage = () => {
       },
     }
     return fetch(
-      '/api/kubernetes/apis/dbaas.redhat.com/v1alpha1/namespaces/' + namespace + '/dbaasinventories/' + inventoryName,
+      '/api/kubernetes/apis/' +
+        group +
+        '/' +
+        version +
+        '/namespaces/' +
+        namespace +
+        '/' +
+        kindPlural +
+        '/' +
+        objectName,
       requestOpts
     )
       .then(status)
