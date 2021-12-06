@@ -26,52 +26,6 @@ import InstanceListFilter from './instanceListFilter'
 import { crunchyProviderType, mongoProviderType, crunchyProviderName, mongoProviderName } from '../const'
 import { getCSRFToken } from '../utils'
 
-export async function fetchInventoryNamespaces() {
-  let inventoryNamespaces = []
-  let listAllowed = await isListAllowed('dbaastenants', '')
-
-  if (listAllowed) {
-    var requestOpts = {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-      },
-    }
-    await fetch('/api/kubernetes/apis/dbaas.redhat.com/v1alpha1/dbaastenants?limit=250', requestOpts)
-      .then(status)
-      .then(json)
-      .then((tenantList) =>
-        tenantList.items.forEach((tenant) => inventoryNamespaces.push(tenant.spec.inventoryNamespace))
-      )
-  } else {
-    let newBody = {
-      apiVersion: 'authorization.k8s.io/v1',
-      kind: 'SelfSubjectRulesReview',
-      spec: {
-        namespace: '*',
-      },
-    }
-    var requestOpts = {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-        'X-CSRFToken': getCSRFToken(),
-      },
-      body: JSON.stringify(newBody),
-    }
-    await fetch('/api/kubernetes/apis/authorization.k8s.io/v1/selfsubjectrulesreviews', requestOpts)
-      .then(status)
-      .then(json)
-      .then((responseJson) => parseRulesReview(responseJson, 'dbaastenants'))
-      .then(fetchInventoryNSfromTenants)
-      .then((inventoryNS) => (inventoryNamespaces = inventoryNS))
-  }
-  let uniqInventoryNamespaces = [...new Set(inventoryNamespaces)]
-  return uniqInventoryNamespaces
-}
-
 async function isListAllowed(group, kindPlural, namespace) {
   let listAllowed = false
 
@@ -127,34 +81,6 @@ function parseRulesReview(responseJson, kindPlural) {
     })
   }
   return kindNames
-}
-
-async function fetchInventoryNSfromTenants(tenantNames = []) {
-  let inventoryNamespaces = []
-  let promises = []
-  tenantNames.forEach((tenantName) => {
-    promises.push(
-      fetchTenant(tenantName).then((data) => {
-        return data.spec.inventoryNamespace
-      })
-    )
-  })
-  await Promise.all(promises).then((namespaces) => (inventoryNamespaces = namespaces))
-  let uniqInventoryNamespaces = [...new Set(inventoryNamespaces)]
-  return uniqInventoryNamespaces
-}
-
-async function fetchTenant(tenantName) {
-  var requestOpts = {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      Accept: 'application/json',
-    },
-  }
-  return fetch('/api/kubernetes/apis/dbaas.redhat.com/v1alpha1/dbaastenants/' + tenantName, requestOpts)
-    .then(status)
-    .then(json)
 }
 
 function status(response) {
@@ -357,7 +283,7 @@ const InstanceListPage = () => {
 
   async function fetchInstances() {
     let inventories = []
-    let inventoryItems = await fetchInventoriesByNSAndRules()
+    let inventoryItems = await fetchObjectsClusterOrNS('dbaas.redhat.com', 'v1alpha1', 'dbaasinventories')
 
     if (inventoryItems.length > 0) {
       let filteredInventories = _.filter(inventoryItems, (inventory) => {
@@ -394,21 +320,6 @@ const InstanceListPage = () => {
       setStatusMsg('There is no Provider Account.')
       setShowResults(true)
     }
-  }
-
-  async function fetchInventoriesByNSAndRules() {
-    let inventoryNamespaces = await fetchInventoryNamespaces()
-    let inventoryItems = await fetchObjectsByNamespace(
-      'dbaas.redhat.com',
-      'v1alpha1',
-      'dbaasinventories',
-      inventoryNamespaces
-    ).catch(function (error) {
-      setFetchInstancesFailed(true)
-      setStatusMsg(error)
-    })
-
-    return inventoryItems
   }
 
   async function fetchObjectsByNamespace(group, version, kindPlural, namespaces = []) {

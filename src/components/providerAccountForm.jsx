@@ -13,7 +13,6 @@ import {
   ValidatedOptions,
 } from '@patternfly/react-core'
 import { getCSRFToken } from '../utils'
-import { fetchInventoryNamespaces } from './instanceListPage'
 
 class ProviderAccountForm extends React.Component {
   constructor(props) {
@@ -28,28 +27,21 @@ class ProviderAccountForm extends React.Component {
       credentials: {},
       currentNS: window.location.pathname.split('/')[3],
       inventoryName: 'my-db-provider-account',
-      inventoryNamespaces: [],
       selectedDBProvider: {},
       dbProviderOptions: [{ value: '', label: 'Select provider' }],
       postResponse: '',
       showError: false,
-      showResults: true,
       error: {},
       isFormValid: false,
     }
   }
 
-  async componentDidUpdate(prevProps) {
+  componentDidUpdate(prevProps) {
     if (!_.isEmpty(this.props.dbProviderInfo) && prevProps.dbProviderInfo !== this.props.dbProviderInfo) {
       let dbProviderList = []
-      this.state.inventoryNamespaces = await fetchInventoryNamespaces()
-      if (this.state.inventoryNamespaces.includes(this.state.currentNS)) {
-        this.props.dbProviderInfo.items.forEach((dbProvider) => {
-          dbProviderList.push({ value: dbProvider?.metadata?.name, label: dbProvider?.spec?.provider?.displayName })
-        })
-      } else {
-        this.state.showResults = false
-      }
+      this.props.dbProviderInfo.items.forEach((dbProvider) => {
+        dbProviderList.push({ value: dbProvider?.metadata?.name, label: dbProvider?.spec?.provider?.displayName })
+      })
       this.setState({ dbProviderOptions: this.state.dbProviderOptions.concat(dbProviderList) })
     }
   }
@@ -247,43 +239,17 @@ class ProviderAccountForm extends React.Component {
             onChange={(value) => this.setState({ inventoryName: value })}
           />
         </FormGroup>
-        {this.state.showResults ? (
-          <div>
-            {!_.isEmpty(this.state.inventoryNamespaces) ? (
-              <FormGroup label="Database provider" fieldId="db-provider">
-                <FormSelect
-                  value={selectedDBProvider.metadata?.name}
-                  onChange={this.handleDBProviderSelection}
-                  aria-label="Database Provider"
-                >
-                  {dbProviderOptions.map((option, index) => (
-                    <FormSelectOption key={index} value={option.value} label={option.label} />
-                  ))}
-                </FormSelect>
-              </FormGroup>
-            ) : null}
-          </div>
-        ) : (
-          <Alert
-            variant="warning"
-            isInline
-            title="Invalid Namespace for Provider Account Creation"
-            className="co-alert co-break-word"
+        <FormGroup label="Database provider" fieldId="db-provider">
+          <FormSelect
+            value={selectedDBProvider.metadata?.name}
+            onChange={this.handleDBProviderSelection}
+            aria-label="Database Provider"
           >
-            {!_.isEmpty(this.state.inventoryNamespaces) ? (
-              <div>
-                Switch to one of these valid Tenant namespaces and retry:
-                <ul>
-                  {_.map(this.state.inventoryNamespaces, (namespace, index) => (
-                    <li key={index}>{namespace}</li>
-                  ))}
-                </ul>
-              </div>
-            ) : (
-              <div>no tenant namespaces detected</div>
-            )}
-          </Alert>
-        )}
+            {dbProviderOptions.map((option, index) => (
+              <FormSelectOption key={index} value={option.value} label={option.label} />
+            ))}
+          </FormSelect>
+        </FormGroup>
         {!_.isEmpty(selectedDBProvider) ? (
           <React.Fragment>
             <div className="section-subtitle extra-top-margin no-bottom-padding">Account Credentials</div>
