@@ -12,6 +12,8 @@ export const crunchyProviderType = 'crunchy-bridge-registration'
 export const mongoProviderType = 'mongodb-atlas-registration'
 export const crunchyProviderName = 'Crunchy Bridge Managed PostgreSQL'
 export const mongoProviderName = 'MongoDB Atlas Cloud Database Service'
+export const cockroachdbProviderType = 'cockroachdb-cloud-registration'
+export const cockroachdbProviderName = 'CockroachDB Cloud'
 
 // Common shortcuts than span pages.
 export const KEYBOARD_SHORTCUTS = Object.freeze({
