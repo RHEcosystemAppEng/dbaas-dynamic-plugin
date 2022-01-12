@@ -169,7 +169,7 @@ function json(response) {
   return response.json()
 }
 
-const InstanceListPage = () => {
+const AdminDashboard = () => {
   const [noInstances, setNoInstances] = React.useState(false)
   const [statusMsg, setStatusMsg] = React.useState('')
   const [fetchInstancesFailed, setFetchInstancesFailed] = React.useState(false)
@@ -671,4 +671,4 @@ const InstanceListPage = () => {
   )
 }
 
-export default InstanceListPage
+export default AdminDashboard

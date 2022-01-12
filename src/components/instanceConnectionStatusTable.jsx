@@ -34,6 +34,8 @@ class InstanceConnectionStatusTable extends React.Component {
         { title: 'Status', transforms: [wrappable, cellWidth(30)] },
         { title: 'Namespace', transforms: [wrappable, cellWidth(30)] },
         { title: 'Application', transforms: [wrappable, cellWidth(30)] },
+        { title: 'Database', transforms: [wrappable, cellWidth(30)] },
+        { title: 'Provider Acct', transforms: [wrappable, cellWidth(30)] },
       ],
       rows: [],
     }
@@ -78,6 +80,8 @@ class InstanceConnectionStatusTable extends React.Component {
                   props: { column: 'Branches' },
                 }
               : '-',
+            rowData.database,
+            rowData.providerAcct,
           ],
         })
       })
