@@ -1,4 +1,4 @@
-import * as React from 'react'
+import React, { useState } from 'react'
 import * as _ from 'lodash'
 import {
   FormSection,
@@ -113,81 +113,20 @@ async function isListAllowed(group, kindPlural, namespace) {
   return listAllowed
 }
 
-function parseRulesReview(responseJson, kindPlural) {
-  let kindNames = []
-  if (responseJson.status.resourceRules?.length > 0) {
-    let resourceRule = { verbs: [], apiGroups: [], resources: [], resourceNames: [] }
-    let availableRules = _.filter(responseJson.status.resourceRules, (rule) => {
-      resourceRule = rule
-      if (resourceRule.verbs && resourceRule.resources && resourceRule.resourceNames) {
-        if (resourceRule.resourceNames.length > 0) {
-          return resourceRule.resources.includes(kindPlural) && resourceRule.verbs.includes('get')
-        }
-      }
-    })
-    availableRules.forEach((rule) => {
-      rule.resourceNames.forEach((kindName) => {
-        if (!kindNames.includes(kindName)) {
-          kindNames.push(kindName)
-        }
-      })
-    })
-  }
-  return kindNames
-}
-
-async function fetchInventoryNSfromTenants(tenantNames = []) {
-  let inventoryNamespaces = []
-  let promises = []
-  tenantNames.forEach((tenantName) => {
-    promises.push(
-      fetchTenant(tenantName).then((data) => {
-        return data.spec.inventoryNamespace
-      })
-    )
-  })
-  await Promise.all(promises).then((namespaces) => (inventoryNamespaces = namespaces))
-  let uniqInventoryNamespaces = [...new Set(inventoryNamespaces)]
-  return uniqInventoryNamespaces
-}
-
-async function fetchTenant(tenantName) {
-  var requestOpts = {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      Accept: 'application/json',
-    },
-  }
-  return fetch('/api/kubernetes/apis/dbaas.redhat.com/v1alpha1/dbaastenants/' + tenantName, requestOpts)
-    .then(status)
-    .then(json)
-}
-
-function status(response) {
-  if (response.status >= 200 && response.status < 300) {
-    return Promise.resolve(response)
-  } else {
-    return Promise.reject(new Error(response.statusText))
-  }
-}
-
 function json(response) {
   return response.json()
 }
 
 const AdminDashboard = () => {
-  const [noInstances, setNoInstances] = React.useState(false)
-  const [statusMsg, setStatusMsg] = React.useState('')
-  const [fetchInstancesFailed, setFetchInstancesFailed] = React.useState(false)
-  const [showResults, setShowResults] = React.useState(false)
-  const [inventories, setInventories] = React.useState([])
-  const [selectedDBProvider, setSelectedDBProvider] = React.useState('')
-  const [dbProviderName, setDBProviderName] = React.useState()
-  const [dbaasConnectionList, setDbaasConnectionList] = React.useState([])
-  const [serviceBindingList, setServiceBindingList] = React.useState([])
-  const [connectionAndServiceBindingList, setConnectionAndServiceBindingList] = React.useState([])
-  const [inventoriesAll, setInventoriesAll] = React.useState([])
+  const [noInstances, setNoInstances] = useState(false)
+  const [statusMsg, setStatusMsg] = useState('')
+  const [fetchInstancesFailed, setFetchInstancesFailed] = useState(false)
+  const [showResults, setShowResults] = useState(false)
+  const [inventories, setInventories] = useState([])
+  const [dbaasConnectionList, setDbaasConnectionList] = useState([])
+  const [serviceBindingList, setServiceBindingList] = useState([])
+  const [connectionAndServiceBindingList, setConnectionAndServiceBindingList] = useState([])
+  const [inventoriesAll, setInventoriesAll] = useState([])
 
   const currentNS = window.location.pathname.split('/')[3]
 
@@ -196,6 +135,13 @@ const AdminDashboard = () => {
       Data Services <Label className="ocs-preview-badge extra-left-margin">Alpha</Label>
     </div>
   )
+
+  const fetchData = async () => {
+    console.log('fetchData Start')
+    await fetchInstances()
+    fetchDBaaSConnections()
+    fetchServiceBindings()
+  }
 
   const disableNSSelection = () => {
     const namespaceMenuToggleEle = document.getElementsByClassName('co-namespace-dropdown__menu-toggle')[0]
@@ -208,9 +154,9 @@ const AdminDashboard = () => {
     location.reload()
   }
 
-  const handleCancel = () => {
-    window.history.back()
-  }
+  // const handleCancel = () => {
+  //   window.history.back()
+  // }
 
   const isDbaasConnectionUsed = (serviceBinding, dbaasConnection) => {
     let usedDBaaSConnect = serviceBinding.spec?.services?.find((service) => {
@@ -252,13 +198,15 @@ const AdminDashboard = () => {
     return databaseName
   }
 
-  const mapDBaaSConnectionsAndServiceBindings = () => {
+  const mapDBaaSConnectionsAndServiceBindings = async () => {
+    console.log('mapDBaaSConnectionsAndServiceBindings')
+    console.log('dbaasConnectionList: ' + dbaasConnectionList.length)
+    console.log('serviceBindingList: ' + serviceBindingList.length)
+
     let newDbaasConnectionList = dbaasConnectionList
     let newServiceBindingList = serviceBindingList
     let newConnectionAndServiceBindingList = []
-    console.log('mapDBaaSConnectionsAndServiceBindings')
     console.log(newDbaasConnectionList.length)
-    console.log(newDbaasConnectionList)
     if (newDbaasConnectionList.length > 0) {
       newDbaasConnectionList.forEach((dbaasConnection) => {
         console.log('dbaasConnection:')
@@ -293,37 +241,24 @@ const AdminDashboard = () => {
       })
     }
     setConnectionAndServiceBindingList(newConnectionAndServiceBindingList)
+    setShowResults(true)
   }
 
-  const parseSelectedDBProvider = () => {
-    let dbProviderType = _.last(window.location.pathname.split('/'))
-    console.log('parseSelectedDBProvider')
-    console.log(dbProviderType)
-    if (dbProviderType === crunchyProviderType) {
-      setDBProviderName(crunchyProviderName)
-    }
-    if (dbProviderType === mongoProviderType) {
-      setDBProviderName(mongoProviderName)
-    }
-    if (dbProviderType === adminProviderType) {
-      setDBProviderName(mongoProviderName)
-    }
-    setSelectedDBProvider(dbProviderType)
-  }
-
-  async function fetchServiceBindings() {
+  const fetchServiceBindings = async () => {
     let serviceBindings = await fetchObjectsClusterOrNS('binding.operators.coreos.com', 'v1alpha1', 'servicebindings')
+    console.log('fetchServiceBindings')
+    console.log(serviceBindings)
     setServiceBindingList(serviceBindings)
   }
 
-  async function fetchDBaaSConnections() {
+  const fetchDBaaSConnections = async () => {
     let connections = await fetchObjectsClusterOrNS('dbaas.redhat.com', 'v1alpha1', 'dbaasconnections')
     console.log('fetchDBaaSConnections')
     console.log(connections)
     setDbaasConnectionList(connections)
   }
 
-  async function fetchObjectsClusterOrNS(group, version, kindPlural) {
+  const fetchObjectsClusterOrNS = async (group, version, kindPlural) => {
     let objectArray = []
     let listAllowed = await isListAllowed(group, kindPlural, '')
     if (listAllowed) {
@@ -349,35 +284,16 @@ const AdminDashboard = () => {
     return objectArray
   }
 
-  async function fetchProjects() {
-    let projectNames = []
-    var requestOpts = {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-      },
-    }
-    await fetch('/api/kubernetes/apis/project.openshift.io/v1/projects?limit=250', requestOpts)
-      .then(status)
-      .then(json)
-      .then((projectList) => projectList.items.forEach((project) => projectNames.push(project.metadata.name)))
-
-    return projectNames
-  }
-
-  async function fetchInstances() {
-    console.log('FETCHINSTANCE')
+  const fetchInstances = async () => {
+    console.log('fetchInstances')
     let inventories = []
     let inventoryItems = await fetchInventoriesByNSAndRules()
     console.log('inventoryItems: ' + inventoryItems.length)
     setInventoriesAll(inventoryItems)
 
     if (inventoryItems.length > 0) {
-      let filteredInventories = _.filter(inventoryItems, (inventory) => {
-        return inventory.spec?.providerRef?.name === selectedDBProvider
-      })
-      filteredInventories.forEach((inventory, index) => {
+      inventoryItems.forEach((inventory, index) => {
+        console.log(inventory)
         let obj = { id: 0, name: '', namespace: '', instances: [], status: {} }
         obj.id = index
         obj.name = inventory.metadata.name
@@ -400,11 +316,10 @@ const AdminDashboard = () => {
     } else {
       setNoInstances(true)
       setStatusMsg('There is no Provider Account.')
-      //   setShowResults(true)
     }
   }
 
-  async function fetchInventoriesByNSAndRules() {
+  const fetchInventoriesByNSAndRules = async () => {
     console.log('fetchInventoriesByNSAndRules')
     let inventoryNamespaces = await fetchInventoryNamespaces()
     console.log('Got inventoryNameSpaces: ' + inventoryNamespaces)
@@ -418,11 +333,11 @@ const AdminDashboard = () => {
       setStatusMsg(error)
     })
     console.log('GOT INVENTORY BACK: ' + inventoryItems.length)
-    setShowResults(true)
     return inventoryItems
   }
 
-  async function fetchObjectsByNamespace(group, version, kindPlural, namespaces = []) {
+  const fetchObjectsByNamespace = async (group, version, kindPlural, namespaces = []) => {
+    console.log('fetchObjectsByNamespace')
     let promises = []
     let items = []
 
@@ -438,7 +353,7 @@ const AdminDashboard = () => {
     return items
   }
 
-  async function objectsFromRulesReview(group, version, kindPlural, namespace) {
+  const objectsFromRulesReview = async (group, version, kindPlural, namespace) => {
     let items = []
     let promises = []
     let listAllowed = await isListAllowed(group, kindPlural, namespace)
@@ -502,7 +417,7 @@ const AdminDashboard = () => {
     return items
   }
 
-  async function fetchObjects(objectNames, namespace, group, version, kindPlural) {
+  const fetchObjects = async (objectNames, namespace, group, version, kindPlural) => {
     let promises = []
     let items = []
     if (typeof objectNames === 'object') {
@@ -518,7 +433,7 @@ const AdminDashboard = () => {
     return items
   }
 
-  async function fetchObject(objectName, namespace, group, version, kindPlural) {
+  const fetchObject = async (objectName, namespace, group, version, kindPlural) => {
     var inventory
     var requestOpts = {
       method: 'GET',
@@ -549,16 +464,8 @@ const AdminDashboard = () => {
 
   React.useEffect(() => {
     disableNSSelection()
-    parseSelectedDBProvider()
-    if (!_.isEmpty(selectedDBProvider)) {
-      fetchInstances()
-    }
-  }, [currentNS, selectedDBProvider])
-
-  React.useEffect(() => {
-    fetchDBaaSConnections()
-    fetchServiceBindings()
-  }, [currentNS, selectedDBProvider])
+    fetchData()
+  }, [])
 
   React.useEffect(() => {
     mapDBaaSConnectionsAndServiceBindings()

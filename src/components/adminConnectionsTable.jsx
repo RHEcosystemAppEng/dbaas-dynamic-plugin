@@ -58,62 +58,62 @@ class AdminConnectionsTable extends React.Component {
 
   getRows(data) {
     let rowList = []
-    if (data && data.length > 0) {
-      _.forEach(data, (rowData) => {
-        rowList.push({
-          cells: [
-            rowData.instanceID,
-            rowData.instanceName,
-            rowData.connectionStatus,
-            rowData.namespace,
-            rowData.applications?.length > 0
-              ? {
-                  title: (
-                    <React.Fragment>
-                      <List isPlain>
-                        {rowData.applications.map((app) => (
-                          <ListItem>{app.name}</ListItem>
-                        ))}
-                      </List>
-                    </React.Fragment>
-                  ),
-                  props: { column: 'Branches' },
-                }
-              : '-',
-            rowData.database,
-            rowData.providerAcct,
-          ],
-        })
-      })
-    } else {
+    //   if (data && data.length > 0) {
+    _.forEach(data, (rowData) => {
       rowList.push({
-        heightAuto: true,
         cells: [
-          {
-            props: { colSpan: 8 },
-            title: <TableEmptyState />,
-          },
+          rowData.instanceID,
+          rowData.instanceName,
+          rowData.connectionStatus,
+          rowData.namespace,
+          rowData.applications?.length > 0
+            ? {
+                title: (
+                  <React.Fragment>
+                    <List isPlain>
+                      {rowData.applications.map((app) => (
+                        <ListItem>{app.name}</ListItem>
+                      ))}
+                    </List>
+                  </React.Fragment>
+                ),
+                props: { column: 'Branches' },
+              }
+            : '-',
+          rowData.database,
+          rowData.providerAcct,
         ],
       })
-    }
+    })
+    // } else {
+    //   rowList.push({
+    //     heightAuto: true,
+    //     cells: [
+    //       {
+    //         props: { colSpan: 8 },
+    //         title: <TableEmptyState />,
+    //       },
+    //     ],
+    //   })
+    // }
 
     this.setState({ rows: rowList })
   }
 
   render() {
     const { columns, rows } = this.state
-    const { isLoading } = this.props
+    // const { isLoading } = this.props
 
-    if (isLoading) {
-      return (
-        <EmptyState>
-          <EmptyStateIcon variant="container" component={Spinner} />
-          <Title size="lg" headingLevel="h3">
-            Fetching Database instance Connection Status...
-          </Title>
-        </EmptyState>
-      )
-    }
+    // if (isLoading) {
+    //   return (
+    //     <EmptyState>
+    //       <EmptyStateIcon variant="container" component={Spinner} />
+    //       <Title size="lg" headingLevel="h3">
+    //         Fetching Database instance Connection Status...
+    //       </Title>
+    //     </EmptyState>
+    //   )
+    // }
 
     return (
       <React.Fragment>
