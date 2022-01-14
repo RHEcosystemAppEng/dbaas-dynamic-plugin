@@ -12,6 +12,8 @@ export const mongoDBIcon = `data:image/svg+xml,%3Csvg height='64' viewBox='0 0 3
 export const APITokenLengthMinimum = 500
 export const crunchyProviderType = 'crunchy-bridge-registration'
 export const mongoProviderType = 'mongodb-atlas-registration'
+export const adminProviderType = 'rhoda-admin-dashboard'
+export const adminProviderName = 'Admin'
 export const crunchyProviderName = 'Crunchy Bridge Managed PostgreSQL'
 export const mongoProviderName = 'MongoDB Atlas Cloud Database Service'
 
