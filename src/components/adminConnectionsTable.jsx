@@ -12,17 +12,17 @@ import {
   ListItem,
 } from '@patternfly/react-core'
 
-const TableEmptyState = () => {
-  return (
-    <Bullseye>
-      <EmptyState variant={EmptyStateVariant.small}>
-        <Title headingLevel="h2" size="lg">
-          No database instance connection found
-        </Title>
-      </EmptyState>
-    </Bullseye>
-  )
-}
+// const TableEmptyState = () => {
+//   return (
+//     <Bullseye>
+//       <EmptyState variant={EmptyStateVariant.small}>
+//         <Title headingLevel="h2" size="lg">
+//           No database instance connection found
+//         </Title>
+//       </EmptyState>
+//     </Bullseye>
+//   )
+// }
 class AdminConnectionsTable extends React.Component {
   constructor(props) {
     super(props)
@@ -58,7 +58,7 @@ class AdminConnectionsTable extends React.Component {
 
   getRows(data) {
     let rowList = []
-    //   if (data && data.length > 0) {
+    //  if (data && data.length > 0) {
     _.forEach(data, (rowData) => {
       rowList.push({
         cells: [

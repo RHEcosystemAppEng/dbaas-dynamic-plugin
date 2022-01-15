@@ -182,9 +182,7 @@ const AdminDashboard = () => {
     if (inventoriesAll.length > 0) {
       inventoriesAll.forEach((inventory) => {
         console.log(inventory)
-        console.log(inventory.metadata.name)
         if (inventory.metadata.name === inventoryRefName) {
-          console.log('Matched inventoryRefName')
           if (inventory.spec?.providerRef?.name === crunchyProviderType) {
             databaseName = crunchyProviderName
           }
@@ -209,8 +207,8 @@ const AdminDashboard = () => {
     console.log(newDbaasConnectionList.length)
     if (newDbaasConnectionList.length > 0) {
       newDbaasConnectionList.forEach((dbaasConnection) => {
-        console.log('dbaasConnection:')
-        console.log(dbaasConnection)
+        // console.log('dbaasConnection:')
+        // console.log(dbaasConnection)
 
         let connectionObj = {
           instanceID: dbaasConnection?.spec?.instanceID,
@@ -241,7 +239,9 @@ const AdminDashboard = () => {
       })
     }
     setConnectionAndServiceBindingList(newConnectionAndServiceBindingList)
-    setShowResults(true)
+    if (newConnectionAndServiceBindingList.length > 0) {
+      setShowResults(true)
+    }
   }
 
   const fetchServiceBindings = async () => {
