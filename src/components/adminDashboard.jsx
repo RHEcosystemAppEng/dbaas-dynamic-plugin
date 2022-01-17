@@ -126,8 +126,6 @@ const AdminDashboard = () => {
   const [dbaasConnectionList, setDbaasConnectionList] = useState([])
   const [serviceBindingList, setServiceBindingList] = useState([])
   const [connectionAndServiceBindingList, setConnectionAndServiceBindingList] = useState([])
-  const [inventoriesAll, setInventoriesAll] = useState([])
-
   const currentNS = window.location.pathname.split('/')[3]
 
   const dbProviderTitle = (
@@ -135,13 +133,6 @@ const AdminDashboard = () => {
       Data Services <Label className="ocs-preview-badge extra-left-margin">Alpha</Label>
     </div>
   )
-
-  const fetchData = async () => {
-    console.log('fetchData Start')
-    await fetchInstances()
-    fetchDBaaSConnections()
-    fetchServiceBindings()
-  }
 
   const disableNSSelection = () => {
     const namespaceMenuToggleEle = document.getElementsByClassName('co-namespace-dropdown__menu-toggle')[0]
@@ -176,14 +167,13 @@ const AdminDashboard = () => {
   const setDatabaseName = (inventoryRefName) => {
     console.log('setDatabaseName')
     console.log('ID: ' + inventoryRefName)
-    console.log(inventoriesAll.length)
+    console.log('Inventory size: ' + inventories.length)
     let databaseName
 
-    if (inventoriesAll.length > 0) {
-      inventoriesAll.forEach((inventory) => {
-        console.log(inventory)
-        if (inventory.metadata.name === inventoryRefName) {
-          if (inventory.spec?.providerRef?.name === crunchyProviderType) {
+    if (inventories.length > 0) {
+      inventories.forEach((inventory) => {
+        if (inventory.name === inventoryRefName) {
+          if (inventory.providername === crunchyProviderType) {
             databaseName = crunchyProviderName
           }
           if (inventory.spec?.providerRef?.name === mongoProviderType) {
@@ -192,7 +182,6 @@ const AdminDashboard = () => {
         }
       })
     }
-
     return databaseName
   }
 
@@ -204,12 +193,8 @@ const AdminDashboard = () => {
     let newDbaasConnectionList = dbaasConnectionList
     let newServiceBindingList = serviceBindingList
     let newConnectionAndServiceBindingList = []
-    console.log(newDbaasConnectionList.length)
     if (newDbaasConnectionList.length > 0) {
       newDbaasConnectionList.forEach((dbaasConnection) => {
-        // console.log('dbaasConnection:')
-        // console.log(dbaasConnection)
-
         let connectionObj = {
           instanceID: dbaasConnection?.spec?.instanceID,
           instanceName: dbaasConnection?.metadata?.name,
@@ -239,9 +224,6 @@ const AdminDashboard = () => {
       })
     }
     setConnectionAndServiceBindingList(newConnectionAndServiceBindingList)
-    if (newConnectionAndServiceBindingList.length > 0) {
-      setShowResults(true)
-    }
   }
 
   const fetchServiceBindings = async () => {
@@ -289,16 +271,15 @@ const AdminDashboard = () => {
     let inventories = []
     let inventoryItems = await fetchInventoriesByNSAndRules()
     console.log('inventoryItems: ' + inventoryItems.length)
-    setInventoriesAll(inventoryItems)
 
     if (inventoryItems.length > 0) {
       inventoryItems.forEach((inventory, index) => {
-        console.log(inventory)
-        let obj = { id: 0, name: '', namespace: '', instances: [], status: {} }
+        let obj = { id: 0, name: '', namespace: '', instances: [], status: {}, providername: '' }
         obj.id = index
         obj.name = inventory.metadata.name
         obj.namespace = inventory.metadata.namespace
         obj.status = inventory.status
+        obj.providername = inventory.spec?.providerRef?.name
 
         if (
           inventory.status?.conditions[0]?.status !== 'False' &&
@@ -309,10 +290,15 @@ const AdminDashboard = () => {
           })
           obj.instances = inventory.status?.instances
         }
+        console.log('Inventory:')
+        console.log(inventory)
+        console.log('Inventory Obj:')
+        console.log(obj)
 
         inventories.push(obj)
       })
       setInventories(inventories)
+      setShowResults(true)
     } else {
       setNoInstances(true)
       setStatusMsg('There is no Provider Account.')
@@ -464,12 +450,14 @@ const AdminDashboard = () => {
 
   React.useEffect(() => {
     disableNSSelection()
-    fetchData()
+    fetchInstances()
+    fetchDBaaSConnections()
+    fetchServiceBindings()
   }, [])
 
   React.useEffect(() => {
     mapDBaaSConnectionsAndServiceBindings()
-  }, [dbaasConnectionList, serviceBindingList])
+  }, [dbaasConnectionList, serviceBindingList, inventories])
 
   return (
     <FlexForm className="instance-table-container">
