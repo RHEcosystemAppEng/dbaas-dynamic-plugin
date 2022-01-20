@@ -77,11 +77,19 @@
     }
   },
   {
+    "type": "console.navigation/section",
+    "properties": {
+      "id": "data-services",
+      "perspective": "admin",
+      "name": "Data Services"
+    }
+  },
+  {
     "type": "console.page/route",
     "properties": {
       "exact": true,
       "path": [
-        "/k8s/ns/:ns/rhoda-admin-dashboard"
+        "/rhoda-admin-dashboard"
       ],
       "component": {
         "$codeRef": "adminDashboard"
@@ -93,12 +101,34 @@
     "properties": {
       "id": "rhoda-admin-dashboard",
       "perspective": "admin",
-      "name": "Data Services",
-      "prefixNamespaced": true,
+      "section": "data-services",
+      "name": "Database Access",
       "href": "/rhoda-admin-dashboard"
-    },
-    "flags": {
-      "required": ["OPENSHIFT"]
     }
   }
+  // {
+  //   "type": "console.page/route",
+  //   "properties": {
+  //     "exact": true,
+  //     "path": [
+  //       "/k8s/ns/:ns/rhoda-admin-dashboard"
+  //     ],
+  //     "component": {
+  //       "$codeRef": "adminDashboard"
+  //     }
+  //   }
+  // },
+  // {
+  //   "type": "console.navigation/href",
+  //   "properties": {
+  //     "id": "rhoda-admin-dashboard",
+  //     "perspective": "admin",
+  //     "name": "Data Services",
+  //     "prefixNamespaced": true,
+  //     "href": "/rhoda-admin-dashboard"
+  //   },
+  //   "flags": {
+  //     "required": ["OPENSHIFT"]
+  //   }
+  // }
 ]

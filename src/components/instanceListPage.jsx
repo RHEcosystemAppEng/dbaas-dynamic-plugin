@@ -182,7 +182,6 @@ const InstanceListPage = () => {
   const [dbaasConnectionList, setDbaasConnectionList] = React.useState([])
   const [serviceBindingList, setServiceBindingList] = React.useState([])
   const [connectionAndServiceBindingList, setConnectionAndServiceBindingList] = React.useState([])
-  const [inventoriesAll, setInventoriesAll] = React.useState([])
 
   const currentNS = window.location.pathname.split('/')[3]
 
@@ -226,82 +225,44 @@ const InstanceListPage = () => {
     }
   }
 
-  const setDatabaseName = (inventoryRefName) => {
-    console.log('setDatabaseName')
-    console.log('ID: ' + inventoryRefName)
-    console.log(inventoriesAll.length)
-    let databaseName
-
-    if (inventoriesAll.length > 0) {
-      inventoriesAll.forEach((inventory) => {
-        console.log(inventory)
-        console.log(inventory.metadata.name)
-        if (inventory.metadata.name === inventoryRefName) {
-          console.log('Matched inventoryRefName')
-          if (inventory.spec?.providerRef?.name === crunchyProviderType) {
-            databaseName = crunchyProviderName
-          }
-          if (inventory.spec?.providerRef?.name === mongoProviderType) {
-            databaseName = mongoProviderName
-          }
-        }
-      })
-    }
-
-    return databaseName
-
-    // if (connectionInfoRefName.includes('crunchy')) {
-    //   return crunchyProviderName
-    // } else return mongoProviderName
-    // return mongoProviderName
-  }
-
   const mapDBaaSConnectionsAndServiceBindings = () => {
     let newDbaasConnectionList = dbaasConnectionList
     let newServiceBindingList = serviceBindingList
     let newConnectionAndServiceBindingList = []
-    console.log('mapDBaaSConnectionsAndServiceBindings')
-    console.log(newDbaasConnectionList.length)
-    console.log(newDbaasConnectionList)
+
     if (newDbaasConnectionList.length > 0) {
       newDbaasConnectionList.forEach((dbaasConnection) => {
-        console.log('dbaasConnection:')
-        console.log(dbaasConnection)
-        // if (
-        //   selectedInventory?.instances?.find((instance) => instance.instanceID === dbaasConnection.spec?.instanceID)
-        // ) {
-        let connectionObj = {
-          instanceID: dbaasConnection?.spec?.instanceID,
-          instanceName: dbaasConnection?.metadata?.name,
-          connectionStatus: _.isEmpty(dbaasConnection?.status) ? '-' : dbaasConnection?.status?.conditions[0]?.reason,
-          errMsg: 'N/A',
-          applications: [],
-          namespace: _.isEmpty(dbaasConnection?.metadata?.namespace) ? '-' : dbaasConnection?.metadata?.namespace,
-          database: setDatabaseName(dbaasConnection.spec?.inventoryRef.name),
-          //database: setDatabaseName(dbaasConnection?.status?.connectionInfoRef?.name),
-          providerAcct: dbaasConnection?.spec?.inventoryRef?.name,
-        }
-        if (!_.isEmpty(dbaasConnection?.status) && dbaasConnection?.status?.conditions[0]?.status !== 'True') {
-          connectionObj.errMsg = dbaasConnection?.status?.conditions[0]?.message
-        }
         if (
-          newServiceBindingList.find((serviceBinding) => {
-            return isDbaasConnectionUsed(serviceBinding, dbaasConnection)
-          })
+          selectedInventory?.instances?.find((instance) => instance.instanceID === dbaasConnection.spec?.instanceID)
         ) {
-          newServiceBindingList.forEach((serviceBinding) => {
-            if (isDbaasConnectionUsed(serviceBinding, dbaasConnection)) {
-              let newConnectionObj = _.extend({}, connectionObj)
-              newConnectionObj.applications.push(serviceBinding.spec?.application)
-            }
-          })
+          let connectionObj = {
+            instanceID: dbaasConnection?.spec?.instanceID,
+            instanceName: dbaasConnection?.metadata?.name,
+            connectionStatus: _.isEmpty(dbaasConnection?.status) ? '-' : dbaasConnection?.status?.conditions[0]?.reason,
+            errMsg: 'N/A',
+            applications: [],
+            namespace: _.isEmpty(dbaasConnection?.metadata?.namespace) ? '-' : dbaasConnection?.metadata?.namespace,
+          }
+          if (!_.isEmpty(dbaasConnection?.status) && dbaasConnection?.status?.conditions[0]?.status !== 'True') {
+            connectionObj.errMsg = dbaasConnection?.status?.conditions[0]?.message
+          }
+          if (
+            newServiceBindingList.find((serviceBinding) => {
+              return isDbaasConnectionUsed(serviceBinding, dbaasConnection)
+            })
+          ) {
+            newServiceBindingList.forEach((serviceBinding) => {
+              if (isDbaasConnectionUsed(serviceBinding, dbaasConnection)) {
+                let newConnectionObj = _.extend({}, connectionObj)
+                newConnectionObj.applications.push(serviceBinding.spec?.application)
+              }
+            })
+          }
+          newConnectionAndServiceBindingList.push(connectionObj)
         }
-        console.log('pushing connectionObj')
-        console.log(connectionObj)
-        newConnectionAndServiceBindingList.push(connectionObj)
-        // }
       })
     }
+
     setConnectionAndServiceBindingList(newConnectionAndServiceBindingList)
   }
 
@@ -348,8 +309,6 @@ const InstanceListPage = () => {
 
   async function fetchDBaaSConnections() {
     let connections = await fetchObjectsClusterOrNS('dbaas.redhat.com', 'v1alpha1', 'dbaasconnections')
-    console.log('fetchDBaaSConnections')
-    console.log(connections)
     setDbaasConnectionList(connections)
   }
 
@@ -399,7 +358,6 @@ const InstanceListPage = () => {
   async function fetchInstances() {
     let inventories = []
     let inventoryItems = await fetchInventoriesByNSAndRules()
-    setInventoriesAll(inventoryItems)
 
     if (inventoryItems.length > 0) {
       let filteredInventories = _.filter(inventoryItems, (inventory) => {
@@ -449,8 +407,7 @@ const InstanceListPage = () => {
       setFetchInstancesFailed(true)
       setStatusMsg(error)
     })
-    console.log('fetchInventoriesByNSAndRules')
-    console.log(inventoryItems.length)
+
     return inventoryItems
   }
 

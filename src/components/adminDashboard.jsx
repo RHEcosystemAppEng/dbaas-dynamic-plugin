@@ -1,37 +1,33 @@
-import React, { useState } from 'react'
-import * as _ from 'lodash'
 import {
-  FormSection,
-  Title,
-  EmptyState,
-  EmptyStateIcon,
-  EmptyStateBody,
-  EmptyStateSecondaryActions,
-  Spinner,
-  Label,
-  FormGroup,
-  FormSelect,
-  FormSelectOption,
-  Button,
   Alert,
-  ExpandableSection,
+  Button,
+  Divider,
+  Dropdown,
+  DropdownItem,
+  DropdownPosition,
+  DropdownToggle,
+  EmptyState,
+  EmptyStateBody,
+  EmptyStateIcon,
+  EmptyStateSecondaryActions,
+  FormSection,
+  Label,
+  Spinner,
+  Split,
+  SplitItem,
+  Title,
 } from '@patternfly/react-core'
 import { InfoCircleIcon } from '@patternfly/react-icons'
-import './_dbaas-import-view.css'
-import FormHeader from './form/formHeader'
-import FlexForm from './form/flexForm'
-import FormBody from './form/formBody'
-import InstanceTable from './instanceTable'
-import InstanceListFilter from './instanceListFilter'
-import {
-  crunchyProviderType,
-  mongoProviderType,
-  crunchyProviderName,
-  mongoProviderName,
-  adminProviderType,
-} from '../const'
+import CaretDownIcon from '@patternfly/react-icons/dist/esm/icons/caret-down-icon'
+import * as _ from 'lodash'
+import React, { useState } from 'react'
+import { crunchyProviderName, crunchyProviderType, mongoProviderName, mongoProviderType } from '../const'
 import { getCSRFToken } from '../utils'
 import AdminConnectionsTable from './adminConnectionsTable'
+import FlexForm from './form/flexForm'
+import FormBody from './form/formBody'
+import FormHeader from './form/formHeader'
+import './_dbaas-import-view.css'
 
 export async function fetchInventoryNamespaces() {
   let inventoryNamespaces = []
@@ -126,11 +122,22 @@ const AdminDashboard = () => {
   const [dbaasConnectionList, setDbaasConnectionList] = useState([])
   const [serviceBindingList, setServiceBindingList] = useState([])
   const [connectionAndServiceBindingList, setConnectionAndServiceBindingList] = useState([])
+  const [isOpen, setIsOpen] = useState(false)
   const currentNS = window.location.pathname.split('/')[3]
+
+  const dropdownItems = [
+    <DropdownItem
+      key="link"
+      href="/k8s/ns/openshift-dbaas-operator/clusterserviceversions/dbaas-operator.v0.1.3/dbaas.redhat.com~v1alpha1~DBaaSInventory/~new"
+    >
+      Create Provider
+    </DropdownItem>,
+    <DropdownItem key="disabled link">Create Database Instance</DropdownItem>,
+  ]
 
   const dbProviderTitle = (
     <div>
-      Data Services <Label className="ocs-preview-badge extra-left-margin">Alpha</Label>
+      Database Access <Label className="ocs-preview-badge extra-left-margin">Alpha</Label>
     </div>
   )
 
@@ -274,6 +281,7 @@ const AdminDashboard = () => {
 
     if (inventoryItems.length > 0) {
       inventoryItems.forEach((inventory, index) => {
+        console.log(inventory)
         let obj = { id: 0, name: '', namespace: '', instances: [], status: {}, providername: '' }
         obj.id = index
         obj.name = inventory.metadata.name
@@ -448,6 +456,23 @@ const AdminDashboard = () => {
       })
   }
 
+  const onToggle = (isOpen) => {
+    setIsOpen(isOpen)
+  }
+  const onSelect = (event) => {
+    console.log('onSelect')
+    console.log(event.target)
+    console.log(isOpen)
+    setIsOpen(!isOpen)
+    onFocus()
+  }
+  const onFocus = () => {
+    const element = document.getElementById('toggle-id-4')
+    console.log('onFocus')
+    console.log(element)
+    element.focus()
+  }
+
   React.useEffect(() => {
     disableNSSelection()
     fetchInstances()
@@ -462,11 +487,36 @@ const AdminDashboard = () => {
   return (
     <FlexForm className="instance-table-container">
       <FormBody flexLayout>
-        <FormHeader
-          title={dbProviderTitle}
-          helpText="Create database provider account and view your database instances."
-          marginBottom="lg"
-        />
+        <Split>
+          <SplitItem isFilled>
+            <FormHeader
+              title={dbProviderTitle}
+              helpText="Create database provider account and view your database instances"
+              marginBottom="lg"
+            />
+          </SplitItem>
+          <SplitItem>
+            <Dropdown
+              onSelect={onSelect}
+              position={DropdownPosition.right}
+              toggle={
+                <DropdownToggle
+                  onToggle={onToggle}
+                  toggleIndicator={CaretDownIcon}
+                  isPrimary
+                  id="toggle-id-4"
+                  // style={{ minwidth: '20%' }}
+                >
+                  Create
+                </DropdownToggle>
+              }
+              isOpen={isOpen}
+              dropdownItems={dropdownItems}
+            />
+          </SplitItem>
+        </Split>
+        <Divider />
+
         {!showResults ? (
           <EmptyState>
             <EmptyStateIcon variant="container" component={Spinner} />

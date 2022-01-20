@@ -32,10 +32,10 @@ class AdminConnectionsTable extends React.Component {
         { title: 'ID', transforms: [wrappable, cellWidth(30)] },
         { title: 'Instance', transforms: [wrappable, cellWidth(30)] },
         { title: 'Status', transforms: [wrappable, cellWidth(30)] },
-        { title: 'Namespace', transforms: [wrappable, cellWidth(30)] },
+        { title: 'Project', transforms: [wrappable, cellWidth(30)] },
         { title: 'Application', transforms: [wrappable, cellWidth(30)] },
-        { title: 'Database', transforms: [wrappable, cellWidth(30)] },
-        { title: 'Provider Acct', transforms: [wrappable, cellWidth(30)] },
+        { title: 'Database Connection', transforms: [wrappable, cellWidth(30)] },
+        { title: 'Provider', transforms: [wrappable, cellWidth(30)] },
       ],
       rows: [],
     }
@@ -85,35 +85,12 @@ class AdminConnectionsTable extends React.Component {
         ],
       })
     })
-    // } else {
-    //   rowList.push({
-    //     heightAuto: true,
-    //     cells: [
-    //       {
-    //         props: { colSpan: 8 },
-    //         title: <TableEmptyState />,
-    //       },
-    //     ],
-    //   })
-    // }
 
     this.setState({ rows: rowList })
   }
 
   render() {
     const { columns, rows } = this.state
-    // const { isLoading } = this.props
-
-    // if (isLoading) {
-    //   return (
-    //     <EmptyState>
-    //       <EmptyStateIcon variant="container" component={Spinner} />
-    //       <Title size="lg" headingLevel="h3">
-    //         Fetching Database instance Connection Status...
-    //       </Title>
-    //     </EmptyState>
-    //   )
-    // }
 
     return (
       <React.Fragment>
@@ -122,6 +99,7 @@ class AdminConnectionsTable extends React.Component {
           aria-label="Instance Connection Status Table"
           cells={columns}
           rows={rows}
+          actions={this.actions}
         >
           <TableHeader />
           <TableBody />
