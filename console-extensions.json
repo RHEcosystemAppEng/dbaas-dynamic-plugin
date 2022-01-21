@@ -69,11 +69,43 @@
       "exact": true,
       "path": [
         "/k8s/ns/:ns/mongodb-atlas-registration",
-        "/k8s/ns/:ns/crunchy-bridge-registration"
+        "/k8s/ns/:ns/crunchy-bridge-registration",
+        "/k8s/ns/:ns/rhoda-admin-dashboard"
       ],
       "component": {
         "$codeRef": "instanceListPage"
       }
+    }
+  },
+  {
+    "type": "console.page/route",
+    "properties": {
+      "exact": true,
+      "path": [
+        "/k8s/ns/:ns/rhoda-provider-cluster-provision"
+      ],
+      "component": {
+        "$codeRef": "providerClusterProvisionPage"
+      }
+    }
+  },
+  {
+    "type": "console.navigation/section",
+    "properties": {
+      "id": "data-services",
+      "perspective": "admin",
+      "name": "Data Services"
+    }
+  },
+  {
+    "type": "console.navigation/href",
+    "properties": {
+      "id": "rhoda-provider-cluster-provision",
+      "prefixNamespaced": true,
+      "perspective": "admin",
+      "section": "data-services",
+      "name": "Provider Cluster Provision",
+      "href": "/rhoda-provider-cluster-provision"
     }
   }
 ]

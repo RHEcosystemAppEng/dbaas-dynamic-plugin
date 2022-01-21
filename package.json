@@ -74,7 +74,8 @@
       "constants": "./const.ts",
       "catalog": "./catalog",
       "dbaasImportPage": "./components/dbaasImportPage.jsx",
-      "instanceListPage": "./components/instanceListPage.jsx"
+      "instanceListPage": "./components/instanceListPage.jsx",
+      "providerClusterProvisionPage": "./components/providerClusterProvisionPage.jsx"
     },
     "dependencies": {
       "@console/pluginAPI": "*"
