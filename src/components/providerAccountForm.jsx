@@ -104,16 +104,23 @@ class ProviderAccountForm extends React.Component {
 
     if (!isFormValid) return
 
+    let labelsMap = new Map([['related-to', 'dbaas-operator']])
+    let providerName = ''
+    let labelKey = 'type'
+
+    providerName = selectedDBProvider.metadata?.name
+    if (providerName.includes('mongodb')) {
+      labelKey = 'atlas.mongodb.com/type'
+    }
+    labelsMap.set(labelKey, 'credentials')
+
     let newSecret = {
       apiVersion: 'v1',
       kind: 'Secret',
       metadata: {
         name: secretName,
         namespace: this.state.currentNS,
-        labels: {
-          'related-to': 'dbaas-operator',
-          type: 'dbaas-vendor-credentials',
-        },
+        labels: Object.fromEntries(labelsMap),
       },
       stringData: credentials,
       type: 'Opaque',
