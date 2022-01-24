@@ -71,15 +71,15 @@ Following commands should be executed in Console repository root.
 
 1. Build the image:
    ```sh
-   USER=<quay user/org> yarn img-build
+   QUAY_USER=<quay user/org> yarn img-build
    ```
 2. Run the image:
    ```sh
-   USER=<quay user/org> yarn img-run
+   QUAY_USER=<quay user/org> yarn img-run
    ```
 3. Push the image to image registry:
    ```sh
-   USER=<quay user/org> yarn img-push
+   QUAY_USER=<quay user/org> yarn img-push
    ```
 
 Update and apply `oc-manifest.yaml` to use a custom plugin image.
