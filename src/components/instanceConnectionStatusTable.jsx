@@ -1,16 +1,16 @@
-import React from 'react'
-import _ from 'lodash'
-import { Table, TableHeader, TableBody, wrappable, cellWidth } from '@patternfly/react-table'
 import {
-  Title,
+  Bullseye,
   EmptyState,
   EmptyStateIcon,
-  Spinner,
-  Bullseye,
   EmptyStateVariant,
   List,
   ListItem,
+  Spinner,
+  Title,
 } from '@patternfly/react-core'
+import { cellWidth, Table, TableBody, TableHeader, wrappable } from '@patternfly/react-table'
+import _ from 'lodash'
+import React from 'react'
 
 const TableEmptyState = () => {
   return (
@@ -40,6 +40,10 @@ class InstanceConnectionStatusTable extends React.Component {
     this.getRows = this.getRows.bind(this)
   }
 
+  componentDidMount() {
+    this.getRows(this.props.connections)
+  }
+
   componentDidUpdate(prevProps) {
     if (
       this.props.connections &&
@@ -48,10 +52,6 @@ class InstanceConnectionStatusTable extends React.Component {
     ) {
       this.getRows(this.props.connections)
     }
-  }
-
-  componentDidMount() {
-    this.getRows(this.props.connections)
   }
 
   getRows(data) {

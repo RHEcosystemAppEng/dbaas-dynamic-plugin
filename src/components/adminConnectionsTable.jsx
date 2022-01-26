@@ -1,28 +1,20 @@
-import React from 'react'
+import { Bullseye, EmptyState, EmptyStateVariant, List, ListItem, Title } from '@patternfly/react-core'
+import { cellWidth, Table, TableBody, TableHeader, wrappable } from '@patternfly/react-table'
 import _ from 'lodash'
-import { Table, TableHeader, TableBody, wrappable, cellWidth } from '@patternfly/react-table'
-import {
-  Title,
-  EmptyState,
-  EmptyStateIcon,
-  Spinner,
-  Bullseye,
-  EmptyStateVariant,
-  List,
-  ListItem,
-} from '@patternfly/react-core'
+import React from 'react'
 
-// const TableEmptyState = () => {
-//   return (
-//     <Bullseye>
-//       <EmptyState variant={EmptyStateVariant.small}>
-//         <Title headingLevel="h2" size="lg">
-//           No database instance connection found
-//         </Title>
-//       </EmptyState>
-//     </Bullseye>
-//   )
-// }
+const TableEmptyState = () => {
+  return (
+    <Bullseye>
+      <EmptyState variant={EmptyStateVariant.small}>
+        <Title headingLevel="h2" size="lg">
+          No database instance connection found
+        </Title>
+      </EmptyState>
+    </Bullseye>
+  )
+}
+
 class AdminConnectionsTable extends React.Component {
   constructor(props) {
     super(props)
@@ -58,34 +50,44 @@ class AdminConnectionsTable extends React.Component {
 
   getRows(data) {
     let rowList = []
-    //  if (data && data.length > 0) {
-    _.forEach(data, (rowData) => {
+    if (data && data.length > 0) {
+      _.forEach(data, (rowData) => {
+        rowList.push({
+          cells: [
+            rowData.instanceID,
+            rowData.instanceName,
+            rowData.connectionStatus,
+            rowData.namespace,
+            rowData.applications?.length > 0
+              ? {
+                  title: (
+                    <React.Fragment>
+                      <List isPlain>
+                        {rowData.applications.map((app) => (
+                          <ListItem>{app.name}</ListItem>
+                        ))}
+                      </List>
+                    </React.Fragment>
+                  ),
+                  props: { column: 'Branches' },
+                }
+              : '-',
+            rowData.database,
+            rowData.providerAcct,
+          ],
+        })
+      })
+    } else {
       rowList.push({
+        heightAuto: true,
         cells: [
-          rowData.instanceID,
-          rowData.instanceName,
-          rowData.connectionStatus,
-          rowData.namespace,
-          rowData.applications?.length > 0
-            ? {
-                title: (
-                  <React.Fragment>
-                    <List isPlain>
-                      {rowData.applications.map((app) => (
-                        <ListItem>{app.name}</ListItem>
-                      ))}
-                    </List>
-                  </React.Fragment>
-                ),
-                props: { column: 'Branches' },
-              }
-            : '-',
-          rowData.database,
-          rowData.providerAcct,
+          {
+            props: { colSpan: 8 },
+            title: <TableEmptyState />,
+          },
         ],
       })
-    })
-
+    }
     this.setState({ rows: rowList })
   }
 

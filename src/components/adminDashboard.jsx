@@ -1,47 +1,45 @@
+/* eslint-disable prettier/prettier */
 import {
-  Alert,
-  Button,
   Divider,
   Dropdown,
   DropdownItem,
   DropdownPosition,
   DropdownToggle,
   EmptyState,
-  EmptyStateBody,
   EmptyStateIcon,
-  EmptyStateSecondaryActions,
   FormSection,
   Label,
   Spinner,
   Split,
   SplitItem,
   Title,
+  EmptyStateVariant,
 } from '@patternfly/react-core'
-import { InfoCircleIcon } from '@patternfly/react-icons'
 import CaretDownIcon from '@patternfly/react-icons/dist/esm/icons/caret-down-icon'
 import * as _ from 'lodash'
 import React, { useState } from 'react'
-import { crunchyProviderName, crunchyProviderType, mongoProviderName, mongoProviderType } from '../const'
-import { getCSRFToken } from '../utils'
+import {
+  crunchyProviderName,
+  crunchyProviderType,
+  mongoProviderName,
+  mongoProviderType,
+  DBaaSInventoryCRName,
+  DBaaSOperatorName,
+} from '../const.ts'
+import {
+  fetchInventoryNamespaces,
+  fetchObjectsByNamespace,
+  fetchObjectsClusterOrNS,
+  isDbaasConnectionUsed,
+  fetchDbaasCSV,
+  disableNSSelection,
+} from '../utils'
 import AdminConnectionsTable from './adminConnectionsTable'
 import FlexForm from './form/flexForm'
 import FormBody from './form/formBody'
 import FormHeader from './form/formHeader'
 import './_dbaas-import-view.css'
-import {
-  fetchInventoryNamespaces,
-  isListAllowed,
-  json,
-  disableNSSelection,
-  handleTryAgain,
-  isDbaasConnectionUsed,
-  fetchObjectsClusterOrNS,
-  fetchInventoriesByNSAndRules,
-  fetchObjectsByNamespace,
-  objectsFromRulesReview,
-  fetchObjects,
-  fetchObject,
-} from './instanceListPage'
+import { handleTryAgain, handleCancel } from './instanceListPage'
 
 const AdminDashboard = () => {
   const [noInstances, setNoInstances] = useState(false)
@@ -53,16 +51,23 @@ const AdminDashboard = () => {
   const [serviceBindingList, setServiceBindingList] = useState([])
   const [connectionAndServiceBindingList, setConnectionAndServiceBindingList] = useState([])
   const [isOpen, setIsOpen] = useState(false)
+  const [dBaaSOperatorNameWithVersion, setDBaaSOperatorNameWithVersion] = useState()
+
   const currentNS = window.location.pathname.split('/')[3]
 
   const dropdownItems = [
     <DropdownItem
       key="link"
-      href="/k8s/ns/openshift-dbaas-operator/clusterserviceversions/dbaas-operator.v0.1.3/dbaas.redhat.com~v1alpha1~DBaaSInventory/~new"
+      href={`/k8s/ns/${currentNS}/clusterserviceversions/${dBaaSOperatorNameWithVersion}/${DBaaSInventoryCRName}/~new`}
     >
-      Create Provider
+      Database Provider Account
     </DropdownItem>,
-    <DropdownItem key="disabled link">Create Database Instance</DropdownItem>,
+    <DropdownItem
+      key="dbinstancelink"
+      href={`/k8s/ns/${currentNS}/clusterserviceversions/${dBaaSOperatorNameWithVersion}/${DBaaSInventoryCRName}/~new`}
+    >
+      Trial Database Instance
+    </DropdownItem>,
   ]
 
   const dbProviderTitle = (
@@ -90,12 +95,12 @@ const AdminDashboard = () => {
   }
 
   const mapDBaaSConnectionsAndServiceBindings = async () => {
-    let newDbaasConnectionList = dbaasConnectionList
-    let newServiceBindingList = serviceBindingList
-    let newConnectionAndServiceBindingList = []
+    const newDbaasConnectionList = dbaasConnectionList
+    const newServiceBindingList = serviceBindingList
+    const newConnectionAndServiceBindingList = []
     if (newDbaasConnectionList.length > 0) {
       newDbaasConnectionList.forEach((dbaasConnection) => {
-        let connectionObj = {
+        const connectionObj = {
           instanceID: dbaasConnection?.spec?.instanceID,
           instanceName: dbaasConnection?.metadata?.name,
           connectionStatus: _.isEmpty(dbaasConnection?.status) ? '-' : dbaasConnection?.status?.conditions[0]?.reason,
@@ -108,14 +113,10 @@ const AdminDashboard = () => {
         if (!_.isEmpty(dbaasConnection?.status) && dbaasConnection?.status?.conditions[0]?.status !== 'True') {
           connectionObj.errMsg = dbaasConnection?.status?.conditions[0]?.message
         }
-        if (
-          newServiceBindingList.find((serviceBinding) => {
-            return isDbaasConnectionUsed(serviceBinding, dbaasConnection)
-          })
-        ) {
+        if (newServiceBindingList.find((serviceBinding) => isDbaasConnectionUsed(serviceBinding, dbaasConnection))) {
           newServiceBindingList.forEach((serviceBinding) => {
             if (isDbaasConnectionUsed(serviceBinding, dbaasConnection)) {
-              let newConnectionObj = _.extend({}, connectionObj)
+              const newConnectionObj = _.extend({}, connectionObj)
               newConnectionObj.applications.push(serviceBinding.spec?.application)
             }
           })
@@ -127,22 +128,30 @@ const AdminDashboard = () => {
   }
 
   const fetchServiceBindings = async () => {
-    let serviceBindings = await fetchObjectsClusterOrNS('binding.operators.coreos.com', 'v1alpha1', 'servicebindings')
+    const serviceBindings = await fetchObjectsClusterOrNS('binding.operators.coreos.com', 'v1alpha1', 'servicebindings')
     setServiceBindingList(serviceBindings)
   }
 
   const fetchDBaaSConnections = async () => {
-    let connections = await fetchObjectsClusterOrNS('dbaas.redhat.com', 'v1alpha1', 'dbaasconnections')
+    const connections = await fetchObjectsClusterOrNS('dbaas.redhat.com', 'v1alpha1', 'dbaasconnections').catch(
+      (error) => {
+        setNoInstances(true)
+        setStatusMsg(error)
+      }
+    )
+    if (connections.length == 0) {
+      setNoInstances(true)
+    }
     setDbaasConnectionList(connections)
   }
 
   const fetchInstances = async () => {
-    let inventories = []
-    let inventoryItems = await fetchInventoriesByNSAndRules()
+    const inventoriesAll = []
+    const inventoryItems = await fetchInventoriesByNSAndRules()
 
     if (inventoryItems.length > 0) {
       inventoryItems.forEach((inventory, index) => {
-        let obj = { id: 0, name: '', namespace: '', instances: [], status: {}, providername: '' }
+        const obj = { id: 0, name: '', namespace: '', instances: [], status: {}, providername: '' }
         obj.id = index
         obj.name = inventory.metadata.name
         obj.namespace = inventory.metadata.namespace
@@ -153,18 +162,16 @@ const AdminDashboard = () => {
           inventory.status?.conditions[0]?.status !== 'False' &&
           inventory.status?.conditions[0]?.type === 'SpecSynced'
         ) {
-          inventory.status?.instances?.map((instance) => {
-            return (instance.provider = inventory.spec?.providerRef?.name)
-          })
+          inventory.status?.instances?.map((instance) => (instance.provider = inventory.spec?.providerRef?.name))
           obj.instances = inventory.status?.instances
         }
-        inventories.push(obj)
+        inventoriesAll.push(obj)
       })
-      setInventories(inventories)
+      setInventories(inventoriesAll)
       setShowResults(true)
     } else {
       setNoInstances(true)
-      setStatusMsg('There is no Provider Account.')
+      setShowResults(true)
     }
   }
 
@@ -180,11 +187,32 @@ const AdminDashboard = () => {
     element.focus()
   }
 
+  async function fetchInventoriesByNSAndRules() {
+    const inventoryNamespaces = await fetchInventoryNamespaces()
+    const inventoryItems = await fetchObjectsByNamespace(
+      'dbaas.redhat.com',
+      'v1alpha1',
+      'dbaasinventories',
+      inventoryNamespaces
+    ).catch((error) => {
+      setFetchInstancesFailed(true)
+      setStatusMsg(error)
+    })
+
+    return inventoryItems
+  }
+
+  const fetchCSV = async () => {
+    const dbaasCSV = await fetchDbaasCSV(currentNS, DBaaSOperatorName)
+    setDBaaSOperatorNameWithVersion(dbaasCSV.metadata?.name)
+  }
+
   React.useEffect(() => {
     disableNSSelection()
     fetchInstances()
     fetchDBaaSConnections()
     fetchServiceBindings()
+    fetchCSV()
   }, [])
 
   React.useEffect(() => {
@@ -207,13 +235,7 @@ const AdminDashboard = () => {
               onSelect={onSelect}
               position={DropdownPosition.right}
               toggle={
-                <DropdownToggle
-                  onToggle={onToggle}
-                  toggleIndicator={CaretDownIcon}
-                  isPrimary
-                  id="toggle-id-4"
-                  // style={{ minwidth: '20%' }}
-                >
+                <DropdownToggle onToggle={onToggle} toggleIndicator={CaretDownIcon} isPrimary id="toggle-id-4">
                   Create
                 </DropdownToggle>
               }
