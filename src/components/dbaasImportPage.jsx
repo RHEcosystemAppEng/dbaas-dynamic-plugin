@@ -1,9 +1,10 @@
-import React from 'react'
 import * as _ from 'lodash'
-import './_dbaas-import-view.css'
-import ProviderAccountForm from './providerAccountForm'
-import InstancesForm from './instancesForm'
+import React from 'react'
 import { DBaaSOperatorName } from '../const'
+import { fetchDbaasCSV } from '../utils'
+import InstancesForm from './instancesForm'
+import ProviderAccountForm from './providerAccountForm'
+import './_dbaas-import-view.css'
 
 class DBaasImportPage extends React.Component {
   constructor(props) {
@@ -27,34 +28,10 @@ class DBaasImportPage extends React.Component {
     this.fetchCSV()
   }
 
-  fetchCSV = () => {
+  fetchCSV = async () => {
     const { currentNS } = this.state
-    let requestOpts = {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-      },
-    }
-
-    fetch(
-      '/api/kubernetes/apis/operators.coreos.com/v1alpha1/namespaces/' +
-        currentNS +
-        '/clusterserviceversions?limit=250',
-      requestOpts
-    )
-      .then((response) => response.json())
-      .then((data) => {
-        if (data.items?.length > 0) {
-          let dbaasCSV = data.items.find((csv) => {
-            return csv?.metadata?.name.includes(DBaaSOperatorName)
-          })
-          this.setState({ dbaasCSV: dbaasCSV })
-        }
-      })
-      .catch((err) => {
-        console.error(err)
-      })
+    const dbaasCSV = await fetchDbaasCSV(currentNS, DBaaSOperatorName)
+    this.setState({ dbaasCSV: dbaasCSV })
   }
 
   fetchProviderInfo = () => {

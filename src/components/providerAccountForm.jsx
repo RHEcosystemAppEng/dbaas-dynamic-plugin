@@ -13,7 +13,7 @@ import {
   ValidatedOptions,
 } from '@patternfly/react-core'
 import { getCSRFToken } from '../utils'
-import { fetchInventoryNamespaces } from './instanceListPage'
+import { fetchInventoryNamespaces } from '../utils'
 
 class ProviderAccountForm extends React.Component {
   constructor(props) {

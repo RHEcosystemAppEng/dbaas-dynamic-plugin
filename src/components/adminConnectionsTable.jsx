@@ -1,13 +1,4 @@
-import {
-  Bullseye,
-  EmptyState,
-  EmptyStateIcon,
-  EmptyStateVariant,
-  List,
-  ListItem,
-  Spinner,
-  Title,
-} from '@patternfly/react-core'
+import { Bullseye, EmptyState, EmptyStateVariant, List, ListItem, Title } from '@patternfly/react-core'
 import { cellWidth, Table, TableBody, TableHeader, wrappable } from '@patternfly/react-table'
 import _ from 'lodash'
 import React from 'react'
@@ -23,7 +14,8 @@ const TableEmptyState = () => {
     </Bullseye>
   )
 }
-class InstanceConnectionStatusTable extends React.Component {
+
+class AdminConnectionsTable extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
@@ -32,16 +24,14 @@ class InstanceConnectionStatusTable extends React.Component {
         { title: 'ID', transforms: [wrappable, cellWidth(30)] },
         { title: 'Instance', transforms: [wrappable, cellWidth(30)] },
         { title: 'Status', transforms: [wrappable, cellWidth(30)] },
-        { title: 'Namespace', transforms: [wrappable, cellWidth(30)] },
+        { title: 'Project', transforms: [wrappable, cellWidth(30)] },
         { title: 'Application', transforms: [wrappable, cellWidth(30)] },
+        { title: 'Database Connection', transforms: [wrappable, cellWidth(30)] },
+        { title: 'Provider', transforms: [wrappable, cellWidth(30)] },
       ],
       rows: [],
     }
     this.getRows = this.getRows.bind(this)
-  }
-
-  componentDidMount() {
-    this.getRows(this.props.connections)
   }
 
   componentDidUpdate(prevProps) {
@@ -52,6 +42,10 @@ class InstanceConnectionStatusTable extends React.Component {
     ) {
       this.getRows(this.props.connections)
     }
+  }
+
+  componentDidMount() {
+    this.getRows(this.props.connections)
   }
 
   getRows(data) {
@@ -78,6 +72,8 @@ class InstanceConnectionStatusTable extends React.Component {
                   props: { column: 'Branches' },
                 }
               : '-',
+            rowData.database,
+            rowData.providerAcct,
           ],
         })
       })
@@ -92,24 +88,11 @@ class InstanceConnectionStatusTable extends React.Component {
         ],
       })
     }
-
     this.setState({ rows: rowList })
   }
 
   render() {
     const { columns, rows } = this.state
-    const { isLoading } = this.props
-
-    if (isLoading) {
-      return (
-        <EmptyState>
-          <EmptyStateIcon variant="container" component={Spinner} />
-          <Title size="lg" headingLevel="h3">
-            Fetching Database instance Connection Status...
-          </Title>
-        </EmptyState>
-      )
-    }
 
     return (
       <React.Fragment>
@@ -118,6 +101,7 @@ class InstanceConnectionStatusTable extends React.Component {
           aria-label="Instance Connection Status Table"
           cells={columns}
           rows={rows}
+          actions={this.actions}
         >
           <TableHeader />
           <TableBody />
@@ -127,4 +111,4 @@ class InstanceConnectionStatusTable extends React.Component {
   }
 }
 
-export default InstanceConnectionStatusTable
+export default AdminConnectionsTable

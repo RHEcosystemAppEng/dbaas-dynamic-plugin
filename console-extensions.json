@@ -20,12 +20,30 @@
       "href": "/catalog?catalogType=dbaas-new",
       "label": "Connected Database",
       "description": "Select a cloud database provider to connect",
-      "icon": { "$codeRef": "constants.dbaasServicesIcon" },
+      "icon": {
+        "$codeRef": "constants.dbaasServicesIcon"
+      },
       "accessReview": [
-        { "group": "apps.openshift.io", "resource": "deploymentconfigs", "verb": "create" },
-        { "group": "route.openshift.io", "resource": "routes", "verb": "create" },
-        { "group": "", "resource": "secrets", "verb": "create" },
-        { "group": "", "resource": "services", "verb": "create" }
+        {
+          "group": "apps.openshift.io",
+          "resource": "deploymentconfigs",
+          "verb": "create"
+        },
+        {
+          "group": "route.openshift.io",
+          "resource": "routes",
+          "verb": "create"
+        },
+        {
+          "group": "",
+          "resource": "secrets",
+          "verb": "create"
+        },
+        {
+          "group": "",
+          "resource": "services",
+          "verb": "create"
+        }
       ]
     }
   },
@@ -46,7 +64,9 @@
     "properties": {
       "catalogId": "dev-catalog",
       "type": "dbaas-new",
-      "provider": { "$codeRef": "catalog.dbaasProvider" }
+      "provider": {
+        "$codeRef": "catalog.dbaasProvider"
+      }
     },
     "flags": {
       "required": []
@@ -60,7 +80,9 @@
         "version": "v1alpha1",
         "kind": "DBaaSInventory"
       },
-      "component": { "$codeRef": "dbaasImportPage" }
+      "component": {
+        "$codeRef": "dbaasImportPage"
+      }
     }
   },
   {
@@ -74,6 +96,37 @@
       "component": {
         "$codeRef": "instanceListPage"
       }
+    }
+  },
+  {
+    "type": "console.navigation/section",
+    "properties": {
+      "id": "data-services",
+      "perspective": "admin",
+      "name": "Data Services"
+    }
+  },
+  {
+    "type": "console.page/route",
+    "properties": {
+      "exact": true,
+      "path": [
+        "/k8s/ns/:ns/rhoda-admin-dashboard"
+      ],
+      "component": {
+        "$codeRef": "adminDashboard"
+      }
+    }
+  },
+  {
+    "type": "console.navigation/href",
+    "properties": {
+      "id": "rhoda-admin-dashboard",
+      "prefixNamespaced": true,
+      "perspective": "admin",
+      "section": "data-services",
+      "name": "Database Access",
+      "href": "/rhoda-admin-dashboard"
     }
   }
 ]
