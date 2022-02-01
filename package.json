@@ -1,6 +1,6 @@
 {
   "name": "@console/dbaas-dynamic-plugin",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "private": true,
   "repository": {
     "type": "git",
@@ -10,9 +10,9 @@
     "clean": "rm -rf ./dist",
     "build": "yarn clean && NODE_ENV=production yarn --production ts-node ./node_modules/.bin/webpack",
     "build-dev": "yarn lint && yarn format && yarn clean && yarn ts-node ./node_modules/.bin/webpack",
-    "img-build": "docker build -f Dockerfile -t quay.io/$USER/dbaas-dynamic-plugin:$npm_package_version .",
-    "img-push": "docker push quay.io/$USER/dbaas-dynamic-plugin:$npm_package_version",
-    "img-run": "docker run -it -p 9001:9001 quay.io/$USER/dbaas-dynamic-plugin:$npm_package_version",
+    "img-build": "docker build -f Dockerfile -t quay.io/$QUAY_USER/dbaas-dynamic-plugin:$npm_package_version .",
+    "img-push": "docker push quay.io/$QUAY_USER/dbaas-dynamic-plugin:$npm_package_version",
+    "img-run": "docker run -it -p 9001:9001 quay.io/$QUAY_USER/dbaas-dynamic-plugin:$npm_package_version",
     "http-server": "./http-server.sh ./dist",
     "ts-node": "ts-node -O '{\"module\":\"commonjs\"}' -I '/node_modules/(?!(@console)/)/'",
     "format": "prettier --trailing-comma es5 --no-semi --single-quote --write 'src/**/*.{ts,tsx,js,jsx}'",
@@ -75,7 +75,8 @@
       "catalog": "./catalog",
       "dbaasImportPage": "./components/dbaasImportPage.jsx",
       "instanceListPage": "./components/instanceListPage.jsx",
-      "providerClusterProvisionPage": "./components/providerClusterProvisionPage.jsx"
+      "providerClusterProvisionPage": "./components/providerClusterProvisionPage.jsx",
+      "adminDashboard": "./components/adminDashboard.jsx"
     },
     "dependencies": {
       "@console/pluginAPI": "*"
