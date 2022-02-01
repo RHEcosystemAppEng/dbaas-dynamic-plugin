@@ -97,6 +97,7 @@ const ProviderClusterProvisionPage = () => {
   const [clusterProvisionSuccess, setClusterProvisionSuccess] = React.useState(false)
   const [provisionRequestFired, setProvisionRequestFired] = React.useState(false)
   const currentNS = window.location.pathname.split('/')[3]
+  const checkDBClusterStatusTimerID = React.useRef()
 
   const goToInstancesPage = () => {}
 
@@ -106,6 +107,41 @@ const ProviderClusterProvisionPage = () => {
 
   const handleCancel = () => {
     window.history.back()
+  }
+
+  const checkDBClusterStatus = (clusterName) => {
+    if (!_.isEmpty(clusterName)) {
+      let requestOpts = {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+      }
+
+      fetch(
+        '/api/kubernetes/apis/dbaas.redhat.com/v1alpha1/namespaces/' + currentNS + '/dbaasinstances/' + clusterName,
+        requestOpts
+      )
+        .then((response) => response.json())
+        .then((responseJson) => {
+          if (
+            responseJson?.status?.phase?.toLowerCase() === 'creating' &&
+            responseJson?.status?.conditions[0]?.type?.toLowerCase() === 'instanceready'
+          ) {
+            if (responseJson?.status?.conditions[0]?.status?.toLowerCase() === 'false') {
+              setClusterProvisionSuccess(true)
+              setShowResults(true)
+            }
+          } else {
+            setTimeout(() => {
+              setClusterProvisionFailed(true)
+              setStatusMsg('Could not connect with database provider')
+              setShowResults(true)
+            }, 30000)
+          }
+        })
+    }
   }
 
   const provisionDBCluster = (e) => {
@@ -137,8 +173,6 @@ const ProviderClusterProvisionPage = () => {
             name: selectedInventory.name,
             namespace: currentNS,
           },
-          cloudProvider: 'AWS', //TODO: should not be hard coded
-          cloudRegion: 'US_EAST_1', //TODO: should not be hard coded
           otherInstanceParams: otherInstanceParams,
         },
       }),
@@ -153,8 +187,9 @@ const ProviderClusterProvisionPage = () => {
           setShowResults(true)
         } else {
           setProvisionRequestFired(true)
-          setClusterProvisionSuccess(true)
-          setShowResults(true)
+          checkDBClusterStatusTimerID.current = setInterval(() => {
+            checkDBClusterStatus(data?.metadata?.name)
+          }, 3000)
         }
       })
       .catch((err) => {
@@ -267,6 +302,10 @@ const ProviderClusterProvisionPage = () => {
   React.useEffect(() => {
     fetchProviderInfo()
     fetchInventoriesByNSAndRules()
+
+    return () => {
+      clearInterval(checkDBClusterStatusTimerID.current)
+    }
   }, [])
 
   return (
@@ -298,7 +337,7 @@ const ProviderClusterProvisionPage = () => {
                 ))}
               </FormSelect>
             </FormGroup>
-            {selectedDBProvider.value === crunchyProviderType ? (
+            {/* {selectedDBProvider.value === crunchyProviderType ? (
               <Alert
                 variant="warning"
                 isInline
@@ -307,51 +346,51 @@ const ProviderClusterProvisionPage = () => {
               >
                 <a href="">link to crunchy</a>
               </Alert>
-            ) : (
-              <React.Fragment>
-                <FormGroup label="Provider Account" fieldId="provider-account" className="half-width-selection">
-                  <FormSelect
-                    value={selectedInventory.name}
-                    onChange={handleInventorySelection}
-                    aria-label="Provider Account"
-                  >
-                    {filteredInventories?.map((inventory, index) => (
-                      <FormSelectOption key={index} value={inventory.name} label={inventory.name} />
-                    ))}
-                  </FormSelect>
-                </FormGroup>
-                <FormGroup label="Cluster Name" fieldId="cluster-name" isRequired className="half-width-selection">
+            ) : ( */}
+            <React.Fragment>
+              <FormGroup label="Provider Account" fieldId="provider-account" className="half-width-selection">
+                <FormSelect
+                  value={selectedInventory.name}
+                  onChange={handleInventorySelection}
+                  aria-label="Provider Account"
+                >
+                  {filteredInventories?.map((inventory, index) => (
+                    <FormSelectOption key={index} value={inventory.name} label={inventory.name} />
+                  ))}
+                </FormSelect>
+              </FormGroup>
+              <FormGroup label="Cluster Name" fieldId="cluster-name" isRequired className="half-width-selection">
+                <TextInput
+                  isRequired
+                  type="text"
+                  id="cluster-name"
+                  name="cluster-name"
+                  value={clusterName}
+                  onChange={(value) => setClusterName(value)}
+                />
+              </FormGroup>
+              {selectedDBProvider.value === mongoProviderType ? (
+                <FormGroup label="Project Name" fieldId="project-name" isRequired className="half-width-selection">
                   <TextInput
                     isRequired
                     type="text"
-                    id="cluster-name"
-                    name="cluster-name"
-                    value={clusterName}
-                    onChange={(value) => setClusterName(value)}
+                    id="project-name"
+                    name="project-name"
+                    value={projectName}
+                    onChange={(value) => setProjectName(value)}
                   />
                 </FormGroup>
-                {selectedDBProvider.value === mongoProviderType ? (
-                  <FormGroup label="Project Name" fieldId="project-name" isRequired className="half-width-selection">
-                    <TextInput
-                      isRequired
-                      type="text"
-                      id="project-name"
-                      name="project-name"
-                      value={projectName}
-                      onChange={(value) => setProjectName(value)}
-                    />
-                  </FormGroup>
-                ) : null}
-                <ActionGroup>
-                  <Button id="cluster-provision-button" variant="primary" type="submit">
-                    Provision
-                  </Button>
-                  <Button variant="secondary" onClick={handleCancel}>
-                    Cancel
-                  </Button>
-                </ActionGroup>
-              </React.Fragment>
-            )}
+              ) : null}
+              <ActionGroup>
+                <Button id="cluster-provision-button" variant="primary" type="submit">
+                  Provision
+                </Button>
+                <Button variant="secondary" onClick={handleCancel}>
+                  Cancel
+                </Button>
+              </ActionGroup>
+            </React.Fragment>
+            {/* )} */}
           </React.Fragment>
         ) : null}
       </FormBody>
