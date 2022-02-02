@@ -16,7 +16,14 @@ import {
 import { InfoCircleIcon } from '@patternfly/react-icons'
 import * as _ from 'lodash'
 import * as React from 'react'
-import { crunchyProviderName, crunchyProviderType, mongoProviderName, mongoProviderType } from '../const'
+import {
+  crunchyProviderName,
+  crunchyProviderType,
+  cockroachdbProviderType,
+  mongoProviderName,
+  mongoProviderType,
+  cockroachdbProviderName,
+} from '../const'
 import {
   fetchInventoryNamespaces,
   fetchObjectsByNamespace,
@@ -163,6 +170,9 @@ const InstanceListPage = () => {
     }
     if (dbProviderType === mongoProviderType) {
       setDBProviderName(mongoProviderName)
+    }
+    if (dbProviderType === cockroachdbProviderType) {
+      setDBProviderName(cockroachdbProviderName)
     }
     setSelectedDBProvider(dbProviderType)
   }
