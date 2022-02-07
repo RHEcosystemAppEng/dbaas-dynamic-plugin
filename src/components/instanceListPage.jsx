@@ -79,7 +79,7 @@ const InstanceListPage = () => {
 
   const dbProviderTitle = (
     <div>
-      Connect {dbProviderName} <Label className="ocs-preview-badge extra-left-margin">Alpha</Label>
+      Connect {dbProviderName} <Label className="ocs-preview-badge extra-left-margin">Service Preview</Label>
     </div>
   )
   const filteredInstances = React.useMemo(
