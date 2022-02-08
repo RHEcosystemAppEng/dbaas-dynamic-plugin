@@ -72,7 +72,7 @@ const AdminDashboard = () => {
 
   const dbProviderTitle = (
     <div>
-      Database Access <Label className="ocs-preview-badge extra-left-margin">Alpha</Label>
+      Database Access <Label className="ocs-preview-badge extra-left-margin">Service Preview</Label>
     </div>
   )
 
