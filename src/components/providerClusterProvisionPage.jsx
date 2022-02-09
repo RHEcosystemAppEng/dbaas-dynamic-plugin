@@ -121,6 +121,7 @@ const ProviderClusterProvisionPage = () => {
         return dbProvider.value === devSelectedDBProviderName
       })
       setSelectedDBProvider(provider)
+      filterInventoriesByProvider(provider)
       setIsDBProviderFieldValid(ValidatedOptions.default)
       setIsDBProviderFieldDisabled(true)
     }
