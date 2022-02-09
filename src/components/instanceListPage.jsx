@@ -12,6 +12,8 @@ import {
   Label,
   Spinner,
   Title,
+  Split,
+  SplitItem,
 } from '@patternfly/react-core'
 import { InfoCircleIcon } from '@patternfly/react-icons'
 import * as _ from 'lodash'
@@ -59,22 +61,6 @@ export async function fetchInventoriesByNSAndRules() {
   })
 
   return inventoryItems
-}
-
-export async function fetchObjectsByNamespace(group, version, kindPlural, namespaces = []) {
-  let promises = []
-  let items = []
-
-  namespaces.forEach((namespace) => {
-    if (namespace) {
-      promises.push(objectsFromRulesReview(group, version, kindPlural, namespace))
-    }
-  })
-  await Promise.all(promises).then((objectByNS) => {
-    objectByNS.forEach((objectArrays) => objectArrays.forEach((value) => items.push(...value)))
-  })
-
-  return items
 }
 
 async function objectsFromRulesReview(group, version, kindPlural, namespace) {
@@ -398,7 +384,24 @@ const InstanceListPage = () => {
                   </FormSelect>
                 </FormGroup>
                 <FormGroup label="Database Instance" fieldId="instance-id-filter">
-                  <InstanceListFilter textInputIDValue={textInputIDValue} setTextInputIDValue={setTextInputIDValue} />
+                  <Split>
+                    <SplitItem>
+                      <InstanceListFilter
+                        textInputIDValue={textInputIDValue}
+                        setTextInputIDValue={setTextInputIDValue}
+                      />
+                    </SplitItem>
+                    <SplitItem>
+                      <Button
+                        component="a"
+                        href={`/k8s/ns/${currentNS}/rhoda-create-database-instance/db/${selectedDBProvider}/pa/${selectedInventory?.name}`}
+                        variant="secondary"
+                        className="extra-left-margin"
+                      >
+                        Create Database Instance
+                      </Button>
+                    </SplitItem>
+                  </Split>
                 </FormGroup>
                 <FormSection fullWidth flexLayout className="no-top-margin">
                   <InstanceTable
