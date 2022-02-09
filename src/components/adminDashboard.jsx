@@ -33,6 +33,7 @@ import {
   isDbaasConnectionUsed,
   fetchDbaasCSV,
   disableNSSelection,
+  enableNSSelection,
 } from '../utils'
 import AdminConnectionsTable from './adminConnectionsTable'
 import FlexForm from './form/flexForm'
@@ -62,11 +63,8 @@ const AdminDashboard = () => {
     >
       Database Provider Account
     </DropdownItem>,
-    <DropdownItem
-      key="dbinstancelink"
-      href={`/k8s/ns/${currentNS}/clusterserviceversions/${dBaaSOperatorNameWithVersion}/${DBaaSInventoryCRName}/~new`}
-    >
-      Trial Database Instance
+    <DropdownItem key="dbinstancelink" href={`/k8s/ns/${currentNS}/rhoda-create-database-instance`}>
+      Database Instance
     </DropdownItem>,
   ]
 
@@ -213,6 +211,10 @@ const AdminDashboard = () => {
     fetchDBaaSConnections()
     fetchServiceBindings()
     fetchCSV()
+
+    return () => {
+      enableNSSelection()
+    }
   }, [])
 
   React.useEffect(() => {

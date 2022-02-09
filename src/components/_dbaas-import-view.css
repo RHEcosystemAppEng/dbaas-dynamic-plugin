@@ -135,6 +135,10 @@
     margin: 30px;
   }
 
+  .error-icon {
+    color: #c9190b !important
+  }
+
   .success-icon {
     color: #3E8635 !important;
   }
@@ -148,5 +152,9 @@
   }
 
   .provider-account-selection {
+    width: 50%;
+  }
+
+  .half-width-selection {
     width: 50%;
   }
