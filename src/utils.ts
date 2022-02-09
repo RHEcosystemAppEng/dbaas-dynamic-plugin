@@ -356,3 +356,10 @@ export const disableNSSelection = () => {
     namespaceMenuToggleEle.setAttribute('disabled', 'true')
   }
 }
+
+export const enableNSSelection = () => {
+  const namespaceMenuToggleEle = document.getElementsByClassName('co-namespace-dropdown__menu-toggle')[0]
+  if (namespaceMenuToggleEle) {
+    namespaceMenuToggleEle.removeAttribute('disabled')
+  }
+}

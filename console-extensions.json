@@ -113,9 +113,10 @@
   {
     "type": "console.page/route",
     "properties": {
-      "exact": true,
+      "exact": false,
       "path": [
-        "/k8s/ns/:ns/rhoda-provider-cluster-provision"
+        "/k8s/ns/:ns/rhoda-create-database-instance",
+        "/k8s/ns/:ns/rhoda-create-database-instance/db/:dbProviderName/pa/:providerAccountName"
       ],
       "component": {
         "$codeRef": "providerClusterProvisionPage"

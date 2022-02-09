@@ -16,15 +16,21 @@ import {
   EmptyStateBody,
   EmptyStateSecondaryActions,
   Spinner,
+  Divider,
+  ValidatedOptions,
 } from '@patternfly/react-core'
 import { InfoCircleIcon, CheckCircleIcon } from '@patternfly/react-icons'
 import FormHeader from './form/formHeader'
 import FlexForm from './form/flexForm'
 import FormBody from './form/formBody'
-import ProviderAccountForm from './providerAccountForm'
-import { fetchInventoryNamespaces, fetchObjectsByNamespace } from './instanceListPage'
 import { mongoProviderType, crunchyProviderType } from '../const'
-import { getCSRFToken } from '../utils'
+import {
+  getCSRFToken,
+  fetchInventoryNamespaces,
+  fetchObjectsByNamespace,
+  disableNSSelection,
+  enableNSSelection,
+} from '../utils'
 
 const LoadingView = () => {
   return (
@@ -32,7 +38,7 @@ const LoadingView = () => {
       <EmptyState>
         <EmptyStateIcon variant="container" component={Spinner} />
         <Title size="lg" headingLevel="h3">
-          Provisioning Provider Cluster...
+          Creating Database Instance...
         </Title>
       </EmptyState>
     </React.Fragment>
@@ -43,11 +49,11 @@ const FailedView = ({ handleTryAgain, handleCancel, statusMsg }) => {
   return (
     <React.Fragment>
       <EmptyState>
-        <EmptyStateIcon variant="container" component={InfoCircleIcon} className="warning-icon" />
+        <EmptyStateIcon variant="container" component={InfoCircleIcon} className="error-icon" />
         <Title headingLevel="h2" size="md">
-          Provider cluster provision failed
+          Database instance creation failed
         </Title>
-        <EmptyStateBody>Provider cluster provision failed. Please try again.</EmptyStateBody>
+        <EmptyStateBody>Database instance creation failed. Please try again.</EmptyStateBody>
         <Alert variant="danger" isInline title="An error occured" className="co-alert co-break-word extra-top-margin">
           <div>{statusMsg}</div>
         </Alert>
@@ -70,10 +76,10 @@ const SuccessView = ({ goToInstancesPage }) => {
       <EmptyState>
         <EmptyStateIcon variant="container" component={CheckCircleIcon} className="success-icon" />
         <Title headingLevel="h2" size="md">
-          Provider cluster provision successfully
+          Database instance creation started
         </Title>
         <EmptyStateBody>
-          The Provider Cluster has been provisioned, please click the button below to view it.
+          The database instance is being created, please click the button below to view it.
         </EmptyStateBody>
         <Button variant="primary" onClick={goToInstancesPage}>
           View Instances
@@ -89,17 +95,53 @@ const ProviderClusterProvisionPage = () => {
   const [inventories, setInventories] = React.useState([])
   const [filteredInventories, setFilteredInventories] = React.useState([{ name: 'Select provider account' }])
   const [selectedInventory, setSelectedInventory] = React.useState({})
-  const [clusterName, setClusterName] = React.useState('my-db-cluster')
-  const [projectName, setProjectName] = React.useState('my-db-project')
+  const [clusterName, setClusterName] = React.useState('')
+  const [projectName, setProjectName] = React.useState('')
   const [statusMsg, setStatusMsg] = React.useState('')
   const [showResults, setShowResults] = React.useState(false)
   const [clusterProvisionFailed, setClusterProvisionFailed] = React.useState(false)
   const [clusterProvisionSuccess, setClusterProvisionSuccess] = React.useState(false)
   const [provisionRequestFired, setProvisionRequestFired] = React.useState(false)
+  const [isDBProviderFieldValid, setIsDBProviderFieldValid] = React.useState('')
+  const [isDBProviderFieldDisabled, setIsDBProviderFieldDisabled] = React.useState(false)
+  const [isInventoryFieldValid, setIsInventoryFieldValid] = React.useState('')
+  const [isInventoryFieldDisabled, setIsInventoryFieldDisabled] = React.useState(false)
+  const [isInstanceNameFieldValid, setIsInstanceNameFieldValid] = React.useState('')
+  const [isProjectNameFieldValid, setIsProjectNameFieldValid] = React.useState('')
+  const [isFormValid, setIsFormValid] = React.useState(false)
   const currentNS = window.location.pathname.split('/')[3]
-  const checkDBClusterStatusTimerID = React.useRef()
+  const devSelectedDBProviderName = window.location.pathname.split('/db/')[1]?.split('/pa/')[0]
+  const devSelectedProviderAccountName = window.location.pathname.split('/pa/')[1]
+  const checkDBClusterStatusIntervalID = React.useRef()
+  const checkDBClusterStatusTimeoutID = React.useRef()
 
-  const goToInstancesPage = () => {}
+  const detectSelectedDBProviderAndProviderAccount = () => {
+    if (!_.isEmpty(devSelectedDBProviderName) && !_.isEmpty(providerList)) {
+      let provider = _.find(providerList, (dbProvider) => {
+        return dbProvider.value === devSelectedDBProviderName
+      })
+      setSelectedDBProvider(provider)
+      setIsDBProviderFieldValid(ValidatedOptions.default)
+      setIsDBProviderFieldDisabled(true)
+    }
+
+    if (!_.isEmpty(devSelectedProviderAccountName) && !_.isEmpty(inventories)) {
+      let inventory = inventories.find((inv) => {
+        return inv.name === devSelectedProviderAccountName
+      })
+      setSelectedInventory(inventory)
+      setIsInventoryFieldValid(ValidatedOptions.default)
+      setIsInventoryFieldDisabled(true)
+    }
+  }
+
+  const goToInstancesPage = () => {
+    if (!_.isEmpty(devSelectedDBProviderName) && !_.isEmpty(devSelectedProviderAccountName)) {
+      window.location.pathname = `/k8s/ns/${currentNS}/${devSelectedDBProviderName}`
+    } else {
+      window.location.pathname = `/k8s/ns/${currentNS}/rhoda-admin-dashboard`
+    }
+  }
 
   const handleTryAgain = () => {
     location.reload()
@@ -125,20 +167,37 @@ const ProviderClusterProvisionPage = () => {
       )
         .then((response) => response.json())
         .then((responseJson) => {
-          if (
-            responseJson?.status?.phase?.toLowerCase() === 'creating' &&
-            responseJson?.status?.conditions[0]?.type?.toLowerCase() === 'instanceready'
-          ) {
-            if (responseJson?.status?.conditions[0]?.status?.toLowerCase() === 'false') {
+          let provisionReadyCondition = responseJson?.status?.conditions?.find((condition) => {
+            return condition.type?.toLowerCase() === 'provisionready'
+          })
+          let instanceReadyCondition = responseJson?.status?.conditions?.find((condition) => {
+            return condition.type?.toLowerCase() === 'instanceready'
+          })
+
+          if (responseJson?.status?.phase?.toLowerCase() === 'creating') {
+            if (instanceReadyCondition?.status.toLowerCase() === 'false') {
               setClusterProvisionSuccess(true)
+              clearInterval(checkDBClusterStatusIntervalID.current)
+              clearTimeout(checkDBClusterStatusTimeoutID.current)
+              setShowResults(true)
+            }
+          } else if (responseJson?.status?.phase?.toLowerCase() === 'failed') {
+            if (provisionReadyCondition?.status.toLowerCase() === 'false') {
+              setClusterProvisionFailed(true)
+              setStatusMsg(provisionReadyCondition?.message)
+              clearInterval(checkDBClusterStatusIntervalID.current)
+              clearTimeout(checkDBClusterStatusTimeoutID.current)
               setShowResults(true)
             }
           } else {
-            setTimeout(() => {
-              setClusterProvisionFailed(true)
-              setStatusMsg('Could not connect with database provider')
-              setShowResults(true)
-            }, 30000)
+            if (!checkDBClusterStatusTimeoutID.current) {
+              checkDBClusterStatusTimeoutID.current = setTimeout(() => {
+                setClusterProvisionFailed(true)
+                setStatusMsg('Could not connect with database provider')
+                clearInterval(checkDBClusterStatusIntervalID.current)
+                setShowResults(true)
+              }, 30000)
+            }
           }
         })
     }
@@ -146,6 +205,8 @@ const ProviderClusterProvisionPage = () => {
 
   const provisionDBCluster = (e) => {
     e.preventDefault()
+
+    if (!isFormValid) return
 
     let otherInstanceParams = {}
 
@@ -187,7 +248,7 @@ const ProviderClusterProvisionPage = () => {
           setShowResults(true)
         } else {
           setProvisionRequestFired(true)
-          checkDBClusterStatusTimerID.current = setInterval(() => {
+          checkDBClusterStatusIntervalID.current = setInterval(() => {
             checkDBClusterStatus(data?.metadata?.name)
           }, 3000)
         }
@@ -211,6 +272,12 @@ const ProviderClusterProvisionPage = () => {
       //Set the first inventory as the selected inventory by default
       if (filteredInventoryList.length > 0) {
         setSelectedInventory(filteredInventoryList[0])
+      }
+
+      if (_.isEmpty(filteredInventoryList)) {
+        setIsInventoryFieldValid(ValidatedOptions.error)
+      } else {
+        setIsInventoryFieldValid(ValidatedOptions.default)
       }
     }
   }
@@ -259,7 +326,43 @@ const ProviderClusterProvisionPage = () => {
     return inventoryItems
   }
 
+  const validateForm = () => {
+    let isValid =
+      isDBProviderFieldValid === ValidatedOptions.default &&
+      isInventoryFieldValid === ValidatedOptions.default &&
+      isInstanceNameFieldValid === ValidatedOptions.default
+
+    if (selectedDBProvider.value === mongoProviderType) {
+      isValid = isValid && isProjectNameFieldValid === ValidatedOptions.default
+    }
+
+    setIsFormValid(isValid)
+  }
+
+  const handleProjectNameChange = (value) => {
+    if (_.isEmpty(value)) {
+      setIsProjectNameFieldValid(ValidatedOptions.error)
+    } else {
+      setIsProjectNameFieldValid(ValidatedOptions.default)
+    }
+    setProjectName(value)
+  }
+
+  const handleInstanceNameChange = (value) => {
+    if (_.isEmpty(value)) {
+      setIsInstanceNameFieldValid(ValidatedOptions.error)
+    } else {
+      setIsInstanceNameFieldValid(ValidatedOptions.default)
+    }
+    setClusterName(value)
+  }
+
   const handleInventorySelection = (value) => {
+    if (_.isEmpty(value)) {
+      setIsInventoryFieldValid(ValidatedOptions.error)
+    } else {
+      setIsInventoryFieldValid(ValidatedOptions.default)
+    }
     let inventory = _.find(inventories, (inv) => {
       return inv.name === value
     })
@@ -267,6 +370,11 @@ const ProviderClusterProvisionPage = () => {
   }
 
   const handleDBProviderSelection = (value) => {
+    if (_.isEmpty(value)) {
+      setIsDBProviderFieldValid(ValidatedOptions.error)
+    } else {
+      setIsDBProviderFieldValid(ValidatedOptions.default)
+    }
     if (!_.isEmpty(providerList)) {
       let provider = _.find(providerList, (dbProvider) => {
         return dbProvider.value === value
@@ -290,7 +398,14 @@ const ProviderClusterProvisionPage = () => {
       .then((data) => {
         let dbProviderList = []
         data.items?.forEach((dbProvider) => {
-          dbProviderList.push({ value: dbProvider?.metadata?.name, label: dbProvider?.spec?.provider?.displayName })
+          dbProviderList.push({
+            value: dbProvider?.metadata?.name,
+            label: dbProvider?.spec?.provider?.displayName,
+            externalProvisionInfo: {
+              url: dbProvider?.spec?.externalProvisionURL,
+              desc: dbProvider?.spec?.externalProvisionDescription,
+            },
+          })
         })
         setProviderList(providerList.concat(dbProviderList))
       })
@@ -300,22 +415,41 @@ const ProviderClusterProvisionPage = () => {
   }
 
   React.useEffect(() => {
+    disableNSSelection()
     fetchProviderInfo()
     fetchInventoriesByNSAndRules()
 
     return () => {
-      clearInterval(checkDBClusterStatusTimerID.current)
+      clearInterval(checkDBClusterStatusIntervalID.current)
+      enableNSSelection()
     }
   }, [])
+
+  React.useEffect(() => {
+    validateForm()
+  }, [
+    isDBProviderFieldValid,
+    isInstanceNameFieldValid,
+    isInventoryFieldValid,
+    isProjectNameFieldValid,
+    selectedDBProvider,
+  ])
+
+  React.useEffect(() => {
+    if (!_.isEmpty(providerList) && !_.isEmpty(inventories)) {
+      detectSelectedDBProviderAndProviderAccount()
+    }
+  }, [providerList, inventories])
 
   return (
     <FlexForm className="instance-table-container" onSubmit={provisionDBCluster}>
       <FormBody flexLayout>
         <FormHeader
-          title="Provider Cluster Provision"
-          helpText="Provision trial database provider clusters."
+          title="Create Database Instance"
+          helpText="Creating an instance allows it to be connected to an application"
           marginBottom="lg"
         />
+        <Divider />
         {!showResults && provisionRequestFired ? <LoadingView /> : null}
         {provisionRequestFired && showResults && clusterProvisionFailed ? (
           <FailedView handleTryAgain={handleTryAgain} handleCancel={handleCancel} statusMsg={statusMsg} />
@@ -326,71 +460,114 @@ const ProviderClusterProvisionPage = () => {
 
         {!provisionRequestFired ? (
           <React.Fragment>
-            <FormGroup label="Database Provider" fieldId="database-provider" className="half-width-selection">
+            <Alert
+              variant="info"
+              isInline
+              title="Information to create a Production database instance"
+              className="co-info co-break-word"
+            >
+              <p>
+                For more information about creating a production database instance, please select a Database Provider
+                below.
+              </p>
+              {!_.isEmpty(selectedDBProvider) ? (
+                <a href={selectedDBProvider?.externalProvisionInfo?.url} target="_blank" rel="noopener noreferrer">
+                  Create a production database instance
+                </a>
+              ) : null}
+            </Alert>
+            <FormGroup
+              label="Database Provider"
+              fieldId="database-provider"
+              isRequired
+              className="half-width-selection"
+              helperTextInvalid="This is a required field"
+              validated={isDBProviderFieldValid}
+            >
               <FormSelect
+                isDisabled={isDBProviderFieldDisabled}
+                isRequired
                 value={selectedDBProvider.value}
                 onChange={handleDBProviderSelection}
                 aria-label="Database Provider"
+                validated={isDBProviderFieldValid}
               >
                 {providerList?.map((provider, index) => (
                   <FormSelectOption key={index} value={provider.value} label={provider.label} />
                 ))}
               </FormSelect>
             </FormGroup>
-            {/* {selectedDBProvider.value === crunchyProviderType ? (
-              <Alert
-                variant="warning"
-                isInline
-                title="Please use the link to provision trial cluster for Crunchy Bridge"
-                className="co-alert co-break-word half-width-selection"
-              >
-                <a href="">link to crunchy</a>
-              </Alert>
-            ) : ( */}
-            <React.Fragment>
-              <FormGroup label="Provider Account" fieldId="provider-account" className="half-width-selection">
-                <FormSelect
-                  value={selectedInventory.name}
-                  onChange={handleInventorySelection}
-                  aria-label="Provider Account"
-                >
-                  {filteredInventories?.map((inventory, index) => (
-                    <FormSelectOption key={index} value={inventory.name} label={inventory.name} />
-                  ))}
-                </FormSelect>
-              </FormGroup>
-              <FormGroup label="Cluster Name" fieldId="cluster-name" isRequired className="half-width-selection">
-                <TextInput
+            {selectedDBProvider?.value === crunchyProviderType ? null : (
+              <React.Fragment>
+                <FormGroup
+                  label="Provider Account"
+                  fieldId="provider-account"
                   isRequired
-                  type="text"
-                  id="cluster-name"
-                  name="cluster-name"
-                  value={clusterName}
-                  onChange={(value) => setClusterName(value)}
-                />
-              </FormGroup>
-              {selectedDBProvider.value === mongoProviderType ? (
-                <FormGroup label="Project Name" fieldId="project-name" isRequired className="half-width-selection">
+                  className="half-width-selection"
+                  helperTextInvalid="This is a required field"
+                  validated={isInventoryFieldValid}
+                >
+                  <FormSelect
+                    isDisabled={isInventoryFieldDisabled}
+                    isRequired
+                    value={selectedInventory.name}
+                    onChange={handleInventorySelection}
+                    aria-label="Provider Account"
+                    validated={isInventoryFieldValid}
+                  >
+                    {filteredInventories?.map((inventory, index) => (
+                      <FormSelectOption key={index} value={inventory.name} label={inventory.name} />
+                    ))}
+                  </FormSelect>
+                </FormGroup>
+                <FormGroup
+                  label="Instance Name"
+                  fieldId="instance-name"
+                  isRequired
+                  className="half-width-selection"
+                  helperTextInvalid="This is a required field"
+                  validated={isInstanceNameFieldValid}
+                >
                   <TextInput
                     isRequired
                     type="text"
-                    id="project-name"
-                    name="project-name"
-                    value={projectName}
-                    onChange={(value) => setProjectName(value)}
+                    id="instance-name"
+                    name="instance-name"
+                    value={clusterName}
+                    onChange={handleInstanceNameChange}
+                    validated={isInstanceNameFieldValid}
                   />
                 </FormGroup>
-              ) : null}
-              <ActionGroup>
-                <Button id="cluster-provision-button" variant="primary" type="submit">
-                  Provision
-                </Button>
-                <Button variant="secondary" onClick={handleCancel}>
-                  Cancel
-                </Button>
-              </ActionGroup>
-            </React.Fragment>
-            {/* )} */}
+                {selectedDBProvider.value === mongoProviderType ? (
+                  <FormGroup
+                    label="Project Name"
+                    fieldId="project-name"
+                    isRequired
+                    className="half-width-selection"
+                    helperTextInvalid="This is a required field"
+                    validated={isProjectNameFieldValid}
+                  >
+                    <TextInput
+                      isRequired
+                      type="text"
+                      id="project-name"
+                      name="project-name"
+                      value={projectName}
+                      onChange={handleProjectNameChange}
+                      validated={isProjectNameFieldValid}
+                    />
+                  </FormGroup>
+                ) : null}
+                <ActionGroup>
+                  <Button id="cluster-provision-button" variant="primary" type="submit" isDisabled={!isFormValid}>
+                    Create
+                  </Button>
+                  <Button variant="secondary" onClick={handleCancel}>
+                    Cancel
+                  </Button>
+                </ActionGroup>
+              </React.Fragment>
+            )}
           </React.Fragment>
         ) : null}
       </FormBody>
