@@ -23,11 +23,12 @@ class ProviderAccountForm extends React.Component {
     this.handleSubmit = this.handleSubmit.bind(this)
     this.validateField = this.validateField.bind(this)
     this.validateForm = this.validateForm.bind(this)
+    this.validateInventoryNameField = this.validateInventoryNameField.bind(this)
 
     this.state = {
       credentials: {},
       currentNS: window.location.pathname.split('/')[3],
-      inventoryName: 'my-db-provider-account',
+      inventoryName: '',
       inventoryNamespaces: [],
       selectedDBProvider: {},
       dbProviderOptions: [{ value: '', label: 'Select provider' }],
@@ -36,10 +37,11 @@ class ProviderAccountForm extends React.Component {
       showResults: true,
       error: {},
       isFormValid: false,
+      isInventoryNameFieldValid: '',
     }
   }
 
-  async componentDidUpdate(prevProps) {
+  async componentDidUpdate(prevProps, prevState) {
     if (!_.isEmpty(this.props.dbProviderInfo) && prevProps.dbProviderInfo !== this.props.dbProviderInfo) {
       let dbProviderList = []
       this.state.inventoryNamespaces = await fetchInventoryNamespaces()
@@ -52,13 +54,28 @@ class ProviderAccountForm extends React.Component {
       }
       this.setState({ dbProviderOptions: this.state.dbProviderOptions.concat(dbProviderList) })
     }
+    if (
+      prevState.isInventoryNameFieldValid !== this.state.isInventoryNameFieldValid &&
+      !_.isEmpty(this.state.selectedDBProvider)
+    ) {
+      this.validateForm()
+    }
   }
 
   validateForm = () => {
     let isValid = _.every(this.state.selectedDBProvider?.spec?.credentialFields, (field) => {
       return field.isValid === ValidatedOptions.default
     })
+    isValid = isValid && this.state.isInventoryNameFieldValid === ValidatedOptions.default
     this.setState({ isFormValid: isValid })
+  }
+
+  validateInventoryNameField = (value) => {
+    if (_.isEmpty(value)) {
+      this.setState({ isInventoryNameFieldValid: ValidatedOptions.error })
+    } else {
+      this.setState({ isInventoryNameFieldValid: ValidatedOptions.default })
+    }
   }
 
   validateField = (value, field) => {
@@ -108,7 +125,7 @@ class ProviderAccountForm extends React.Component {
     let providerName = ''
     let labelKey = 'type'
 
-    providerName = selectedDBProvider.metadata?.name
+    providerName = selectedDBProvider?.metadata?.name
     if (providerName.includes('mongodb')) {
       labelKey = 'atlas.mongodb.com/type'
     }
@@ -169,7 +186,7 @@ class ProviderAccountForm extends React.Component {
         },
         spec: {
           providerRef: {
-            name: selectedDBProvider.metadata?.name,
+            name: selectedDBProvider?.metadata?.name,
           },
           credentialsRef: {
             name: secretName,
@@ -239,19 +256,40 @@ class ProviderAccountForm extends React.Component {
   }
 
   render() {
-    const { selectedDBProvider, showError, error, inventoryName, dbProviderOptions, credentials, isFormValid } =
-      this.state
+    const {
+      selectedDBProvider,
+      showError,
+      error,
+      inventoryName,
+      dbProviderOptions,
+      credentials,
+      isFormValid,
+      isInventoryNameFieldValid,
+    } = this.state
 
     return (
       <Form id="provider-account-form" isWidthLimited onSubmit={this.handleSubmit}>
-        <FormGroup label="Name" fieldId="inventory-name" isRequired>
+        <FormGroup
+          label="Name"
+          fieldId="inventory-name"
+          isRequired
+          validated={isInventoryNameFieldValid}
+          helperTextInvalid="This is a required field"
+        >
           <TextInput
             isRequired
             type="text"
             id="inventory-name"
             name="inventory-name"
             value={inventoryName}
-            onChange={(value) => this.setState({ inventoryName: value })}
+            onChange={(value) => {
+              this.setState({ inventoryName: value })
+              this.validateInventoryNameField(value)
+            }}
+            onBlur={(event) => {
+              this.validateInventoryNameField(event.target.value)
+            }}
+            validated={isInventoryNameFieldValid}
           />
         </FormGroup>
         {this.state.showResults ? (
@@ -259,7 +297,7 @@ class ProviderAccountForm extends React.Component {
             {!_.isEmpty(this.state.inventoryNamespaces) ? (
               <FormGroup label="Database provider" fieldId="db-provider">
                 <FormSelect
-                  value={selectedDBProvider.metadata?.name}
+                  value={selectedDBProvider?.metadata?.name}
                   onChange={this.handleDBProviderSelection}
                   aria-label="Database Provider"
                 >
@@ -294,7 +332,7 @@ class ProviderAccountForm extends React.Component {
         {!_.isEmpty(selectedDBProvider) ? (
           <React.Fragment>
             <div className="section-subtitle extra-top-margin no-bottom-padding">Account Credentials</div>
-            {selectedDBProvider.spec?.credentialFields.map((field) => {
+            {selectedDBProvider?.spec?.credentialFields.map((field) => {
               return (
                 <FormGroup
                   label={field.displayName}
