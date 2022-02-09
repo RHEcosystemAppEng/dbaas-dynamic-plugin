@@ -120,6 +120,19 @@
     }
   },
   {
+    "type": "console.page/route",
+    "properties": {
+      "exact": false,
+      "path": [
+        "/k8s/ns/:ns/rhoda-create-database-instance",
+        "/k8s/ns/:ns/rhoda-create-database-instance/db/:dbProviderName/pa/:providerAccountName"
+      ],
+      "component": {
+        "$codeRef": "providerClusterProvisionPage"
+      }
+    }
+  },
+  {
     "type": "console.navigation/href",
     "properties": {
       "id": "rhoda-admin-dashboard",

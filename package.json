@@ -75,7 +75,8 @@
       "catalog": "./catalog",
       "dbaasImportPage": "./components/dbaasImportPage.jsx",
       "instanceListPage": "./components/instanceListPage.jsx",
-      "adminDashboard": "./components/adminDashboard.jsx"
+      "adminDashboard": "./components/adminDashboard.jsx",
+      "providerClusterProvisionPage": "./components/providerClusterProvisionPage.jsx"
     },
     "dependencies": {
       "@console/pluginAPI": "*"
