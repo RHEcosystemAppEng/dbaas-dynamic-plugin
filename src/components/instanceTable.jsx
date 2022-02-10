@@ -34,16 +34,16 @@ class InstanceTable extends React.Component {
       currentNS: window.location.pathname.split('/')[3],
       columns: this.props.isSelectable
         ? [
-          { title: 'ID', transforms: [wrappable, cellWidth(20)] },
-          { title: 'Instance', transforms: [wrappable, cellWidth(20)] },
-          { title: 'Project', transforms: [wrappable, cellWidth(20)] },
-          { title: 'Bound', transforms: [wrappable, cellWidth(10)] },
-          { title: 'Application', transforms: [wrappable, cellWidth(20)] },
-        ]
+            { title: 'ID', transforms: [wrappable, cellWidth(20)] },
+            { title: 'Instance', transforms: [wrappable, cellWidth(20)] },
+            { title: 'Project', transforms: [wrappable, cellWidth(20)] },
+            { title: 'Bound', transforms: [wrappable, cellWidth(10)] },
+            { title: 'Application', transforms: [wrappable, cellWidth(20)] },
+          ]
         : [
-          { title: 'ID', transforms: [wrappable, cellWidth(45)] },
-          { title: 'Instance', transforms: [wrappable, cellWidth(45)] },
-        ],
+            { title: 'ID', transforms: [wrappable, cellWidth(45)] },
+            { title: 'Instance', transforms: [wrappable, cellWidth(45)] },
+          ],
       rows: [],
       selectedInstance: {},
       showError: false,
