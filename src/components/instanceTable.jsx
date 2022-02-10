@@ -32,13 +32,18 @@ class InstanceTable extends React.Component {
     super(props)
     this.state = {
       currentNS: window.location.pathname.split('/')[3],
-      columns: [
-        { title: 'ID', transforms: [wrappable, cellWidth(20)] },
-        { title: 'Instance', transforms: [wrappable, cellWidth(20)] },
-        { title: 'Project', transforms: [wrappable, cellWidth(20)] },
-        { title: 'Bound', transforms: [wrappable, cellWidth(10)] },
-        { title: 'Application', transforms: [wrappable, cellWidth(20)] },
-      ],
+      columns: this.props.isSelectable
+        ? [
+          { title: 'ID', transforms: [wrappable, cellWidth(20)] },
+          { title: 'Instance', transforms: [wrappable, cellWidth(20)] },
+          { title: 'Project', transforms: [wrappable, cellWidth(20)] },
+          { title: 'Bound', transforms: [wrappable, cellWidth(10)] },
+          { title: 'Application', transforms: [wrappable, cellWidth(20)] },
+        ]
+        : [
+          { title: 'ID', transforms: [wrappable, cellWidth(45)] },
+          { title: 'Instance', transforms: [wrappable, cellWidth(45)] },
+        ],
       rows: [],
       selectedInstance: {},
       showError: false,
@@ -89,53 +94,64 @@ class InstanceTable extends React.Component {
       _.forEach(data, (dbInstance) => {
         var connectionRows = []
 
-        for (let connection of this.props.connectionAndServiceBindingList) {
-          if (connection.instanceID == dbInstance.instanceID) {
-            for (let i = 0; i < connection.applications.length; i++) {
-              if (i === 0) {
-                connectionRows.push([connection.namespace, 'Yes', connection.applications[i].name])
-              } else {
-                connectionRows.push(['\u00a0', 'Yes', connection.applications[i].name])
+        if (this.props.isSelectable && this.props.connectionAndServiceBindingList != undefined) {
+          for (let connection of this.props.connectionAndServiceBindingList) {
+            if (connection.instanceID == dbInstance.instanceID) {
+              for (let i = 0; i < connection.applications.length; i++) {
+                if (i === 0) {
+                  connectionRows.push([connection.namespace, 'Yes', connection.applications[i].name])
+                } else {
+                  connectionRows.push(['\u00a0', 'Yes', connection.applications[i].name])
+                }
+              }
+              if (connection.applications.length === 0) {
+                connectionRows.push([connection.namespace, 'No', '\u00a0'])
               }
             }
-            if (connection.applications.length === 0) {
-              connectionRows.push([connection.namespace, 'No', '\u00a0'])
-            }
           }
-        }
 
-        rowList.push({
-          cells: [
-            //id
-            dbInstance.instanceID,
-            //instance
-            `${dbInstance.name}-${dbInstance.instanceID.slice(-10)}`,
-            //project Name
-            <React.Fragment>
-              <List isPlain>
-                {connectionRows.map((con) => (
-                  <ListItem>{con[0]}</ListItem>
-                ))}
-              </List>
-            </React.Fragment>,
-            //bound
-            <React.Fragment>
-              <List isPlain>
-                {connectionRows.map((con) => (
-                  <ListItem>{con[1]}</ListItem>
-                ))}
-              </List>
-            </React.Fragment>,
-            //app names
-            <React.Fragment>
-              <List isPlain>
-                {connectionRows.map((con) => (
-                  <ListItem>{con[2]}</ListItem>
-                ))}
-              </List>
-            </React.Fragment>,
-          ],
-        })
+          rowList.push({
+            cells: [
+              //id
+              dbInstance.instanceID,
+              //instance
+              `${dbInstance.name}-${dbInstance.instanceID.slice(-10)}`,
+              //project Name
+              <React.Fragment>
+                <List isPlain>
+                  {connectionRows.map((con) => (
+                    <ListItem>{con[0]}</ListItem>
+                  ))}
+                </List>
+              </React.Fragment>,
+              //bound
+              <React.Fragment>
+                <List isPlain>
+                  {connectionRows.map((con) => (
+                    <ListItem>{con[1]}</ListItem>
+                  ))}
+                </List>
+              </React.Fragment>,
+              //app names
+              <React.Fragment>
+                <List isPlain>
+                  {connectionRows.map((con) => (
+                    <ListItem>{con[2]}</ListItem>
+                  ))}
+                </List>
+              </React.Fragment>,
+            ],
+          })
+        } else {
+          rowList.push({
+            cells: [
+              //id
+              dbInstance.instanceID,
+              //instance
+              `${dbInstance.name}-${dbInstance.instanceID.slice(-10)}`,
+            ],
+          })
+        }
       })
     } else {
       rowList.push({
@@ -251,7 +267,7 @@ class InstanceTable extends React.Component {
           <TableBody />
         </Table>
         {isSelectable ? (
-          <div className={isLoading ? 'hide' : null}>
+          <div>
             {showError ? (
               <Alert variant="danger" isInline title={error.reason} className="co-alert co-break-word">
                 {error.details?.causes ? (
