@@ -17,7 +17,8 @@ class InstancesForm extends React.Component {
   constructor(props) {
     super(props)
     this.DBaaSOperatorNameWithVersion = props.csv?.metadata?.name || window.DBAAS_OPERATOR_VERSION
-    this.fetchInventoryTimerID = 0
+    this.fetchInventoryIntervalID = 0
+    this.fetchInventoryTimeoutID = 0
     this.state = {
       currentNS: window.location.pathname.split('/')[3],
       showResults: false,
@@ -35,14 +36,15 @@ class InstancesForm extends React.Component {
 
   componentDidMount() {
     if (this.props.dbaaSServiceStatus && this.state.inventory.instances.length == 0 && !this.state.hasInstanceUpdated) {
-      this.fetchInventoryTimerID = setInterval(() => {
+      this.fetchInventoryIntervalID = setInterval(() => {
         this.fetchInventory()
       }, 3000)
     }
   }
 
   componentWillUnmount() {
-    clearInterval(this.fetchInventoryTimerID)
+    clearInterval(this.fetchInventoryIntervalID)
+    clearTimeout(this.fetchInventoryTimeoutID)
   }
 
   fetchInventory = () => {
@@ -93,14 +95,18 @@ class InstancesForm extends React.Component {
           })
         }
       }
+      clearInterval(this.fetchInventoryIntervalID)
+      clearTimeout(this.fetchInventoryTimeoutID)
     } else {
-      setTimeout(() => {
-        this.setState({
-          fetchInstancesFailed: true,
-          statusMsg: 'Could not connect with database provider',
-          showResults: true,
-        })
-      }, 30000)
+      if (this.fetchInventoryTimeoutID === 0) {
+        this.fetchInventoryTimeoutID = setTimeout(() => {
+          this.setState({
+            fetchInstancesFailed: true,
+            statusMsg: 'Could not connect with database provider',
+            showResults: true,
+          })
+        }, 30000)
+      }
     }
   }
 
