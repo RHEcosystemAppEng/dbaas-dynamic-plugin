@@ -1,20 +1,19 @@
-import React from 'react'
-import _ from 'lodash'
-import { Table, TableHeader, TableBody, RowSelectVariant, wrappable, cellWidth } from '@patternfly/react-table'
 import {
-  Title,
+  ActionGroup,
+  Alert,
+  Bullseye,
+  Button,
   EmptyState,
   EmptyStateIcon,
-  Spinner,
-  Button,
-  Alert,
-  AlertActionCloseButton,
-  Bullseye,
   EmptyStateVariant,
-  ActionGroup,
-  ExpandableSection,
+  List,
+  ListItem,
+  Spinner,
+  Title,
 } from '@patternfly/react-core'
-import InstanceConnectionStatusTable from './instanceConnectionStatusTable'
+import { cellWidth, RowSelectVariant, Table, TableBody, TableHeader, wrappable } from '@patternfly/react-table'
+import _ from 'lodash'
+import React from 'react'
 import { getCSRFToken } from '../utils'
 
 const TableEmptyState = () => {
@@ -33,17 +32,24 @@ class InstanceTable extends React.Component {
     super(props)
     this.state = {
       currentNS: window.location.pathname.split('/')[3],
-      columns: [
-        { title: 'ID', transforms: [wrappable, cellWidth(45)] },
-        { title: 'Instance', transforms: [wrappable, cellWidth(45)] },
-      ],
+      columns: this.props.isSelectable
+        ? [
+            { title: 'ID', transforms: [wrappable, cellWidth(20)] },
+            { title: 'Instance', transforms: [wrappable, cellWidth(20)] },
+            { title: 'Project', transforms: [wrappable, cellWidth(20)] },
+            { title: 'Bound', transforms: [wrappable, cellWidth(10)] },
+            { title: 'Application', transforms: [wrappable, cellWidth(20)] },
+          ]
+        : [
+            { title: 'ID', transforms: [wrappable, cellWidth(45)] },
+            { title: 'Instance', transforms: [wrappable, cellWidth(45)] },
+          ],
       rows: [],
       selectedInstance: {},
       showError: false,
       error: {},
-      isInstanceConnectionStatusTableExpanded: false,
     }
-    this.onInstanceConnectionStatusTableToggle = this.onInstanceConnectionStatusTableToggle.bind(this)
+
     this.onSelect = this.onSelect.bind(this)
     this.getRows = this.getRows.bind(this)
     this.submitInstances = this.submitInstances.bind(this)
@@ -71,10 +77,6 @@ class InstanceTable extends React.Component {
     this.getRows(this.props.data.instances)
   }
 
-  onInstanceConnectionStatusTableToggle() {
-    this.setState({ isInstanceConnectionStatusTableExpanded: !this.state.isInstanceConnectionStatusTableExpanded })
-  }
-
   toTopologyView() {
     const { currentNS } = this.state
     window.location.pathname = `/topology/ns/${currentNS}?view=graph`
@@ -82,9 +84,69 @@ class InstanceTable extends React.Component {
 
   getRows(data) {
     let rowList = []
+
     if (data && data.length > 0) {
-      _.forEach(data, (rowData) => {
-        rowList.push({ cells: [rowData.instanceID, `${rowData.name}-${rowData.instanceID.slice(-10)}`] })
+      _.forEach(data, (dbInstance) => {
+        var connectionRows = []
+
+        if (this.props.isSelectable && this.props.connectionAndServiceBindingList != undefined) {
+          for (let connection of this.props.connectionAndServiceBindingList) {
+            if (connection.instanceID == dbInstance.instanceID) {
+              for (let i = 0; i < connection.applications.length; i++) {
+                if (i === 0) {
+                  connectionRows.push([connection.namespace, 'Yes', connection.applications[i].name])
+                } else {
+                  connectionRows.push(['\u00a0', 'Yes', connection.applications[i].name])
+                }
+              }
+              if (connection.applications.length === 0) {
+                connectionRows.push([connection.namespace, 'No', '\u00a0'])
+              }
+            }
+          }
+
+          rowList.push({
+            cells: [
+              //id
+              dbInstance.instanceID,
+              //instance
+              `${dbInstance.name}-${dbInstance.instanceID.slice(-10)}`,
+              //project Name
+              <React.Fragment>
+                <List isPlain>
+                  {connectionRows.map((con) => (
+                    <ListItem>{con[0]}</ListItem>
+                  ))}
+                </List>
+              </React.Fragment>,
+              //bound
+              <React.Fragment>
+                <List isPlain>
+                  {connectionRows.map((con) => (
+                    <ListItem>{con[1]}</ListItem>
+                  ))}
+                </List>
+              </React.Fragment>,
+              //app names
+              <React.Fragment>
+                <List isPlain>
+                  {connectionRows.map((con) => (
+                    <ListItem>{con[2]}</ListItem>
+                  ))}
+                </List>
+              </React.Fragment>,
+            ],
+          })
+        } else {
+          rowList.push({
+            cells: [
+              //id
+              dbInstance.instanceID,
+              //instance
+              `${dbInstance.name}-${dbInstance.instanceID.slice(-10)}`,
+            ],
+          })
+        }
       })
     } else {
       rowList.push({
@@ -172,7 +234,7 @@ class InstanceTable extends React.Component {
   }
 
   render() {
-    const { columns, rows, error, showError, isInstanceConnectionStatusTableExpanded } = this.state
+    const { columns, rows, error, showError } = this.state
     const { isSelectable, isLoading, connectionAndServiceBindingList } = this.props
 
     if (isLoading) {
@@ -200,18 +262,7 @@ class InstanceTable extends React.Component {
           <TableBody />
         </Table>
         {isSelectable ? (
-          <div className={isLoading ? 'hide' : null}>
-            {connectionAndServiceBindingList ? (
-              <ExpandableSection
-                toggleText={
-                  isInstanceConnectionStatusTableExpanded ? 'Hide connected instances' : 'Show connected instances'
-                }
-                onToggle={this.onInstanceConnectionStatusTableToggle}
-                isExpanded={isInstanceConnectionStatusTableExpanded}
-              >
-                <InstanceConnectionStatusTable isLoading={isLoading} connections={connectionAndServiceBindingList} />
-              </ExpandableSection>
-            ) : null}
+          <div>
             {showError ? (
               <Alert variant="danger" isInline title={error.reason} className="co-alert co-break-word">
                 {error.details?.causes ? (

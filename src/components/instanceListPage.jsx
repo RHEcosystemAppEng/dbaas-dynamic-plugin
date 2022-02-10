@@ -235,7 +235,7 @@ const InstanceListPage = () => {
 
   React.useEffect(() => {
     mapDBaaSConnectionsAndServiceBindings()
-  }, [dbaasConnectionList, serviceBindingList])
+  }, [dbaasConnectionList, serviceBindingList, selectedInventory])
 
   return (
     <FlexForm className="instance-table-container">
