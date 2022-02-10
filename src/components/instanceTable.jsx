@@ -48,9 +48,8 @@ class InstanceTable extends React.Component {
       selectedInstance: {},
       showError: false,
       error: {},
-      isInstanceConnectionStatusTableExpanded: false,
     }
-    this.onInstanceConnectionStatusTableToggle = this.onInstanceConnectionStatusTableToggle.bind(this)
+
     this.onSelect = this.onSelect.bind(this)
     this.getRows = this.getRows.bind(this)
     this.submitInstances = this.submitInstances.bind(this)
@@ -76,10 +75,6 @@ class InstanceTable extends React.Component {
 
   componentDidMount() {
     this.getRows(this.props.data.instances)
-  }
-
-  onInstanceConnectionStatusTableToggle() {
-    this.setState({ isInstanceConnectionStatusTableExpanded: !this.state.isInstanceConnectionStatusTableExpanded })
   }
 
   toTopologyView() {
@@ -239,7 +234,7 @@ class InstanceTable extends React.Component {
   }
 
   render() {
-    const { columns, rows, error, showError, isInstanceConnectionStatusTableExpanded } = this.state
+    const { columns, rows, error, showError } = this.state
     const { isSelectable, isLoading, connectionAndServiceBindingList } = this.props
 
     if (isLoading) {
