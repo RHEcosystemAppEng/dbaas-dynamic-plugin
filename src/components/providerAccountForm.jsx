@@ -38,6 +38,7 @@ class ProviderAccountForm extends React.Component {
       error: {},
       isFormValid: false,
       isInventoryNameFieldValid: '',
+      inventoryNameFieldInvalidText: '',
     }
   }
 
@@ -71,11 +72,23 @@ class ProviderAccountForm extends React.Component {
   }
 
   validateInventoryNameField = (value) => {
+    let pattern = '^[a-z0-9]+(?:[.-][a-z0-9]+)*$'
+    let regEx = new RegExp(pattern)
+    let validField = ValidatedOptions.error
+    let text = ''
     if (_.isEmpty(value)) {
-      this.setState({ isInventoryNameFieldValid: ValidatedOptions.error })
+      text = 'This is a required field'
+    } else if (!regEx.test(value)) {
+      text =
+        "Must consist of lower case alphanumeric characters, '-' or '.', and must start and end with an alphanumeric character; regex used for validation is " +
+        pattern
+    } else if (value.length > 63) {
+      text = 'Should be no more than 63 characters'
     } else {
-      this.setState({ isInventoryNameFieldValid: ValidatedOptions.default })
+      validField = ValidatedOptions.default
     }
+    this.setState({ isInventoryNameFieldValid: validField })
+    this.setState({ inventoryNameFieldInvalidText: text })
   }
 
   validateField = (value, field) => {
@@ -265,6 +278,7 @@ class ProviderAccountForm extends React.Component {
       credentials,
       isFormValid,
       isInventoryNameFieldValid,
+      inventoryNameFieldInvalidText,
     } = this.state
 
     return (
@@ -274,7 +288,7 @@ class ProviderAccountForm extends React.Component {
           fieldId="inventory-name"
           isRequired
           validated={isInventoryNameFieldValid}
-          helperTextInvalid="This is a required field"
+          helperTextInvalid={inventoryNameFieldInvalidText}
         >
           <TextInput
             isRequired
