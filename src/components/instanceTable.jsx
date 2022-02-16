@@ -11,10 +11,20 @@ import {
   Spinner,
   Title,
 } from '@patternfly/react-core'
-import { cellWidth, RowSelectVariant, Table, TableBody, TableHeader, wrappable } from '@patternfly/react-table'
+import {
+  cellWidth,
+  RowSelectVariant,
+  Table,
+  TableBody,
+  TableHeader,
+  wrappable,
+  OuterScrollContainer,
+  InnerScrollContainer,
+} from '@patternfly/react-table'
 import _ from 'lodash'
 import React from 'react'
 import { getCSRFToken } from '../utils'
+import './_dbaas-import-view.css'
 
 const TableEmptyState = () => {
   return (
@@ -250,17 +260,25 @@ class InstanceTable extends React.Component {
 
     return (
       <React.Fragment>
-        <Table
-          id="instance-table"
-          onSelect={isSelectable ? this.onSelect : null}
-          selectVariant={isSelectable ? RowSelectVariant.radio : null}
-          aria-label="Instance Table"
-          cells={columns}
-          rows={rows}
-        >
-          <TableHeader />
-          <TableBody />
-        </Table>
+        <div className="sticky-table-container">
+          <OuterScrollContainer>
+            <InnerScrollContainer>
+              <Table
+                id="instance-table"
+                onSelect={isSelectable ? this.onSelect : null}
+                selectVariant={isSelectable ? RowSelectVariant.radio : null}
+                aria-label="Instance Table"
+                cells={columns}
+                rows={rows}
+                isStickyHeader
+                className="sticky-header-table"
+              >
+                <TableHeader className="sticky-header-th" />
+                <TableBody />
+              </Table>
+            </InnerScrollContainer>
+          </OuterScrollContainer>
+        </div>
         {isSelectable ? (
           <div>
             {showError ? (
