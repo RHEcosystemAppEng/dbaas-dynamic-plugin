@@ -21,8 +21,8 @@ const InstanceListFilter: React.FC<InstanceListFilterProps> = ({
                 value={textInputIDValue}
                 type="text"
                 onChange={(value) => setTextInputIDValue(value)}
-                aria-label="Search by ID"
-                placeholder="Search by ID..."
+                aria-label="Search by Instance Name"
+                placeholder="Search by Instance Name..."
                 className="co-text-filter"
               />
               <span className="form-control-feedback form-control-feedback--keyboard-hint">
