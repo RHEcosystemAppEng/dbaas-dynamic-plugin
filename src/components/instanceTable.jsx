@@ -10,11 +10,42 @@ import {
   ListItem,
   Spinner,
   Title,
+  Flex,
+  FlexItem,
+  Popover,
 } from '@patternfly/react-core'
 import { cellWidth, RowSelectVariant, Table, TableBody, TableHeader, wrappable } from '@patternfly/react-table'
+import { ExclamationTriangleIcon } from '@patternfly/react-icons'
 import _ from 'lodash'
 import React from 'react'
-import { getCSRFToken } from '../utils'
+import { getCSRFToken, fetchDbaasCSV } from '../utils'
+import { DBaaSInventoryCRName, DBaaSOperatorName } from '../const'
+
+const IssuePopover = ({ action }) => {
+  return (
+    <Flex>
+      <FlexItem spacer={{ default: 'spacerSm' }}>
+        <ExclamationTriangleIcon color="#f0ab00"></ExclamationTriangleIcon>
+      </FlexItem>
+      <FlexItem>
+        <Popover
+          aria-label="Issue popover"
+          headerContent={<div>Issue</div>}
+          bodyContent={<div>Click on the link below for more information about this issue.</div>}
+          footerContent={
+            <Button onClick={action} variant="link" isInline>
+              Learn more
+            </Button>
+          }
+        >
+          <Button variant="link" isInline>
+            Issue
+          </Button>
+        </Popover>
+      </FlexItem>
+    </Flex>
+  )
+}
 
 const TableEmptyState = () => {
   return (
@@ -31,13 +62,16 @@ class InstanceTable extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
+      dbaaSOperatorNameWithVersion: '',
+      inventoryHasIssue: false,
       currentNS: window.location.pathname.split('/')[3],
       columns: this.props.isSelectable
         ? [
-            { title: 'ID', transforms: [wrappable, cellWidth(20)] },
-            { title: 'Instance', transforms: [wrappable, cellWidth(20)] },
+            { title: 'Instance Name', transforms: [wrappable, cellWidth(20)] },
+            { title: 'Database ID', transforms: [wrappable, cellWidth(20)] },
+            { title: 'Alert', transforms: [wrappable, cellWidth(5)] },
             { title: 'Project', transforms: [wrappable, cellWidth(20)] },
-            { title: 'Bound', transforms: [wrappable, cellWidth(10)] },
+            { title: 'Bound', transforms: [wrappable, cellWidth(5)] },
             { title: 'Application', transforms: [wrappable, cellWidth(20)] },
           ]
         : [
@@ -50,6 +84,9 @@ class InstanceTable extends React.Component {
       error: {},
     }
 
+    this.goToInventoryInfoPage = this.goToInventoryInfoPage.bind(this)
+    this.fetchCSV = this.fetchCSV.bind(this)
+    this.getInventoryStatus = this.getInventoryStatus.bind(this)
     this.onSelect = this.onSelect.bind(this)
     this.getRows = this.getRows.bind(this)
     this.submitInstances = this.submitInstances.bind(this)
@@ -70,11 +107,36 @@ class InstanceTable extends React.Component {
       } else {
         this.getRows(this.props.data.instances)
       }
+      this.getInventoryStatus(this.props.data)
     }
   }
 
   componentDidMount() {
     this.getRows(this.props.data.instances)
+    this.getInventoryStatus(this.props.data)
+  }
+
+  fetchCSV = async () => {
+    const dbaasCSV = await fetchDbaasCSV(this.state.currentNS, DBaaSOperatorName)
+    this.setState({ dbaaSOperatorNameWithVersion: dbaasCSV.metadata?.name })
+  }
+
+  goToInventoryInfoPage = () => {
+    const { currentNS, dbaaSOperatorNameWithVersion } = this.state
+    const { data } = this.props
+
+    window.location.pathname = `/k8s/ns/${currentNS}/clusterserviceversions/${dbaaSOperatorNameWithVersion}/${DBaaSInventoryCRName}/${data?.name}`
+  }
+
+  getInventoryStatus = (inventory) => {
+    let inventoryReadyCondition = inventory?.status?.conditions?.find((condition) => {
+      return condition.type?.toLowerCase() === 'inventoryready'
+    })
+
+    if (!_.isEmpty(inventoryReadyCondition) && inventoryReadyCondition?.status === 'False') {
+      this.fetchCSV()
+      this.setState({ inventoryHasIssue: true })
+    }
   }
 
   toTopologyView() {
@@ -107,11 +169,17 @@ class InstanceTable extends React.Component {
 
           rowList.push({
             cells: [
-              //id
-              dbInstance.instanceID,
-              //instance
+              //Instance name
               `${dbInstance.name}-${dbInstance.instanceID.slice(-10)}`,
-              //project Name
+              //Instance ID
+              dbInstance.instanceID,
+              //Provider account issue
+              this.state.inventoryHasIssue ? (
+                <React.Fragment>
+                  <IssuePopover action={this.goToInventoryInfoPage} />
+                </React.Fragment>
+              ) : null,
+              //Namespace
               <React.Fragment>
                 <List isPlain>
                   {connectionRows.map((con) => (
@@ -119,7 +187,7 @@ class InstanceTable extends React.Component {
                   ))}
                 </List>
               </React.Fragment>,
-              //bound
+              //Bound
               <React.Fragment>
                 <List isPlain>
                   {connectionRows.map((con) => (
@@ -127,7 +195,7 @@ class InstanceTable extends React.Component {
                   ))}
                 </List>
               </React.Fragment>,
-              //app names
+              //App names
               <React.Fragment>
                 <List isPlain>
                   {connectionRows.map((con) => (
