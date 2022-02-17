@@ -132,7 +132,7 @@ class AdminConnectionsTable extends React.Component {
                   bodyContent={<div>Click on the link below for more information about this issue.</div>}
                   footerContent={
                     <a
-                      href={`/k8s/ns/${this.currentNS}/clusterserviceversions/${this.dBaaSOperatorNameWithVersion}/${this.DBaaSInventoryCRName}/${inventoryInstance.instanceName}`}
+                      href={`/k8s/ns/${this.state.currentNS}/clusterserviceversions/${this.state.dBaaSOperatorNameWithVersion}/${DBaaSInventoryCRName}/${inventoryInstance.providerAcct}`}
                     >
                       Learn more
                     </a>
