@@ -1,6 +1,26 @@
-import { Bullseye, EmptyState, EmptyStateVariant, List, ListItem, Popover, Title } from '@patternfly/react-core'
+import {
+  Bullseye,
+  EmptyState,
+  EmptyStateVariant,
+  List,
+  ListItem,
+  Popover,
+  Title,
+  ActionGroup,
+  Button,
+} from '@patternfly/react-core'
 import { ExclamationTriangleIcon } from '@patternfly/react-icons'
-import { cellWidth, Table, TableBody, TableHeader, wrappable } from '@patternfly/react-table'
+import {
+  cellWidth,
+  Table,
+  TableBody,
+  TableHeader,
+  wrappable,
+  OuterScrollContainer,
+  InnerScrollContainer,
+  sortable,
+  SortByDirection,
+} from '@patternfly/react-table'
 import _ from 'lodash'
 import React, { useState } from 'react'
 import {
@@ -26,7 +46,7 @@ const TableEmptyState = () => {
           <Button
             id="instance-select-button"
             variant="primary"
-            href={`/k8s/ns/${currentNS}/clusterserviceversions/${dBaaSOperatorNameWithVersion}/${DBaaSInventoryCRName}/~new`}
+            //  href={`/k8s/ns/${currentNS}/clusterserviceversions/${dBaaSOperatorNameWithVersion}/${DBaaSInventoryCRName}/~new`}
           >
             Create Provider Account
           </Button>
@@ -36,120 +56,135 @@ const TableEmptyState = () => {
   )
 }
 
-const AdminConnectionsTable = (props) => {
-  const currentNS = window.location.pathname.split('/')[3]
-  const columns = [
-    { title: 'Instance Name', transforms: [wrappable, cellWidth(30)] },
-    { title: 'DB Provider', transforms: [wrappable, cellWidth(30)] },
-    { title: 'Provider Account', transforms: [wrappable, cellWidth(30)] },
-    { title: 'Alert', transforms: [wrappable, cellWidth(20)] },
-    { title: 'Project', transforms: [wrappable, cellWidth(30)] },
-    { title: 'Bound', transforms: [wrappable, cellWidth(10)] },
-    { title: 'User', transforms: [wrappable, cellWidth(30)] },
-    { title: 'Application', transforms: [wrappable, cellWidth(30)] },
-  ]
-  const [rows, setRows] = useState([])
-  const [inventories, setConnections] = useState(props.inventories)
-  const [connections, setInventories] = useState(props.connections)
-  const [dBaaSOperatorNameWithVersion, setDBaaSOperatorNameWithVersion] = useState(props.dBaaSOperatorNameWithVersion)
+class AdminConnectionsTable extends React.Component {
+  constructor(props) {
+    super(props)
+    this.state = {
+      currentNS: window.location.pathname.split('/')[3],
+      columns: [
+        { title: 'Instance Name', transforms: [wrappable, cellWidth(30), sortable] },
+        { title: 'DB Provider', transforms: [wrappable, cellWidth(30), sortable] },
+        { title: 'Provider Account', transforms: [wrappable, cellWidth(30), sortable] },
+        { title: 'Alert', transforms: [wrappable, cellWidth(20)] },
+        { title: 'Project', transforms: [wrappable, cellWidth(30)] },
+        { title: 'Bound', transforms: [wrappable, cellWidth(10)] },
+        { title: 'User', transforms: [wrappable, cellWidth(30)] },
+        { title: 'Application', transforms: [wrappable, cellWidth(30)] },
+      ],
+      rows: [],
+      dBaaSOperatorNameWithVersion: this.props.dBaaSOperatorNameWithVersion,
+      sortBy: {},
+    }
+    this.getRows = this.getRows.bind(this)
+    this.onSort = this.onSort.bind(this)
+  }
 
-  const getRows = () => {
+  componentDidUpdate(prevProps) {
+    if (
+      (this.props.inventoryInstances &&
+        this.props.inventoryInstances.length > 0 &&
+        !_.isEqual(prevProps.inventoryInstances, this.props.inventoryInstances)) ||
+      !_.isEqual(prevProps.filteredInstances, this.props.filteredInstances)
+    ) {
+      if (this.props.filteredInstances) {
+        this.getRows(this.props.filteredInstances)
+      } else {
+        this.getRows(this.props.inventoryInstances)
+      }
+    }
+  }
+
+  componentDidMount() {
+    this.getRows(this.props.inventoryInstances)
+  }
+
+  onSort = (_event, index, direction) => {
+    let filterKey = ''
+    let sortedInstances = []
+    const filterColumns = ['instanceName', 'dbProvider', 'providerAcct']
+    filterKey = filterColumns[index]
+    const { inventoryInstances } = this.props
+
+    if (!_.isEmpty(inventoryInstances)) {
+      sortedInstances = inventoryInstances.sort((a, b) => {
+        const keyA = a[filterKey].toLowerCase()
+        const keyB = b[filterKey].toLowerCase()
+        if (keyA < keyB) {
+          return -1
+        }
+        if (keyA > keyB) {
+          return 1
+        }
+        return 0
+      })
+    }
+
+    this.getRows(direction === SortByDirection.asc ? sortedInstances : sortedInstances.reverse())
+    this.setState({ sortBy: { index, direction } })
+  }
+
+  getRows(data) {
     let rowList = []
-    if (inventories && inventories.length > 0) {
-      _.forEach(inventories, (inventory) => {
-        var connectionRows = []
-        let dbProvider
-        let providerAcct
-        if (inventory.providername === crunchyProviderType) {
-          dbProvider = crunchyProviderName
-        } else if (inventory.providername === mongoProviderType) {
-          dbProvider = mongoProviderName
-        } else if (inventory.providername === cockroachdbProviderType) {
-          dbProvider = cockroachdbProviderName
-        }
-        if (inventory.instances?.length > 0) {
-          for (let dbInstance of inventory.instances) {
-            for (let connection of connections) {
-              providerAcct = connection.instanceName
-              if (connection.instanceID == dbInstance.instanceID) {
-                for (let i = 0; i < connection.applications.length; i++) {
-                  if (i === 0) {
-                    connectionRows.push([
-                      connection.namespace,
-                      'Yes',
-                      connection.users[i],
-                      connection.applications[i].name,
-                    ])
-                  } else {
-                    connectionRows.push(['\u00a0', 'Yes', connection.users[i], connection.applications[i].name])
-                  }
-                }
-                if (connection.applications.length === 0) {
-                  connectionRows.push([connection.namespace, 'No', '\u00a0', '\u00a0'])
-                }
-              }
-            }
-
-            rowList.push({
-              cells: [
-                dbInstance.name,
-                dbProvider,
-                inventory.name,
-                inventory.alert.length > 0 ? (
-                  <div>
-                    <Popover
-                      aria-label="Basic popover"
-                      headerContent={<div>Issue</div>}
-                      bodyContent={<div>Click on the link below for more information about this issue.</div>}
-                      footerContent={
-                        <a
-                          href={`/k8s/ns/${currentNS}/clusterserviceversions/${dBaaSOperatorNameWithVersion}/${DBaaSInventoryCRName}/${inventory.name}`}
-                        >
-                          Learn more
-                        </a>
-                      }
+    if (data && data.length > 0) {
+      data.forEach((inventoryInstance) => {
+        rowList.push({
+          cells: [
+            inventoryInstance.instanceName,
+            inventoryInstance.dbProvider,
+            inventoryInstance.providerAcct,
+            inventoryInstance.alert.length > 0 ? (
+              <div>
+                <Popover
+                  aria-label="Basic popover"
+                  headerContent={<div>Issue</div>}
+                  bodyContent={<div>Click on the link below for more information about this issue.</div>}
+                  footerContent={
+                    <a
+                      href={`/k8s/ns/${this.currentNS}/clusterserviceversions/${this.dBaaSOperatorNameWithVersion}/${this.DBaaSInventoryCRName}/${inventoryInstance.name}`}
                     >
-                      <div>
-                        <ExclamationTriangleIcon color="#f0ab00"></ExclamationTriangleIcon>
-                        <span style={{ color: '#2b9af3', paddingLeft: '3px' }}> Issue</span>
-                      </div>
-                    </Popover>
+                      Learn more
+                    </a>
+                  }
+                >
+                  <div>
+                    <ExclamationTriangleIcon color="#f0ab00"></ExclamationTriangleIcon>
+                    <span style={{ color: '#2b9af3', paddingLeft: '3px' }}> Issue</span>
                   </div>
-                ) : (
-                  ''
-                ),
-                <React.Fragment>
-                  <List isPlain>
-                    {connectionRows.map((con) => (
-                      <ListItem>{con[0]}</ListItem>
-                    ))}
-                  </List>
-                </React.Fragment>,
-                <React.Fragment>
-                  <List isPlain>
-                    {connectionRows.map((con) => (
-                      <ListItem>{con[1]}</ListItem>
-                    ))}
-                  </List>
-                </React.Fragment>,
-                <React.Fragment>
-                  <List isPlain>
-                    {connectionRows.map((con) => (
-                      <ListItem>{con[2]}</ListItem>
-                    ))}
-                  </List>
-                </React.Fragment>,
-                <React.Fragment>
-                  <List isPlain>
-                    {connectionRows.map((con) => (
-                      <ListItem>{con[3]}</ListItem>
-                    ))}
-                  </List>
-                </React.Fragment>,
-              ],
-            })
-          }
-        }
+                </Popover>
+              </div>
+            ) : (
+              ''
+            ),
+            <React.Fragment>
+              <List isPlain>
+                {inventoryInstance.connections.map((con) => (
+                  <ListItem>{con[0]}</ListItem>
+                ))}
+              </List>
+            </React.Fragment>,
+            <React.Fragment>
+              <List isPlain>
+                {inventoryInstance.connections.map((con) => (
+                  <ListItem>{con[1]}</ListItem>
+                ))}
+              </List>
+            </React.Fragment>,
+            <React.Fragment>
+              <List isPlain>
+                {inventoryInstance.connections.map((con) => (
+                  <ListItem>{con[2]}</ListItem>
+                ))}
+              </List>
+            </React.Fragment>,
+            <React.Fragment>
+              <List isPlain>
+                {inventoryInstance.connections.map((con) => (
+                  <ListItem>{con[3]}</ListItem>
+                ))}
+              </List>
+            </React.Fragment>,
+          ],
+        })
       })
     } else {
       rowList.push({
@@ -162,27 +197,34 @@ const AdminConnectionsTable = (props) => {
         ],
       })
     }
-
-    setRows(rowList)
+    this.setState({ rows: rowList })
   }
 
-  React.useEffect(() => {
-    getRows()
-  }, [])
+  render() {
+    const { columns, rows, sortBy } = this.state
+    const { inventoryInstances } = this.props
 
-  return (
-    <React.Fragment>
-      <Table
-        id="instance-connection-status-table"
-        aria-label="Instance Connection Status Table"
-        cells={columns}
-        rows={rows}
-      >
-        <TableHeader />
-        <TableBody />
-      </Table>
-    </React.Fragment>
-  )
+    return (
+      <React.Fragment>
+        <div className="sticky-table-container">
+          <OuterScrollContainer>
+            <InnerScrollContainer>
+              <Table
+                sortBy={!_.isEmpty(inventoryInstances) ? sortBy : null}
+                onSort={!_.isEmpty(inventoryInstances) ? this.onSort : null}
+                id="instance-connection-status-table"
+                aria-label="Instance Connection Status Table"
+                cells={columns}
+                rows={rows}
+              >
+                <TableHeader className="sticky-header-th" />
+                <TableBody />
+              </Table>
+            </InnerScrollContainer>
+          </OuterScrollContainer>
+        </div>
+      </React.Fragment>
+    )
+  }
 }
-
 export default AdminConnectionsTable

@@ -17,7 +17,18 @@ import {
 import CaretDownIcon from '@patternfly/react-icons/dist/esm/icons/caret-down-icon'
 import * as _ from 'lodash'
 import React, { useState } from 'react'
-import { DBaaSInventoryCRName, DBaaSOperatorName } from '../const.ts'
+import {
+  DBaaSInventoryCRName,
+  DBaaSOperatorName,
+  cockroachdbProviderName,
+  cockroachdbProviderType,
+  crunchyProviderName,
+  crunchyProviderType,
+  mongoProviderName,
+  mongoProviderType,
+  DBaaSInventoryCRName,
+  DBaaSOperatorName,
+} from '../const.ts'
 import {
   disableNSSelection,
   enableNSSelection,
@@ -44,15 +55,20 @@ const AdminDashboard = () => {
   const [dbaasConnectionList, setDbaasConnectionList] = useState([])
   const [serviceBindingList, setServiceBindingList] = useState([])
   const [connectionAndServiceBindingList, setConnectionAndServiceBindingList] = useState([])
+  const [inventoryInstances, setInventoryInstances] = useState([])
   const [isOpen, setIsOpen] = useState(false)
   const [dBaaSOperatorNameWithVersion, setDBaaSOperatorNameWithVersion] = useState()
-  const [textInputIDValue, setTextInputIDValue] = React.useState('')
+  const [textInputNameValue, setTextInputNameValue] = useState('')
 
   const currentNS = window.location.pathname.split('/')[3]
 
   const filteredInstances = React.useMemo(
-    () => inventories?.instances?.filter((instance) => instance.name.includes(textInputIDValue)),
-    [inventories.instances, textInputIDValue]
+    () =>
+      inventoryInstances?.filter((instance) => {
+        let nameStr = instance.instanceName
+        return nameStr.toLowerCase().includes(textInputNameValue.toLowerCase())
+      }),
+    [inventoryInstances, textInputNameValue]
   )
 
   const dropdownItems = [
@@ -109,7 +125,55 @@ const AdminDashboard = () => {
         newConnectionAndServiceBindingList.push(connectionObj)
       })
     }
-    setConnectionAndServiceBindingList(newConnectionAndServiceBindingList)
+
+    inventories?.forEach((inventory) => {
+      let dbProvider
+      let providerAcct
+      if (inventory.providername === crunchyProviderType) {
+        dbProvider = crunchyProviderName
+      } else if (inventory.providername === mongoProviderType) {
+        dbProvider = mongoProviderName
+      } else if (inventory.providername === cockroachdbProviderType) {
+        dbProvider = cockroachdbProviderName
+      }
+      if (inventory.instances?.length > 0) {
+        for (let dbInstance of inventory.instances) {
+          var inventoryInstance = new Object()
+          inventoryInstance.instanceName = dbInstance.name
+          inventoryInstance.dbProvider = dbProvider
+          inventoryInstance.providerAcct = inventory.name
+          inventoryInstance.alert = inventory.alert
+          inventoryInstance.instanceID = dbInstance.instanceID
+          inventoryInstance.connections = []
+          for (let connection of newConnectionAndServiceBindingList) {
+            if (connection.instanceID == dbInstance.instanceID) {
+              for (let i = 0; i < connection.applications.length; i++) {
+                if (i === 0) {
+                  inventoryInstance.connections.push([
+                    connection.namespace,
+                    'Yes',
+                    connection.users[i],
+                    connection.applications[i].name,
+                  ])
+                } else {
+                  inventoryInstance.connections.push([
+                    '\u00a0',
+                    'Yes',
+                    connection.users[i],
+                    connection.applications[i].name,
+                  ])
+                }
+              }
+              if (connection.applications.length === 0) {
+                inventoryInstance.connections.push([connection.namespace, 'No', '\u00a0', '\u00a0'])
+              }
+            }
+          }
+          inventoryInstances.push(inventoryInstance)
+        }
+      }
+    })
+    setInventoryInstances(inventoryInstances)
   }
 
   const fetchServiceBindings = async () => {
@@ -243,8 +307,7 @@ const AdminDashboard = () => {
           </SplitItem>
         </Split>
         <Divider />
-        <InstanceListFilter textInputIDValue={textInputIDValue} setTextInputIDValue={setTextInputIDValue} />
-
+        <InstanceListFilter textInputNameValue={textInputNameValue} setTextInputNameValue={setTextInputNameValue} />
         {!showResults ? (
           <EmptyState>
             <EmptyStateIcon variant="container" component={Spinner} />
@@ -282,10 +345,11 @@ const AdminDashboard = () => {
               <React.Fragment>
                 <FormSection fullWidth flexLayout className="no-top-margin">
                   <AdminConnectionsTable
-                    inventories={inventories}
-                    connections={connectionAndServiceBindingList}
+                    // inventories={inventories}
+                    // connections={connectionAndServiceBindingList}
                     filteredInstances={filteredInstances}
                     dBaaSOperatorNameWithVersion={dBaaSOperatorNameWithVersion}
+                    inventoryInstances={inventoryInstances}
                   />
                 </FormSection>
               </React.Fragment>
