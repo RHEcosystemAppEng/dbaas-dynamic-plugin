@@ -23,7 +23,7 @@
   },
   "dependencies": {
     "@patternfly/react-core": "4.147.0",
-    "@patternfly/react-table": "4.29.37",
+    "@patternfly/react-table": "4.61.14",
     "@types/node": "^14.14.34",
     "css-loader": "^5.2.6",
     "file-loader": "^6.2.0",
