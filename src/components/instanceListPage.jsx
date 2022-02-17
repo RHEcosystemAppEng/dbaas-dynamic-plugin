@@ -26,6 +26,7 @@ import {
   mongoProviderType,
   cockroachdbProviderName,
 } from '../const'
+import { DBAAS_PROVIDER_KIND } from '../catalog/const'
 import {
   fetchInventoryNamespaces,
   fetchObjectsByNamespace,
@@ -38,6 +39,7 @@ import FormBody from './form/formBody'
 import FormHeader from './form/formHeader'
 import InstanceListFilter from './instanceListFilter'
 import InstanceTable from './instanceTable'
+import { useK8sWatchResource } from '@openshift-console/dynamic-plugin-sdk'
 import './_dbaas-import-view.css'
 
 export const handleTryAgain = () => {
@@ -72,6 +74,7 @@ const InstanceListPage = () => {
   const [inventories, setInventories] = React.useState([])
   const [selectedDBProvider, setSelectedDBProvider] = React.useState('')
   const [dbProviderName, setDBProviderName] = React.useState()
+  const [dbProviderLogoUrl, setDBProviderLogoUrl] = React.useState('')
   const [selectedInventory, setSelectedInventory] = React.useState({})
   const [dbaasConnectionList, setDbaasConnectionList] = React.useState([])
   const [serviceBindingList, setServiceBindingList] = React.useState([])
@@ -80,10 +83,22 @@ const InstanceListPage = () => {
   const currentNS = window.location.pathname.split('/')[3]
 
   const dbProviderTitle = (
-    <div>
-      Connect {dbProviderName} <Label className="ocs-preview-badge extra-left-margin">Service Preview</Label>
+    <div className="co-catalog-item-details">
+      <span className="co-catalog-item-icon">
+        <img className="catalog-item-header-pf-icon" src={dbProviderLogoUrl} alt="logo" aria-hidden />
+      </span>
+      <div>
+        Connect {dbProviderName} <Label className="ocs-preview-badge extra-left-margin">Service Preview</Label>
+        <p className="pf-c-form__helper-text">The selected database instance will be added to the topology view.</p>
+      </div>
     </div>
   )
+
+  const [dbaasProviders, isProviderFetched, errorMsg] = useK8sWatchResource({
+    kind: DBAAS_PROVIDER_KIND,
+    isList: false,
+  })
+
   const filteredInstances = React.useMemo(
     () =>
       selectedInventory?.instances?.filter((instance) => {
@@ -170,6 +185,17 @@ const InstanceListPage = () => {
 
   const parseSelectedDBProvider = () => {
     let dbProviderType = _.last(window.location.pathname.split('/'))
+    let providerInfo = {}
+    if (!_.isEmpty(dbaasProviders)) {
+      providerInfo = _.find(dbaasProviders?.items, (provider) => {
+        return provider?.metadata?.name === dbProviderType
+      })
+      setDBProviderLogoUrl(
+        `data:${providerInfo.spec?.provider?.icon?.mediatype};base64,${providerInfo.spec?.provider?.icon?.base64data}`
+      )
+    }
+
+    //Cannot parse provider name from CRD
     if (dbProviderType === crunchyProviderType) {
       setDBProviderName(crunchyProviderName)
     }
@@ -224,6 +250,10 @@ const InstanceListPage = () => {
   }
 
   React.useEffect(() => {
+    parseSelectedDBProvider()
+  }, [isProviderFetched])
+
+  React.useEffect(() => {
     disableNSSelection()
     parseSelectedDBProvider()
     if (!_.isEmpty(selectedDBProvider)) {
@@ -243,11 +273,7 @@ const InstanceListPage = () => {
   return (
     <FlexForm className="instance-table-container">
       <FormBody flexLayout>
-        <FormHeader
-          title={dbProviderTitle}
-          helpText="The selected database instance will be added to the topology view."
-          marginBottom="lg"
-        />
+        <FormHeader title={dbProviderTitle} helpText="" marginBottom="lg" />
         {!showResults ? (
           <EmptyState>
             <EmptyStateIcon variant="container" component={Spinner} />

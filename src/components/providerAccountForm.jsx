@@ -11,9 +11,19 @@ import {
   FormSelectOption,
   FormSelectOptionGroup,
   ValidatedOptions,
+  Popover,
 } from '@patternfly/react-core'
 import { getCSRFToken } from '../utils'
 import { fetchInventoryNamespaces } from '../utils'
+import { HelpIcon, ExternalLinkAltIcon } from '@patternfly/react-icons'
+import {
+  mongoFetchCredentialsUrl,
+  crunchyFetchCredentialsUrl,
+  cockroachFetchCredentialsUrl,
+  mongoProviderType,
+  crunchyProviderType,
+  cockroachdbProviderType,
+} from '../const'
 
 class ProviderAccountForm extends React.Component {
   constructor(props) {
@@ -26,6 +36,7 @@ class ProviderAccountForm extends React.Component {
     this.validateInventoryNameField = this.validateInventoryNameField.bind(this)
 
     this.state = {
+      credentialDocUrl: '',
       credentials: {},
       currentNS: window.location.pathname.split('/')[3],
       inventoryName: '',
@@ -117,6 +128,15 @@ class ProviderAccountForm extends React.Component {
         provider.spec.credentialFields.forEach((field) => {
           field.isValid = ''
         })
+      }
+      if (provider?.metadata?.name === mongoProviderType) {
+        this.setState({ credentialDocUrl: mongoFetchCredentialsUrl })
+      }
+      if (provider?.metadata?.name === crunchyProviderType) {
+        this.setState({ credentialDocUrl: crunchyFetchCredentialsUrl })
+      }
+      if (provider?.metadata?.name === cockroachdbProviderType) {
+        this.setState({ credentialDocUrl: cockroachFetchCredentialsUrl })
       }
       this.setState({ selectedDBProvider: provider })
     }
@@ -279,6 +299,7 @@ class ProviderAccountForm extends React.Component {
       isFormValid,
       isInventoryNameFieldValid,
       inventoryNameFieldInvalidText,
+      credentialDocUrl,
     } = this.state
 
     return (
@@ -345,7 +366,44 @@ class ProviderAccountForm extends React.Component {
         )}
         {!_.isEmpty(selectedDBProvider) ? (
           <React.Fragment>
-            <div className="section-subtitle extra-top-margin no-bottom-padding">Account Credentials</div>
+            <div className="section-subtitle extra-top-margin no-bottom-padding">
+              Account Credentials
+              <span>
+                <Popover
+                  headerContent={<div>Account credentials</div>}
+                  bodyContent={
+                    <div>
+                      These are the credentials you used to create your database provider account. To create a new
+                      provider account or retrieve existing account credentials, click on the link below
+                    </div>
+                  }
+                  footerContent={
+                    <Button
+                      variant="link"
+                      component="a"
+                      href={credentialDocUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      icon={<ExternalLinkAltIcon />}
+                      iconPosition="right"
+                      isInline
+                    >
+                      Account credentials
+                    </Button>
+                  }
+                >
+                  <button
+                    type="button"
+                    aria-label="More info for name field"
+                    onClick={(e) => e.preventDefault()}
+                    aria-describedby="simple-form-name-01"
+                    className="pf-c-form__group-label-help"
+                  >
+                    <HelpIcon noVerticalAlign />
+                  </button>
+                </Popover>
+              </span>
+            </div>
             {selectedDBProvider?.spec?.credentialFields.map((field) => {
               return (
                 <FormGroup

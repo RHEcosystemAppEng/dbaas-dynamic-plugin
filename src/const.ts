@@ -14,6 +14,12 @@ export const crunchyProviderName = 'Crunchy Bridge Managed PostgreSQL'
 export const mongoProviderName = 'MongoDB Atlas Cloud Database Service'
 export const cockroachdbProviderType = 'cockroachdb-cloud-registration'
 export const cockroachdbProviderName = 'CockroachDB Cloud'
+export const mongoFetchCredentialsUrl =
+  'https://access.redhat.com/documentation/en-us/red_hat_openshift_database_access/1/html-single/quick_start_guide/index#find-your-mongodb-atlas-account-credentials_dbaas'
+export const crunchyFetchCredentialsUrl =
+  'https://access.redhat.com/documentation/en-us/red_hat_openshift_database_access/1/html-single/quick_start_guide/index#find-your-crunchy-data-bridge-account-credentials_dbaas'
+export const cockroachFetchCredentialsUrl =
+  'https://access.redhat.com/documentation/en-us/red_hat_openshift_database_access/1/html-single/quick_start_guide/index#find-your-cockroachdb-account-credentials_dbaas'
 
 // Common shortcuts than span pages.
 export const KEYBOARD_SHORTCUTS = Object.freeze({
