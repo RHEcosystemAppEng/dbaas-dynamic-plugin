@@ -3,13 +3,13 @@ import { TextInput, Toolbar, ToolbarContent, ToolbarItem, ToolbarGroup } from '@
 import { KEYBOARD_SHORTCUTS } from '../const'
 
 type InstanceListFilterProps = {
-  textInputIDValue: string
-  setTextInputIDValue: (textInputIDValue: string) => void
+  textInputNameValue: string
+  setTextInputNameValue: (textInputNameValue: string) => void
 }
 
 const InstanceListFilter: React.FC<InstanceListFilterProps> = ({
-  textInputIDValue,
-  setTextInputIDValue,
+  textInputNameValue,
+  setTextInputNameValue,
 }: InstanceListFilterProps) => {
   return (
     <Toolbar data-test-id="toolbar-filter-instances">
@@ -18,11 +18,11 @@ const InstanceListFilter: React.FC<InstanceListFilterProps> = ({
           <ToolbarItem>
             <div className="has-feedback">
               <TextInput
-                value={textInputIDValue}
+                value={textInputNameValue}
                 type="text"
-                onChange={(value) => setTextInputIDValue(value)}
-                aria-label="Search by ID"
-                placeholder="Search by ID..."
+                onChange={(value) => setTextInputNameValue(value)}
+                aria-label="Search by name"
+                placeholder="Search by name..."
                 className="co-text-filter"
               />
               <span className="form-control-feedback form-control-feedback--keyboard-hint">

@@ -158,3 +158,18 @@
   .half-width-selection {
     width: 50%;
   }
+
+  .sticky-table-container {
+    height: 600px;
+  }
+
+  .sticky-header-table {
+    position: relative;
+  }
+
+  .sticky-header-th > tr > * {
+    position: sticky !important;
+    top: 0;
+    z-index: var(--pf-global--ZIndex--xs);
+    background: var(--pf-c-table--BackgroundColor);
+  }
