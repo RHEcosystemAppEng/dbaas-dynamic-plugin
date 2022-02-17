@@ -34,6 +34,7 @@ import {
   DBaaSOperatorName,
 } from '../const.ts'
 import { fetchDbaasCSV } from '../utils'
+import './_dbaas-import-view.css'
 
 const TableEmptyState = () => {
   return (
@@ -42,15 +43,6 @@ const TableEmptyState = () => {
         <Title headingLevel="h2" size="lg">
           No database instances
         </Title>
-        <ActionGroup>
-          <Button
-            id="instance-select-button"
-            variant="primary"
-            //  href={`/k8s/ns/${currentNS}/clusterserviceversions/${dBaaSOperatorNameWithVersion}/${DBaaSInventoryCRName}/~new`}
-          >
-            Create Provider Account
-          </Button>
-        </ActionGroup>
       </EmptyState>
     </Bullseye>
   )
@@ -140,7 +132,7 @@ class AdminConnectionsTable extends React.Component {
                   bodyContent={<div>Click on the link below for more information about this issue.</div>}
                   footerContent={
                     <a
-                      href={`/k8s/ns/${this.currentNS}/clusterserviceversions/${this.dBaaSOperatorNameWithVersion}/${this.DBaaSInventoryCRName}/${inventoryInstance.name}`}
+                      href={`/k8s/ns/${this.currentNS}/clusterserviceversions/${this.dBaaSOperatorNameWithVersion}/${this.DBaaSInventoryCRName}/${inventoryInstance.instanceName}`}
                     >
                       Learn more
                     </a>
@@ -148,7 +140,7 @@ class AdminConnectionsTable extends React.Component {
                 >
                   <div>
                     <ExclamationTriangleIcon color="#f0ab00"></ExclamationTriangleIcon>
-                    <span style={{ color: '#2b9af3', paddingLeft: '3px' }}> Issue</span>
+                    <span className="issue-text"> Issue</span>
                   </div>
                 </Popover>
               </div>

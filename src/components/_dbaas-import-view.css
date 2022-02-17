@@ -173,3 +173,8 @@
     z-index: var(--pf-global--ZIndex--xs);
     background: var(--pf-c-table--BackgroundColor);
   }
+
+  .issue-text {
+    color: '#2b9af3';
+    padding-left: '3px';
+  }
