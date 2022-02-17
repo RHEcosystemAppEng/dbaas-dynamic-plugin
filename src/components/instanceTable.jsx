@@ -80,8 +80,14 @@ class InstanceTable extends React.Component {
       currentNS: window.location.pathname.split('/')[3],
       columns: this.props.isSelectable
         ? [
-            { title: 'Instance Name', transforms: [sortable, wrappable, cellWidth(20)] },
-            { title: 'Database ID', transforms: [sortable, wrappable, cellWidth(20)] },
+            {
+              title: 'Instance Name',
+              transforms: [sortable, wrappable, cellWidth(20)],
+            },
+            {
+              title: 'Database ID',
+              transforms: [sortable, wrappable, cellWidth(20)],
+            },
             { title: 'Alert', transforms: [wrappable, cellWidth(5)] },
             { title: 'Project', transforms: [wrappable, cellWidth(20)] },
             { title: 'Bound', transforms: [wrappable, cellWidth(5)] },
@@ -135,12 +141,20 @@ class InstanceTable extends React.Component {
     let sortedInstances = []
     const filterColumns = ['name', 'instanceID']
     filterKey = filterColumns[index - 1]
-    const { data, filteredInstances } = this.props
+    const { filteredInstances } = this.props
 
     if (!_.isEmpty(filteredInstances)) {
-      sortedInstances = _.sortBy(filteredInstances, [filterKey])
-    } else {
-      sortedInstances = _.sortBy(data?.instances, [filterKey])
+      sortedInstances = filteredInstances.sort((a, b) => {
+        const keyA = a[filterKey].toLowerCase()
+        const keyB = b[filterKey].toLowerCase()
+        if (keyA < keyB) {
+          return -1
+        }
+        if (keyA > keyB) {
+          return 1
+        }
+        return 0
+      })
     }
 
     this.getRows(direction === SortByDirection.asc ? sortedInstances : sortedInstances.reverse())
@@ -201,7 +215,7 @@ class InstanceTable extends React.Component {
           rowList.push({
             cells: [
               //Instance name
-              `${dbInstance.name}-${dbInstance.instanceID.slice(-10)}`,
+              dbInstance.name,
               //Instance ID
               dbInstance.instanceID,
               //Provider account issue
@@ -334,7 +348,7 @@ class InstanceTable extends React.Component {
 
   render() {
     const { columns, rows, error, showError, sortBy } = this.state
-    const { isSelectable, isLoading, connectionAndServiceBindingList } = this.props
+    const { isSelectable, isLoading, connectionAndServiceBindingList, filteredInstances } = this.props
 
     if (isLoading) {
       return (
@@ -361,8 +375,8 @@ class InstanceTable extends React.Component {
                 rows={rows}
                 isStickyHeader
                 className="sticky-header-table"
-                sortBy={sortBy}
-                onSort={this.onSort}
+                sortBy={!_.isEmpty(filteredInstances) ? sortBy : null}
+                onSort={!_.isEmpty(filteredInstances) ? this.onSort : null}
               >
                 <TableHeader className="sticky-header-th" />
                 <TableBody />
