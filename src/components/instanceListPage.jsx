@@ -87,8 +87,7 @@ const InstanceListPage = () => {
   const filteredInstances = React.useMemo(
     () =>
       selectedInventory?.instances?.filter((instance) => {
-        let nameStr = `${instance.name}-${instance.instanceID.slice(-10)}`
-        return nameStr.toLowerCase().includes(textInputNameValue.toLowerCase())
+        return instance?.name?.toLowerCase().includes(textInputNameValue.toLowerCase())
       }),
     [selectedInventory.instances, textInputNameValue]
   )
