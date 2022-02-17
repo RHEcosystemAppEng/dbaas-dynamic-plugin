@@ -67,7 +67,7 @@ const InstanceListPage = () => {
   const [noInstances, setNoInstances] = React.useState(false)
   const [statusMsg, setStatusMsg] = React.useState('')
   const [fetchInstancesFailed, setFetchInstancesFailed] = React.useState(false)
-  const [textInputIDValue, setTextInputIDValue] = React.useState('')
+  const [textInputNameValue, setTextInputNameValue] = React.useState('')
   const [showResults, setShowResults] = React.useState(false)
   const [inventories, setInventories] = React.useState([])
   const [selectedDBProvider, setSelectedDBProvider] = React.useState('')
@@ -85,8 +85,11 @@ const InstanceListPage = () => {
     </div>
   )
   const filteredInstances = React.useMemo(
-    () => selectedInventory?.instances?.filter((instance) => instance.instanceID.includes(textInputIDValue)),
-    [selectedInventory.instances, textInputIDValue]
+    () =>
+      selectedInventory?.instances?.filter((instance) => {
+        return instance?.name?.toLowerCase().includes(textInputNameValue.toLowerCase())
+      }),
+    [selectedInventory.instances, textInputNameValue]
   )
 
   const mapDBaaSConnectionsAndServiceBindings = () => {
@@ -160,7 +163,7 @@ const InstanceListPage = () => {
     setSelectedInventory(inventory)
 
     //clear filter value when switch inventory
-    setTextInputIDValue('')
+    setTextInputNameValue('')
     setShowResults(false)
     checkInventoryStatus(inventory)
   }
@@ -295,8 +298,8 @@ const InstanceListPage = () => {
                   <Split>
                     <SplitItem>
                       <InstanceListFilter
-                        textInputIDValue={textInputIDValue}
-                        setTextInputIDValue={setTextInputIDValue}
+                        textInputNameValue={textInputNameValue}
+                        setTextInputNameValue={setTextInputNameValue}
                       />
                     </SplitItem>
                     <SplitItem>

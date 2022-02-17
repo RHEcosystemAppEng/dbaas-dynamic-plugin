@@ -14,12 +14,24 @@ import {
   FlexItem,
   Popover,
 } from '@patternfly/react-core'
-import { cellWidth, RowSelectVariant, Table, TableBody, TableHeader, wrappable } from '@patternfly/react-table'
+import {
+  cellWidth,
+  RowSelectVariant,
+  Table,
+  TableBody,
+  TableHeader,
+  wrappable,
+  OuterScrollContainer,
+  InnerScrollContainer,
+  sortable,
+  SortByDirection,
+} from '@patternfly/react-table'
 import { ExclamationTriangleIcon } from '@patternfly/react-icons'
 import _ from 'lodash'
 import React from 'react'
 import { getCSRFToken, fetchDbaasCSV } from '../utils'
 import { DBaaSInventoryCRName, DBaaSOperatorName } from '../const'
+import './_dbaas-import-view.css'
 
 const IssuePopover = ({ action }) => {
   return (
@@ -62,13 +74,20 @@ class InstanceTable extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
+      sortBy: {},
       dbaaSOperatorNameWithVersion: '',
       inventoryHasIssue: false,
       currentNS: window.location.pathname.split('/')[3],
       columns: this.props.isSelectable
         ? [
-            { title: 'Instance Name', transforms: [wrappable, cellWidth(20)] },
-            { title: 'Database ID', transforms: [wrappable, cellWidth(20)] },
+            {
+              title: 'Instance Name',
+              transforms: [sortable, wrappable, cellWidth(20)],
+            },
+            {
+              title: 'Database ID',
+              transforms: [sortable, wrappable, cellWidth(20)],
+            },
             { title: 'Alert', transforms: [wrappable, cellWidth(5)] },
             { title: 'Project', transforms: [wrappable, cellWidth(20)] },
             { title: 'Bound', transforms: [wrappable, cellWidth(5)] },
@@ -84,6 +103,7 @@ class InstanceTable extends React.Component {
       error: {},
     }
 
+    this.onSort = this.onSort.bind(this)
     this.goToInventoryInfoPage = this.goToInventoryInfoPage.bind(this)
     this.fetchCSV = this.fetchCSV.bind(this)
     this.getInventoryStatus = this.getInventoryStatus.bind(this)
@@ -114,6 +134,31 @@ class InstanceTable extends React.Component {
   componentDidMount() {
     this.getRows(this.props.data.instances)
     this.getInventoryStatus(this.props.data)
+  }
+
+  onSort = (_event, index, direction) => {
+    let filterKey = ''
+    let sortedInstances = []
+    const filterColumns = ['name', 'instanceID']
+    filterKey = filterColumns[index - 1]
+    const { filteredInstances } = this.props
+
+    if (!_.isEmpty(filteredInstances)) {
+      sortedInstances = filteredInstances.sort((a, b) => {
+        const keyA = a[filterKey].toLowerCase()
+        const keyB = b[filterKey].toLowerCase()
+        if (keyA < keyB) {
+          return -1
+        }
+        if (keyA > keyB) {
+          return 1
+        }
+        return 0
+      })
+    }
+
+    this.getRows(direction === SortByDirection.asc ? sortedInstances : sortedInstances.reverse())
+    this.setState({ sortBy: { index, direction } })
   }
 
   fetchCSV = async () => {
@@ -170,7 +215,7 @@ class InstanceTable extends React.Component {
           rowList.push({
             cells: [
               //Instance name
-              `${dbInstance.name}-${dbInstance.instanceID.slice(-10)}`,
+              dbInstance.name,
               //Instance ID
               dbInstance.instanceID,
               //Provider account issue
@@ -302,8 +347,8 @@ class InstanceTable extends React.Component {
   }
 
   render() {
-    const { columns, rows, error, showError } = this.state
-    const { isSelectable, isLoading, connectionAndServiceBindingList } = this.props
+    const { columns, rows, error, showError, sortBy } = this.state
+    const { isSelectable, isLoading, connectionAndServiceBindingList, filteredInstances } = this.props
 
     if (isLoading) {
       return (
@@ -318,17 +363,27 @@ class InstanceTable extends React.Component {
 
     return (
       <React.Fragment>
-        <Table
-          id="instance-table"
-          onSelect={isSelectable ? this.onSelect : null}
-          selectVariant={isSelectable ? RowSelectVariant.radio : null}
-          aria-label="Instance Table"
-          cells={columns}
-          rows={rows}
-        >
-          <TableHeader />
-          <TableBody />
-        </Table>
+        <div className="sticky-table-container">
+          <OuterScrollContainer>
+            <InnerScrollContainer>
+              <Table
+                id="instance-table"
+                onSelect={isSelectable ? this.onSelect : null}
+                selectVariant={isSelectable ? RowSelectVariant.radio : null}
+                aria-label="Instance Table"
+                cells={columns}
+                rows={rows}
+                isStickyHeader
+                className="sticky-header-table"
+                sortBy={!_.isEmpty(filteredInstances) ? sortBy : null}
+                onSort={!_.isEmpty(filteredInstances) ? this.onSort : null}
+              >
+                <TableHeader className="sticky-header-th" />
+                <TableBody />
+              </Table>
+            </InnerScrollContainer>
+          </OuterScrollContainer>
+        </div>
         {isSelectable ? (
           <div>
             {showError ? (
