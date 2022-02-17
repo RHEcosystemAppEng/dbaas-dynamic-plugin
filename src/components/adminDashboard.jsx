@@ -13,12 +13,15 @@ import {
   Split,
   SplitItem,
   Title,
-  EmptyStateVariant,
 } from '@patternfly/react-core'
 import CaretDownIcon from '@patternfly/react-icons/dist/esm/icons/caret-down-icon'
 import * as _ from 'lodash'
 import React, { useState } from 'react'
 import {
+  DBaaSInventoryCRName,
+  DBaaSOperatorName,
+  cockroachdbProviderName,
+  cockroachdbProviderType,
   crunchyProviderName,
   crunchyProviderType,
   mongoProviderName,
@@ -27,20 +30,21 @@ import {
   DBaaSOperatorName,
 } from '../const.ts'
 import {
+  disableNSSelection,
+  enableNSSelection,
+  fetchDbaasCSV,
   fetchInventoryNamespaces,
   fetchObjectsByNamespace,
   fetchObjectsClusterOrNS,
   isDbaasConnectionUsed,
-  fetchDbaasCSV,
-  disableNSSelection,
-  enableNSSelection,
 } from '../utils'
 import AdminConnectionsTable from './adminConnectionsTable'
 import FlexForm from './form/flexForm'
 import FormBody from './form/formBody'
 import FormHeader from './form/formHeader'
+import InstanceListFilter from './instanceListFilter'
+import { handleCancel, handleTryAgain } from './instanceListPage'
 import './_dbaas-import-view.css'
-import { handleTryAgain, handleCancel } from './instanceListPage'
 
 const AdminDashboard = () => {
   const [noInstances, setNoInstances] = useState(false)
@@ -51,10 +55,21 @@ const AdminDashboard = () => {
   const [dbaasConnectionList, setDbaasConnectionList] = useState([])
   const [serviceBindingList, setServiceBindingList] = useState([])
   const [connectionAndServiceBindingList, setConnectionAndServiceBindingList] = useState([])
+  const [inventoryInstances, setInventoryInstances] = useState([])
   const [isOpen, setIsOpen] = useState(false)
   const [dBaaSOperatorNameWithVersion, setDBaaSOperatorNameWithVersion] = useState()
+  const [textInputNameValue, setTextInputNameValue] = useState('')
 
   const currentNS = window.location.pathname.split('/')[3]
+
+  const filteredInstances = React.useMemo(
+    () =>
+      inventoryInstances?.filter((instance) => {
+        let nameStr = instance.instanceName
+        return nameStr.toLowerCase().includes(textInputNameValue.toLowerCase())
+      }),
+    [inventoryInstances, textInputNameValue]
+  )
 
   const dropdownItems = [
     <DropdownItem
@@ -74,24 +89,6 @@ const AdminDashboard = () => {
     </div>
   )
 
-  const setDatabaseName = (inventoryRefName) => {
-    let databaseName
-
-    if (inventories.length > 0) {
-      inventories.forEach((inventory) => {
-        if (inventory.name === inventoryRefName) {
-          if (inventory.providername === crunchyProviderType) {
-            databaseName = crunchyProviderName
-          }
-          if (inventory.spec?.providerRef?.name === mongoProviderType) {
-            databaseName = mongoProviderName
-          }
-        }
-      })
-    }
-    return databaseName
-  }
-
   const mapDBaaSConnectionsAndServiceBindings = async () => {
     const newDbaasConnectionList = dbaasConnectionList
     const newServiceBindingList = serviceBindingList
@@ -104,8 +101,8 @@ const AdminDashboard = () => {
           connectionStatus: _.isEmpty(dbaasConnection?.status) ? '-' : dbaasConnection?.status?.conditions[0]?.reason,
           errMsg: 'N/A',
           applications: [],
+          users: [],
           namespace: _.isEmpty(dbaasConnection?.metadata?.namespace) ? '-' : dbaasConnection?.metadata?.namespace,
-          database: setDatabaseName(dbaasConnection.spec?.inventoryRef.name),
           providerAcct: dbaasConnection?.spec?.inventoryRef?.name,
         }
         if (!_.isEmpty(dbaasConnection?.status) && dbaasConnection?.status?.conditions[0]?.status !== 'True') {
@@ -116,13 +113,67 @@ const AdminDashboard = () => {
             if (isDbaasConnectionUsed(serviceBinding, dbaasConnection)) {
               const newConnectionObj = _.extend({}, connectionObj)
               newConnectionObj.applications.push(serviceBinding.spec?.application)
+              if (serviceBinding.metadata?.annotations?.['servicebinding.io/requester'] != undefined) {
+                var obj = JSON.parse(serviceBinding.metadata?.annotations?.['servicebinding.io/requester'])
+                newConnectionObj.users.push(obj.username)
+              } else {
+                newConnectionObj.users.push('\u00a0')
+              }
             }
           })
         }
         newConnectionAndServiceBindingList.push(connectionObj)
       })
     }
-    setConnectionAndServiceBindingList(newConnectionAndServiceBindingList)
+
+    inventories?.forEach((inventory) => {
+      let dbProvider
+      let providerAcct
+      if (inventory.providername === crunchyProviderType) {
+        dbProvider = crunchyProviderName
+      } else if (inventory.providername === mongoProviderType) {
+        dbProvider = mongoProviderName
+      } else if (inventory.providername === cockroachdbProviderType) {
+        dbProvider = cockroachdbProviderName
+      }
+      if (inventory.instances?.length > 0) {
+        for (let dbInstance of inventory.instances) {
+          var inventoryInstance = new Object()
+          inventoryInstance.instanceName = dbInstance.name
+          inventoryInstance.dbProvider = dbProvider
+          inventoryInstance.providerAcct = inventory.name
+          inventoryInstance.alert = inventory.alert
+          inventoryInstance.instanceID = dbInstance.instanceID
+          inventoryInstance.connections = []
+          for (let connection of newConnectionAndServiceBindingList) {
+            if (connection.instanceID == dbInstance.instanceID) {
+              for (let i = 0; i < connection.applications.length; i++) {
+                if (i === 0) {
+                  inventoryInstance.connections.push([
+                    connection.namespace,
+                    'Yes',
+                    connection.users[i],
+                    connection.applications[i].name,
+                  ])
+                } else {
+                  inventoryInstance.connections.push([
+                    '\u00a0',
+                    'Yes',
+                    connection.users[i],
+                    connection.applications[i].name,
+                  ])
+                }
+              }
+              if (connection.applications.length === 0) {
+                inventoryInstance.connections.push([connection.namespace, 'No', '\u00a0', '\u00a0'])
+              }
+            }
+          }
+          inventoryInstances.push(inventoryInstance)
+        }
+      }
+    })
+    setInventoryInstances(inventoryInstances)
   }
 
   const fetchServiceBindings = async () => {
@@ -146,23 +197,32 @@ const AdminDashboard = () => {
   const fetchInstances = async () => {
     const inventoriesAll = []
     const inventoryItems = await fetchInventoriesByNSAndRules()
-
     if (inventoryItems.length > 0) {
-      inventoryItems.forEach((inventory, index) => {
-        const obj = { id: 0, name: '', namespace: '', instances: [], status: {}, providername: '' }
+      let filteredInventories = _.filter(inventoryItems, (inventory) => {
+        return inventory.status?.instances != undefined
+      })
+      filteredInventories.forEach((inventory, index) => {
+        const obj = { id: 0, name: '', namespace: '', instances: [], status: {}, providername: '', alert: '' }
         obj.id = index
         obj.name = inventory.metadata.name
         obj.namespace = inventory.metadata.namespace
         obj.status = inventory.status
         obj.providername = inventory.spec?.providerRef?.name
 
-        if (
-          inventory.status?.conditions[0]?.status !== 'False' &&
-          inventory.status?.conditions[0]?.type === 'SpecSynced'
-        ) {
+        let inventoryReadyCondition = inventory?.status?.conditions?.find((condition) => {
+          return condition.type?.toLowerCase() === 'inventoryready'
+        })
+        let specSyncedCondition = inventory?.status?.conditions?.find((condition) => {
+          return condition.type?.toLowerCase() === 'specsynced'
+        })
+        if (specSyncedCondition.type === 'SpecSynced') {
           inventory.status?.instances?.map((instance) => (instance.provider = inventory.spec?.providerRef?.name))
           obj.instances = inventory.status?.instances
+          if (specSyncedCondition.status === 'False' || inventoryReadyCondition.status === 'False') {
+            obj.alert = 'alert'
+          }
         }
+
         inventoriesAll.push(obj)
       })
       setInventories(inventoriesAll)
@@ -247,7 +307,7 @@ const AdminDashboard = () => {
           </SplitItem>
         </Split>
         <Divider />
-
+        <InstanceListFilter textInputNameValue={textInputNameValue} setTextInputNameValue={setTextInputNameValue} />
         {!showResults ? (
           <EmptyState>
             <EmptyStateIcon variant="container" component={Spinner} />
@@ -284,7 +344,13 @@ const AdminDashboard = () => {
             ) : (
               <React.Fragment>
                 <FormSection fullWidth flexLayout className="no-top-margin">
-                  <AdminConnectionsTable connections={connectionAndServiceBindingList} />
+                  <AdminConnectionsTable
+                    // inventories={inventories}
+                    // connections={connectionAndServiceBindingList}
+                    filteredInstances={filteredInstances}
+                    dBaaSOperatorNameWithVersion={dBaaSOperatorNameWithVersion}
+                    inventoryInstances={inventoryInstances}
+                  />
                 </FormSection>
               </React.Fragment>
             )}
