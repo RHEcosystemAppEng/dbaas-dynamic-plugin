@@ -44,6 +44,7 @@ import FormBody from './form/formBody'
 import FormHeader from './form/formHeader'
 import InstanceListFilter from './instanceListFilter'
 import { handleCancel, handleTryAgain } from './instanceListPage'
+import { InfoCircleIcon } from '@patternfly/react-icons'
 import './_dbaas-import-view.css'
 
 const AdminDashboard = () => {
