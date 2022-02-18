@@ -133,7 +133,6 @@ const AdminDashboard = () => {
 
     inventories?.forEach((inventory) => {
       let dbProvider
-      let providerAcct
       if (inventory.providername === crunchyProviderType) {
         dbProvider = crunchyProviderName
       } else if (inventory.providername === mongoProviderType) {
@@ -143,34 +142,38 @@ const AdminDashboard = () => {
       }
       if (inventory.instances?.length > 0) {
         for (let dbInstance of inventory.instances) {
-          var inventoryInstance = new Object()
+          var inventoryInstance = {}
           inventoryInstance.instanceName = dbInstance.name
           inventoryInstance.dbProvider = dbProvider
           inventoryInstance.providerAcct = inventory.name
           inventoryInstance.alert = inventory.alert
           inventoryInstance.instanceID = dbInstance.instanceID
           inventoryInstance.connections = []
-          for (let connection of newConnectionAndServiceBindingList) {
-            if (connection.instanceID == dbInstance.instanceID) {
-              for (let i = 0; i < connection.applications.length; i++) {
-                if (i === 0) {
-                  inventoryInstance.connections.push([
-                    connection.namespace,
-                    'Yes',
-                    connection.users[i],
-                    connection.applications[i].name,
-                  ])
-                } else {
-                  inventoryInstance.connections.push([
-                    '\u00a0',
-                    'Yes',
-                    connection.users[i],
-                    connection.applications[i].name,
-                  ])
+          if(newConnectionAndServiceBindingList.length === 0) {
+            inventoryInstance.connections.push(['--', '--', '--', '--'])
+          } else {
+            for (let connection of newConnectionAndServiceBindingList) {
+              if (connection.instanceID === dbInstance.instanceID) {
+                for (let i = 0; i < connection.applications.length; i++) {
+                  if (i === 0) {
+                    inventoryInstance.connections.push([
+                      connection.namespace,
+                      'Yes',
+                      connection.users[i],
+                      connection.applications[i].name,
+                    ])
+                  } else {
+                    inventoryInstance.connections.push([
+                      '\u00a0',
+                      'Yes',
+                      connection.users[i],
+                      connection.applications[i].name,
+                    ])
+                  }
                 }
-              }
-              if (connection.applications.length === 0) {
-                inventoryInstance.connections.push([connection.namespace, 'No', '\u00a0', '\u00a0'])
+                if (connection.applications.length === 0) {
+                  inventoryInstance.connections.push([connection.namespace, 'No', '--', '--'])
+                }
               }
             }
           }
@@ -194,7 +197,7 @@ const AdminDashboard = () => {
       }
     )
     if (connections.length == 0) {
-      setNoInstances(true)
+      //setNoInstances(true) - instances can exist on the provider side without connections, don't hide the list
     }
     setDbaasConnectionList(connections)
   }
@@ -204,7 +207,7 @@ const AdminDashboard = () => {
     const inventoryItems = await fetchInventoriesByNSAndRules()
     if (inventoryItems.length > 0) {
       let filteredInventories = _.filter(inventoryItems, (inventory) => {
-        return inventory.status?.instances != undefined
+        return inventory.status?.instances !== undefined
       })
       filteredInventories.forEach((inventory, index) => {
         const obj = { id: 0, name: '', namespace: '', instances: [], status: {}, providername: '', alert: '' }
