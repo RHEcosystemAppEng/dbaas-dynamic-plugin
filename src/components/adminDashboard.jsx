@@ -149,7 +149,7 @@ const AdminDashboard = () => {
           inventoryInstance.alert = inventory.alert
           inventoryInstance.instanceID = dbInstance.instanceID
           inventoryInstance.connections = []
-          if(newConnectionAndServiceBindingList.length === 0) {
+          if (newConnectionAndServiceBindingList.length === 0) {
             inventoryInstance.connections.push(['--', '--', '--', '--'])
           } else {
             for (let connection of newConnectionAndServiceBindingList) {
