@@ -402,6 +402,7 @@ const ProviderClusterProvisionPage = () => {
           dbProviderList.push({
             value: dbProvider?.metadata?.name,
             label: dbProvider?.spec?.provider?.displayName,
+            allowsFreeTrial: dbProvider?.spec?.allowsFreeTrial,
             externalProvisionInfo: {
               url: dbProvider?.spec?.externalProvisionURL,
               desc: dbProvider?.spec?.externalProvisionDescription,
@@ -498,7 +499,7 @@ const ProviderClusterProvisionPage = () => {
                 ))}
               </FormSelect>
             </FormGroup>
-            {selectedDBProvider?.value === crunchyProviderType ? null : (
+            {selectedDBProvider?.allowsFreeTrial === true ? (
               <React.Fragment>
                 <FormGroup
                   label="Provider Account"
@@ -568,7 +569,7 @@ const ProviderClusterProvisionPage = () => {
                   </Button>
                 </ActionGroup>
               </React.Fragment>
-            )}
+            ) : null}
           </React.Fragment>
         ) : null}
       </FormBody>
