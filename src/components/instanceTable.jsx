@@ -196,7 +196,7 @@ class InstanceTable extends React.Component {
       _.forEach(data, (dbInstance) => {
         var connectionRows = []
 
-        if (this.props.isSelectable && this.props.connectionAndServiceBindingList != undefined) {
+        if (this.props.isSelectable && !_.isEmpty(this.props.connectionAndServiceBindingList)) {
           for (let connection of this.props.connectionAndServiceBindingList) {
             if (connection.instanceID == dbInstance.instanceID) {
               for (let i = 0; i < connection.applications.length; i++) {
@@ -348,7 +348,7 @@ class InstanceTable extends React.Component {
 
   render() {
     const { columns, rows, error, showError, sortBy } = this.state
-    const { isSelectable, isLoading, connectionAndServiceBindingList, filteredInstances } = this.props
+    const { isSelectable, isLoading, filteredInstances } = this.props
 
     if (isLoading) {
       return (

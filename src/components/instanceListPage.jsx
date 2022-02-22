@@ -163,6 +163,9 @@ const InstanceListPage = () => {
       if (inventory?.status?.conditions[0]?.status === 'False') {
         setFetchInstancesFailed(true)
         setStatusMsg(inventory?.status?.conditions[0]?.message)
+      } else {
+        setFetchInstancesFailed(false)
+        setStatusMsg('')
       }
     } else {
       setFetchInstancesFailed(true)
@@ -240,6 +243,7 @@ const InstanceListPage = () => {
       //Set the first inventory as the selected inventory by default
       if (inventories.length > 0) {
         setSelectedInventory(inventories[0])
+        checkInventoryStatus(inventories[0])
       }
       setShowResults(true)
     } else {
@@ -283,6 +287,17 @@ const InstanceListPage = () => {
           </EmptyState>
         ) : (
           <React.Fragment>
+            <FormGroup label="Provider Account" fieldId="provider-account" className="provider-account-selection">
+              <FormSelect
+                value={selectedInventory.name}
+                onChange={handleInventorySelection}
+                aria-label="Provider Account"
+              >
+                {inventories?.map((inventory, index) => (
+                  <FormSelectOption key={index} value={inventory.name} label={inventory.name} />
+                ))}
+              </FormSelect>
+            </FormGroup>
             {fetchInstancesFailed || noInstances ? (
               <EmptyState>
                 <EmptyStateIcon variant="container" component={InfoCircleIcon} className="warning-icon" />
@@ -309,17 +324,6 @@ const InstanceListPage = () => {
               </EmptyState>
             ) : (
               <React.Fragment>
-                <FormGroup label="Provider Account" fieldId="provider-account" className="provider-account-selection">
-                  <FormSelect
-                    value={selectedInventory.name}
-                    onChange={handleInventorySelection}
-                    aria-label="Provider Account"
-                  >
-                    {inventories?.map((inventory, index) => (
-                      <FormSelectOption key={index} value={inventory.name} label={inventory.name} />
-                    ))}
-                  </FormSelect>
-                </FormGroup>
                 <FormGroup label="Database Instance" fieldId="instance-id-filter">
                   <Split>
                     <SplitItem>
