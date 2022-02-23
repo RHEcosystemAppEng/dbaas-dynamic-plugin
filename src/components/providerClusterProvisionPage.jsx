@@ -233,7 +233,7 @@ const ProviderClusterProvisionPage = () => {
           name: clusterName,
           inventoryRef: {
             name: selectedInventory.name,
-            namespace: currentNS,
+            namespace: selectedInventory.namespace,
           },
           otherInstanceParams: otherInstanceParams,
         },
