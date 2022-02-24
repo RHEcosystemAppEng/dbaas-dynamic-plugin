@@ -28,11 +28,12 @@ import {
 } from '../const'
 import { DBAAS_PROVIDER_KIND } from '../catalog/const'
 import {
-  fetchInventoryNamespaces,
+  fetchInventoriesAndMapByNSAndRules,
   fetchObjectsByNamespace,
   fetchObjectsClusterOrNS,
   isDbaasConnectionUsed,
   disableNSSelection,
+  filterInventoriesByConnNS,
 } from '../utils'
 import FlexForm from './form/flexForm'
 import FormBody from './form/formBody'
@@ -48,21 +49,6 @@ export const handleTryAgain = () => {
 
 export const handleCancel = () => {
   window.history.back()
-}
-
-export async function fetchInventoriesByNSAndRules() {
-  let inventoryNamespaces = await fetchInventoryNamespaces()
-  let inventoryItems = await fetchObjectsByNamespace(
-    'dbaas.redhat.com',
-    'v1alpha1',
-    'dbaasinventories',
-    inventoryNamespaces
-  ).catch(function (error) {
-    setFetchInstancesFailed(true)
-    setStatusMsg(error)
-  })
-
-  return inventoryItems
 }
 
 const InstanceListPage = () => {
@@ -211,9 +197,19 @@ const InstanceListPage = () => {
     setSelectedDBProvider(dbProviderType)
   }
 
+  async function filteredInventoriesByValidConnectionNS() {
+    let inventoryItems = []
+    let inventoryData = await fetchInventoriesAndMapByNSAndRules().catch(function (error) {
+      setFetchInstancesFailed(true)
+      setStatusMsg(error)
+    })
+
+    return filterInventoriesByConnNS(inventoryData, currentNS)
+  }
+
   async function fetchInstances() {
     let inventories = []
-    let inventoryItems = await fetchInventoriesByNSAndRules()
+    let inventoryItems = await filteredInventoriesByValidConnectionNS()
 
     if (inventoryItems.length > 0) {
       let filteredInventories = _.filter(inventoryItems, (inventory) => {
@@ -222,8 +218,8 @@ const InstanceListPage = () => {
       filteredInventories.forEach((inventory, index) => {
         let obj = { id: 0, name: '', namespace: '', instances: [], status: {} }
         obj.id = index
-        obj.name = inventory.metadata.name
-        obj.namespace = inventory.metadata.namespace
+        obj.name = inventory.metadata?.name
+        obj.namespace = inventory.metadata?.namespace
         obj.status = inventory.status
 
         if (

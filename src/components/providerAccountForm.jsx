@@ -13,8 +13,7 @@ import {
   ValidatedOptions,
   Popover,
 } from '@patternfly/react-core'
-import { getCSRFToken } from '../utils'
-import { fetchInventoryNamespaces } from '../utils'
+import { getCSRFToken, fetchInvAndConnNamespacesFromTenants } from '../utils'
 import { HelpIcon, ExternalLinkAltIcon } from '@patternfly/react-icons'
 import {
   mongoFetchCredentialsUrl,
@@ -56,7 +55,8 @@ class ProviderAccountForm extends React.Component {
   async componentDidUpdate(prevProps, prevState) {
     if (!_.isEmpty(this.props.dbProviderInfo) && prevProps.dbProviderInfo !== this.props.dbProviderInfo) {
       let dbProviderList = []
-      this.state.inventoryNamespaces = await fetchInventoryNamespaces()
+      let namespaces = await fetchInvAndConnNamespacesFromTenants()
+      this.setState({ inventoryNamespaces: namespaces.uniqInventoryNamespaces })
       if (this.state.inventoryNamespaces.includes(this.state.currentNS)) {
         this.props.dbProviderInfo.items.forEach((dbProvider) => {
           dbProviderList.push({ value: dbProvider?.metadata?.name, label: dbProvider?.spec?.provider?.displayName })

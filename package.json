@@ -67,7 +67,7 @@
   },
   "consolePlugin": {
     "name": "dbaas-dynamic-plugin",
-    "version": "0.1.3",
+    "version": "0.1.4",
     "displayName": "DBaaS Dynamic Plugin",
     "description": "Dynamic Plugin for Openshift Console to provide custom components for DBaaS",
     "exposedModules": {
