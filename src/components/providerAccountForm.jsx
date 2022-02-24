@@ -72,6 +72,10 @@ class ProviderAccountForm extends React.Component {
     ) {
       this.validateForm()
     }
+    if (prevState.selectedDBProvider?.metadata?.name !== this.state.selectedDBProvider?.metadata?.name) {
+      this.validateForm()
+      this.setState({ credentials: {} })
+    }
   }
 
   validateForm = () => {
@@ -127,6 +131,7 @@ class ProviderAccountForm extends React.Component {
       if (provider?.spec?.credentialFields) {
         provider.spec.credentialFields.forEach((field) => {
           field.isValid = ''
+          field.value = ''
         })
       }
       if (provider?.metadata?.name === mongoProviderType) {
@@ -408,7 +413,7 @@ class ProviderAccountForm extends React.Component {
               return (
                 <FormGroup
                   label={field.displayName}
-                  fieldId={field.key}
+                  fieldId={`${selectedDBProvider?.metadata?.name}-${field.key}`}
                   isRequired={field.required}
                   helperTextInvalid="This is a required field"
                   validated={field.isValid}
@@ -416,11 +421,12 @@ class ProviderAccountForm extends React.Component {
                   <TextInput
                     isRequired={field.required}
                     type={field.type === 'maskedstring' ? 'password' : 'text'}
-                    id={field.key}
-                    name={field.key}
-                    value={credentials[field.key]}
+                    id={`${selectedDBProvider?.metadata?.name}-${field.key}`}
+                    name={`${selectedDBProvider?.metadata?.name}-${field.key}`}
+                    value={field.value}
                     validated={field.isValid}
                     onChange={(value) => {
+                      field.value = value
                       this.setState((prevState) => {
                         let newCredentials = Object.assign({}, prevState.credentials)
                         newCredentials[field.key] = value.toString('base64')
