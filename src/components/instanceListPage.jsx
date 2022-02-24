@@ -334,6 +334,7 @@ const InstanceListPage = () => {
                     </SplitItem>
                     <SplitItem>
                       <Button
+                        isDisabled={inventories.length === 0}
                         component="a"
                         href={`/k8s/ns/${currentNS}/rhoda-create-database-instance/db/${selectedDBProvider}/pa/${selectedInventory?.name}`}
                         variant="secondary"
