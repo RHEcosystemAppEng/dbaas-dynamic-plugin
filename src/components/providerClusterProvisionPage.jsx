@@ -191,10 +191,14 @@ const ProviderClusterProvisionPage = () => {
               setShowResults(true)
             }
           } else {
+            if (!_.isEmpty(provisionReadyCondition?.message)) {
+              setStatusMsg(provisionReadyCondition?.message)
+            } else {
+              setStatusMsg('Could not connect with database provider')
+            }
             if (!checkDBClusterStatusTimeoutID.current) {
               checkDBClusterStatusTimeoutID.current = setTimeout(() => {
                 setClusterProvisionFailed(true)
-                setStatusMsg('Could not connect with database provider')
                 clearInterval(checkDBClusterStatusIntervalID.current)
                 setShowResults(true)
               }, 30000)
