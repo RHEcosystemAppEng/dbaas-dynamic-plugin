@@ -141,7 +141,7 @@ const AdminDashboard = () => {
       }
       if (inventory.instances?.length > 0) {
         for (let dbInstance of inventory.instances) {
-          var inventoryInstance = {}
+          const inventoryInstance = {}
           inventoryInstance.instanceName = dbInstance.name
           inventoryInstance.dbProvider = dbProvider
           inventoryInstance.providerAcct = inventory.name
@@ -193,12 +193,7 @@ const AdminDashboard = () => {
   }
 
   const fetchDBaaSConnections = async () => {
-    const connections = await fetchObjectsClusterOrNS('dbaas.redhat.com', 'v1alpha1', 'dbaasconnections').catch(
-      (error) => {
-        setNoInstances(true)
-        setStatusMsg(error)
-      }
-    )
+    const connections = await fetchObjectsClusterOrNS('dbaas.redhat.com', 'v1alpha1', 'dbaasconnections')
     setDbaasConnectionList(connections)
   }
 
@@ -271,6 +266,49 @@ const AdminDashboard = () => {
     setDBaaSOperatorNameWithVersion(dbaasCSV.metadata?.name)
   }
 
+  const goToCreateProviderPage = () => {
+    window.location.pathname = `/k8s/ns/${currentNS}/clusterserviceversions/${dBaaSOperatorNameWithVersion}/${DBaaSInventoryCRName}/~new`
+  }
+
+  const displayEmptyState = () => {
+    if (fetchInstancesFailed) {
+      return (
+        <EmptyState>
+          <EmptyStateIcon variant="container" component={InfoCircleIcon} className="warning-icon" />
+          <Title headingLevel="h2" size="md">
+            Database instances retrieval failed
+          </Title>
+          <EmptyStateBody>Database instances could not be retrieved. Please try again.</EmptyStateBody>
+          <Alert variant="danger" isInline title="An error occured" className="co-alert co-break-word extra-top-margin">
+            <div>{statusMsg}</div>
+          </Alert>
+          <Button variant="primary" onClick={handleTryAgain}>
+            Try Again
+          </Button>
+          <EmptyStateSecondaryActions>
+            <Button variant="link" onClick={handleCancel}>
+              Close
+            </Button>
+          </EmptyStateSecondaryActions>
+        </EmptyState>
+      )
+    }
+    return (
+      <EmptyState>
+        <EmptyStateIcon variant="container" component={InfoCircleIcon} className="warning-icon" />
+        <Title headingLevel="h2" size="md">
+          No Database Instances
+        </Title>
+        <EmptyStateBody>
+          Database instances are shown here once you've created your first Provider Account.
+        </EmptyStateBody>
+        <Button variant="primary" onClick={goToCreateProviderPage}>
+          Create Provider Account
+        </Button>
+      </EmptyState>
+    )
+  }
+
   React.useEffect(() => {
     disableNSSelection()
     fetchInstances()
@@ -290,30 +328,6 @@ const AdminDashboard = () => {
   return (
     <FlexForm className="instance-table-container">
       <FormBody flexLayout>
-        <Split>
-          <SplitItem isFilled>
-            <FormHeader
-              title={dbProviderTitle}
-              helpText="Create database provider account and view your database instances"
-              marginBottom="lg"
-            />
-          </SplitItem>
-          <SplitItem>
-            <Dropdown
-              onSelect={onSelect}
-              position={DropdownPosition.right}
-              toggle={
-                <DropdownToggle onToggle={onToggle} toggleIndicator={CaretDownIcon} isPrimary id="toggle-id-4">
-                  Create
-                </DropdownToggle>
-              }
-              isOpen={isOpen}
-              dropdownItems={dropdownItems}
-            />
-          </SplitItem>
-        </Split>
-        <Divider />
-        <InstanceListFilter textInputNameValue={textInputNameValue} setTextInputNameValue={setTextInputNameValue} />
         {!showResults ? (
           <EmptyState>
             <EmptyStateIcon variant="container" component={Spinner} />
@@ -322,33 +336,38 @@ const AdminDashboard = () => {
             </Title>
           </EmptyState>
         ) : (
-          <React.Fragment>
+          <>
             {fetchInstancesFailed || noInstances ? (
-              <EmptyState>
-                <EmptyStateIcon variant="container" component={InfoCircleIcon} className="warning-icon" />
-                <Title headingLevel="h2" size="md">
-                  Database instances retrieval failed
-                </Title>
-                <EmptyStateBody>Database instances could not be retrieved. Please try again.</EmptyStateBody>
-                <Alert
-                  variant="danger"
-                  isInline
-                  title="An error occured"
-                  className="co-alert co-break-word extra-top-margin"
-                >
-                  <div>{statusMsg}</div>
-                </Alert>
-                <Button variant="primary" onClick={handleTryAgain}>
-                  Try Again
-                </Button>
-                <EmptyStateSecondaryActions>
-                  <Button variant="link" onClick={handleCancel}>
-                    Close
-                  </Button>
-                </EmptyStateSecondaryActions>
-              </EmptyState>
+              displayEmptyState()
             ) : (
-              <React.Fragment>
+              <>
+                <Split>
+                  <SplitItem isFilled>
+                    <FormHeader
+                      title={dbProviderTitle}
+                      helpText="Create database provider account and view your database instances"
+                      marginBottom="lg"
+                    />
+                  </SplitItem>
+                  <SplitItem>
+                    <Dropdown
+                      onSelect={onSelect}
+                      position={DropdownPosition.right}
+                      toggle={
+                        <DropdownToggle onToggle={onToggle} toggleIndicator={CaretDownIcon} isPrimary id="toggle-id-4">
+                          Create
+                        </DropdownToggle>
+                      }
+                      isOpen={isOpen}
+                      dropdownItems={dropdownItems}
+                    />
+                  </SplitItem>
+                </Split>
+                <Divider />
+                <InstanceListFilter
+                  textInputNameValue={textInputNameValue}
+                  setTextInputNameValue={setTextInputNameValue}
+                />
                 <FormSection fullWidth flexLayout className="no-top-margin">
                   <AdminConnectionsTable
                     filteredInstances={filteredInstances}
@@ -356,9 +375,9 @@ const AdminDashboard = () => {
                     inventoryInstances={inventoryInstances}
                   />
                 </FormSection>
-              </React.Fragment>
+              </>
             )}
-          </React.Fragment>
+          </>
         )}
       </FormBody>
     </FlexForm>
