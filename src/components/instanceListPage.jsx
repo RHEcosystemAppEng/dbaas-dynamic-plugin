@@ -24,23 +24,23 @@ import {
   cockroachdbProviderType,
   mongoProviderName,
   mongoProviderType,
-  cockroachdbProviderName
-} from '../const.ts';
+  cockroachdbProviderName,
+} from '../const'
 import { DBAAS_PROVIDER_KIND } from '../catalog/const'
 import {
   fetchInventoryNamespaces,
   fetchObjectsByNamespace,
   fetchObjectsClusterOrNS,
   isDbaasConnectionUsed,
-  disableNSSelection
-} from '../utils.ts';
-import FlexForm from './form/flexForm.tsx';
-import FormBody from './form/formBody.tsx';
-import FormHeader from './form/formHeader.tsx';
-import InstanceListFilter from './instanceListFilter';
+  disableNSSelection,
+} from '../utils'
+import FlexForm from './form/flexForm'
+import FormBody from './form/formBody'
+import FormHeader from './form/formHeader'
+import InstanceListFilter from './instanceListFilter'
 import InstanceTable from './instanceTable'
 import { useK8sWatchResource } from '@openshift-console/dynamic-plugin-sdk'
-import './_dbaas-import-view.css';
+import './_dbaas-import-view.css'
 
 export const handleTryAgain = () => {
   location.reload()
@@ -92,12 +92,12 @@ const InstanceListPage = () => {
         <p className="pf-c-form__helper-text">The selected database instance will be added to the topology view.</p>
       </div>
     </div>
-  );
+  )
 
   const [dbaasProviders, isProviderFetched, errorMsg] = useK8sWatchResource({
     kind: DBAAS_PROVIDER_KIND,
-    isList: false
-  });
+    isList: false,
+  })
 
   const filteredInstances = React.useMemo(
     () =>
@@ -150,12 +150,12 @@ const InstanceListPage = () => {
 
   async function fetchServiceBindings() {
     let serviceBindings = await fetchObjectsClusterOrNS('binding.operators.coreos.com', 'v1alpha1', 'servicebindings')
-    setServiceBindingList(serviceBindings);
+    setServiceBindingList(serviceBindings)
   }
 
   async function fetchDBaaSConnections() {
     let connections = await fetchObjectsClusterOrNS('dbaas.redhat.com', 'v1alpha1', 'dbaasconnections')
-    setDbaasConnectionList(connections);
+    setDbaasConnectionList(connections)
   }
 
   const checkInventoryStatus = (inventory) => {
@@ -286,7 +286,7 @@ const InstanceListPage = () => {
             </Title>
           </EmptyState>
         ) : (
-          <>
+          <React.Fragment>
             <FormGroup label="Provider Account" fieldId="provider-account" className="provider-account-selection">
               <FormSelect
                 value={selectedInventory.name}
@@ -323,7 +323,7 @@ const InstanceListPage = () => {
                 </EmptyStateSecondaryActions>
               </EmptyState>
             ) : (
-              <>
+              <React.Fragment>
                 <FormGroup label="Database Instance" fieldId="instance-id-filter">
                   <Split>
                     <SplitItem>
@@ -354,9 +354,9 @@ const InstanceListPage = () => {
                     filteredInstances={filteredInstances}
                   />
                 </FormSection>
-              </>
+              </React.Fragment>
             )}
-          </>
+          </React.Fragment>
         )}
       </FormBody>
     </FlexForm>
