@@ -203,11 +203,11 @@ class InstanceTable extends React.Component {
                 if (i === 0) {
                   connectionRows.push([connection.namespace, 'Yes', connection.applications[i].name])
                 } else {
-                  connectionRows.push(['\u00a0', 'Yes', connection.applications[i].name])
+                  connectionRows.push(['--', 'Yes', connection.applications[i].name])
                 }
               }
               if (connection.applications.length === 0) {
-                connectionRows.push([connection.namespace, 'No', '\u00a0'])
+                connectionRows.push([connection.namespace, 'No', '--'])
               }
             }
           }
