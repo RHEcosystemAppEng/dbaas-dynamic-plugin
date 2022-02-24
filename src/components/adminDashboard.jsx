@@ -121,7 +121,7 @@ const AdminDashboard = () => {
                 const obj = JSON.parse(serviceBinding.metadata?.annotations?.['servicebinding.io/requester'])
                 newConnectionObj.users.push(obj.username)
               } else {
-                newConnectionObj.users.push('\u00a0')
+                newConnectionObj.users.push('--')
               }
             }
           })
@@ -167,7 +167,7 @@ const AdminDashboard = () => {
                     ])
                   } else {
                     inventoryInstance.connections.push([
-                      '\u00a0',
+                      '--',
                       'Yes',
                       connection.users[i],
                       connection.applications[i].name,
@@ -178,6 +178,9 @@ const AdminDashboard = () => {
                   inventoryInstance.connections.push([connection.namespace, 'No', '--', '--'])
                 }
               }
+            }
+            if (inventoryInstance.connections.length === 0) {
+              inventoryInstance.connections.push(['--', '--', '--', '--'])
             }
           }
           inventoryInstances.push(inventoryInstance)
