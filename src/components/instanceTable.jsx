@@ -282,7 +282,7 @@ class InstanceTable extends React.Component {
       return oneRow
     })
     this.setState({
-      selectedInstance: this.props.data.instances[rowId],
+      selectedInstance: rows[rowId],
       rows: rows,
     })
   }
