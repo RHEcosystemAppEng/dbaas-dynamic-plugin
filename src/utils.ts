@@ -365,9 +365,10 @@ export async function fetchTenant(tenantName) {
 
 export function filterInventoriesByConnNS(inventoryData = { inventoryList: [], nsMap: {} }, currentNS = '') {
   let inventoryItems = []
+  let validNamespaces = []
+
   inventoryData.inventoryList.forEach((inventory) => {
     let push = false
-    let validNamespaces = []
     if (inventory.metadata?.namespace == currentNS) {
       push = true
     }
@@ -375,7 +376,7 @@ export function filterInventoriesByConnNS(inventoryData = { inventoryList: [], n
     if (validNamespaces == null || validNamespaces.length == null) {
       validNamespaces = inventoryData.nsMap[inventory.metadata?.namespace]
     }
-    if (validNamespaces.includes(currentNS) || validNamespaces.includes('*')) {
+    if (validNamespaces?.includes(currentNS) || validNamespaces?.includes('*')) {
       push = true
     }
     if (push) {
