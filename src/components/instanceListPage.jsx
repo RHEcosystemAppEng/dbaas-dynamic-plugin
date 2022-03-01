@@ -215,38 +215,44 @@ const InstanceListPage = () => {
       let filteredInventories = _.filter(inventoryItems, (inventory) => {
         return inventory.spec?.providerRef?.name === selectedDBProvider
       })
-      filteredInventories.forEach((inventory, index) => {
-        let obj = { id: 0, name: '', namespace: '', instances: [], status: {} }
-        obj.id = index
-        obj.name = inventory.metadata?.name
-        obj.namespace = inventory.metadata?.namespace
-        obj.status = inventory.status
+      if (!_.isEmpty(filteredInventories)) {
+        filteredInventories.forEach((inventory, index) => {
+          let obj = { id: 0, name: '', namespace: '', instances: [], status: {} }
+          obj.id = index
+          obj.name = inventory.metadata.name
+          obj.namespace = inventory.metadata.namespace
+          obj.status = inventory.status
 
-        if (
-          inventory.status?.conditions[0]?.status !== 'False' &&
-          inventory.status?.conditions[0]?.type === 'SpecSynced'
-        ) {
-          inventory.status?.instances?.map((instance) => {
-            return (instance.provider = inventory.spec?.providerRef?.name)
-          })
-          obj.instances = inventory.status?.instances
-        }
+          if (
+            inventory.status?.conditions[0]?.status !== 'False' &&
+            inventory.status?.conditions[0]?.type === 'SpecSynced'
+          ) {
+            inventory.status?.instances?.map((instance) => {
+              return (instance.provider = inventory.spec?.providerRef?.name)
+            })
+            obj.instances = inventory.status?.instances
+          }
 
-        inventories.push(obj)
-      })
-      setInventories(inventories)
+          inventories.push(obj)
+        })
+
+        setInventories(inventories)
+      } else {
+        setNoInstances(true)
+        setStatusMsg('There is no Provider Account.')
+      }
 
       //Set the first inventory as the selected inventory by default
       if (inventories.length > 0) {
         setSelectedInventory(inventories[0])
         checkInventoryStatus(inventories[0])
       }
-      setShowResults(true)
     } else {
       setNoInstances(true)
       setStatusMsg('There is no Provider Account.')
-      setShowResults(true)
     }
+
+    setShowResults(true)
   }
 
   React.useEffect(() => {
@@ -283,73 +289,89 @@ const InstanceListPage = () => {
           </EmptyState>
         ) : (
           <React.Fragment>
-            <FormGroup label="Provider Account" fieldId="provider-account" className="provider-account-selection">
-              <FormSelect
-                value={selectedInventory.name}
-                onChange={handleInventorySelection}
-                aria-label="Provider Account"
-              >
-                {inventories?.map((inventory, index) => (
-                  <FormSelectOption key={index} value={inventory.name} label={inventory.name} />
-                ))}
-              </FormSelect>
-            </FormGroup>
-            {fetchInstancesFailed || noInstances ? (
-              <EmptyState>
-                <EmptyStateIcon variant="container" component={InfoCircleIcon} className="warning-icon" />
-                <Title headingLevel="h2" size="md">
-                  Database instances retrieval failed
-                </Title>
-                <EmptyStateBody>Database instances could not be retrieved. Please try again.</EmptyStateBody>
-                <Alert
-                  variant="danger"
-                  isInline
-                  title="An error occured"
-                  className="co-alert co-break-word extra-top-margin"
-                >
-                  <div>{statusMsg}</div>
-                </Alert>
-                <Button variant="primary" onClick={handleTryAgain}>
-                  Try Again
-                </Button>
-                <EmptyStateSecondaryActions>
-                  <Button variant="link" onClick={handleCancel}>
-                    Close
-                  </Button>
-                </EmptyStateSecondaryActions>
-              </EmptyState>
+            {noInstances ? (
+              <React.Fragment>
+                <EmptyState>
+                  <EmptyStateIcon variant="container" component={InfoCircleIcon} className="warning-icon" />
+                  <Title headingLevel="h2" size="md">
+                    No Database Instances
+                  </Title>
+                  <EmptyStateBody>
+                    There are no Provider Accounts available. Please work with an administrator to create one first.
+                  </EmptyStateBody>
+                </EmptyState>
+              </React.Fragment>
             ) : (
               <React.Fragment>
-                <FormGroup label="Database Instance" fieldId="instance-id-filter">
-                  <Split>
-                    <SplitItem>
-                      <InstanceListFilter
-                        textInputNameValue={textInputNameValue}
-                        setTextInputNameValue={setTextInputNameValue}
-                      />
-                    </SplitItem>
-                    <SplitItem>
-                      <Button
-                        isDisabled={inventories.length === 0}
-                        component="a"
-                        href={`/k8s/ns/${currentNS}/rhoda-create-database-instance/db/${selectedDBProvider}/pa/${selectedInventory?.name}`}
-                        variant="secondary"
-                        className="extra-left-margin"
-                      >
-                        Create Database Instance
-                      </Button>
-                    </SplitItem>
-                  </Split>
+                <FormGroup label="Provider Account" fieldId="provider-account" className="provider-account-selection">
+                  <FormSelect
+                    value={selectedInventory.name}
+                    onChange={handleInventorySelection}
+                    aria-label="Provider Account"
+                  >
+                    {inventories?.map((inventory, index) => (
+                      <FormSelectOption key={index} value={inventory.name} label={inventory.name} />
+                    ))}
+                  </FormSelect>
                 </FormGroup>
-                <FormSection fullWidth flexLayout className="no-top-margin">
-                  <InstanceTable
-                    connectionAndServiceBindingList={connectionAndServiceBindingList}
-                    isLoading={!showResults}
-                    data={selectedInventory}
-                    isSelectable={selectedInventory?.instances?.length > 0 && filteredInstances.length > 0}
-                    filteredInstances={filteredInstances}
-                  />
-                </FormSection>
+                {fetchInstancesFailed ? (
+                  <EmptyState>
+                    <EmptyStateIcon variant="container" component={InfoCircleIcon} className="warning-icon" />
+                    <Title headingLevel="h2" size="md">
+                      Database instances retrieval failed
+                    </Title>
+                    <EmptyStateBody>Database instances could not be retrieved. Please try again.</EmptyStateBody>
+                    <Alert
+                      variant="danger"
+                      isInline
+                      title="An error occured"
+                      className="co-alert co-break-word extra-top-margin"
+                    >
+                      <div>{statusMsg}</div>
+                    </Alert>
+                    <Button variant="primary" onClick={handleTryAgain}>
+                      Try Again
+                    </Button>
+                    <EmptyStateSecondaryActions>
+                      <Button variant="link" onClick={handleCancel}>
+                        Close
+                      </Button>
+                    </EmptyStateSecondaryActions>
+                  </EmptyState>
+                ) : (
+                  <React.Fragment>
+                    <FormGroup label="Database Instance" fieldId="instance-id-filter">
+                      <Split>
+                        <SplitItem>
+                          <InstanceListFilter
+                            textInputNameValue={textInputNameValue}
+                            setTextInputNameValue={setTextInputNameValue}
+                          />
+                        </SplitItem>
+                        <SplitItem>
+                          <Button
+                            isDisabled={inventories.length === 0}
+                            component="a"
+                            href={`/k8s/ns/${currentNS}/rhoda-create-database-instance/db/${selectedDBProvider}/pa/${selectedInventory?.name}`}
+                            variant="secondary"
+                            className="extra-left-margin"
+                          >
+                            Create Database Instance
+                          </Button>
+                        </SplitItem>
+                      </Split>
+                    </FormGroup>
+                    <FormSection fullWidth flexLayout className="no-top-margin">
+                      <InstanceTable
+                        connectionAndServiceBindingList={connectionAndServiceBindingList}
+                        isLoading={!showResults}
+                        data={selectedInventory}
+                        isSelectable={selectedInventory?.instances?.length > 0 && filteredInstances.length > 0}
+                        filteredInstances={filteredInstances}
+                      />
+                    </FormSection>
+                  </React.Fragment>
+                )}
               </React.Fragment>
             )}
           </React.Fragment>
