@@ -26,10 +26,11 @@ import FormBody from './form/formBody'
 import { mongoProviderType, crunchyProviderType } from '../const'
 import {
   getCSRFToken,
-  fetchInventoryNamespaces,
+  fetchInventoriesAndMapByNSAndRules,
   fetchObjectsByNamespace,
   disableNSSelection,
   enableNSSelection,
+  filterInventoriesByConnNS,
 } from '../utils'
 
 const LoadingView = () => {
@@ -294,8 +295,8 @@ const ProviderClusterProvisionPage = () => {
       inventoryItems.forEach((inventory, index) => {
         let obj = { id: 0, name: '', namespace: '', instances: [], status: {}, providerRef: {} }
         obj.id = index
-        obj.name = inventory.metadata.name
-        obj.namespace = inventory.metadata.namespace
+        obj.name = inventory.metadata?.name
+        obj.namespace = inventory.metadata?.namespace
         obj.status = inventory.status
         obj.providerRef = inventory.spec?.providerRef
 
@@ -316,19 +317,18 @@ const ProviderClusterProvisionPage = () => {
   }
 
   async function fetchInventoriesByNSAndRules() {
-    let inventoryNamespaces = await fetchInventoryNamespaces()
-    let inventoryItems = await fetchObjectsByNamespace(
-      'dbaas.redhat.com',
-      'v1alpha1',
-      'dbaasinventories',
-      inventoryNamespaces
-    ).catch(function (error) {
-      console.log(error)
-    })
-
+    let inventoryItems = await filteredInventoriesByValidConnectionNS()
     parseInventories(inventoryItems)
 
     return inventoryItems
+  }
+
+  async function filteredInventoriesByValidConnectionNS() {
+    let inventoryItems = []
+    let inventoryData = await fetchInventoriesAndMapByNSAndRules().catch(function (error) {
+      console.log(error)
+    })
+    return filterInventoriesByConnNS(inventoryData, currentNS)
   }
 
   const validateForm = () => {

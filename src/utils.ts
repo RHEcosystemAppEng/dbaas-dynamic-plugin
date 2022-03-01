@@ -200,6 +200,29 @@ function parseRulesReview(responseJson, kindPlural) {
   return kindNames
 }
 
+export async function fetchInventoriesAndMapByNSAndRules() {
+  let namespaces = await fetchInvAndConnNamespacesFromTenants()
+  let nsMap = namespaces.nsMap
+  let inventoryList = await fetchObjectsByNamespace(
+    'dbaas.redhat.com',
+    'v1alpha1',
+    'dbaasinventories',
+    namespaces.uniqInventoryNamespaces
+  )
+  return { inventoryList, nsMap }
+}
+
+export async function fetchInventoriesByNSAndRules() {
+  let namespaces = await fetchInvAndConnNamespacesFromTenants()
+  let inventoryList = await fetchObjectsByNamespace(
+    'dbaas.redhat.com',
+    'v1alpha1',
+    'dbaasinventories',
+    namespaces.uniqInventoryNamespaces
+  )
+  return inventoryList
+}
+
 export async function fetchObjects(objectNames, namespace, group, version, kindPlural) {
   let promises = []
   let items = []
@@ -250,8 +273,9 @@ export const isDbaasConnectionUsed = (serviceBinding, dbaasConnection) => {
   }
 }
 
-export async function fetchInventoryNamespaces() {
+export async function fetchInvAndConnNamespacesFromTenants() {
   let inventoryNamespaces = []
+  let nsMap = {}
   let listAllowed = await isListAllowed('dbaastenants', '', '')
   var requestOpts
 
@@ -267,7 +291,14 @@ export async function fetchInventoryNamespaces() {
       .then(status)
       .then(json)
       .then((tenantList) =>
-        tenantList.items.forEach((tenant) => inventoryNamespaces.push(tenant.spec.inventoryNamespace))
+        tenantList.items.forEach((tenant) => {
+          if (nsMap[tenant.spec?.inventoryNamespace]) {
+            nsMap[tenant.spec?.inventoryNamespace].push(...tenant.spec?.connectionNamespaces)
+          } else {
+            nsMap[tenant.spec?.inventoryNamespace] = tenant.spec?.connectionNamespaces
+          }
+          inventoryNamespaces.push(tenant.spec?.inventoryNamespace)
+        })
       )
   } else {
     let newBody = {
@@ -291,25 +322,32 @@ export async function fetchInventoryNamespaces() {
       .then(json)
       .then((responseJson) => parseRulesReview(responseJson, 'dbaastenants'))
       .then(fetchInventoryNSfromTenants)
-      .then((inventoryNS) => (inventoryNamespaces = inventoryNS))
+      .then((namespaces) => ((inventoryNamespaces = namespaces.uniqInventoryNamespaces), (nsMap = namespaces.nsMap)))
   }
   let uniqInventoryNamespaces = [...new Set(inventoryNamespaces)]
-  return uniqInventoryNamespaces
+
+  return { uniqInventoryNamespaces, nsMap }
 }
 
-export async function fetchInventoryNSfromTenants(tenantNames = []) {
+export async function fetchInventoryNSfromTenants(tenants = []) {
   let inventoryNamespaces = []
+  let nsMap = {}
   let promises = []
-  tenantNames.forEach((tenantName) => {
-    promises.push(
-      fetchTenant(tenantName).then((data) => {
-        return data.spec.inventoryNamespace
-      })
-    )
+  tenants.forEach((tenant) => {
+    promises.push(fetchTenant(tenant))
   })
-  await Promise.all(promises).then((namespaces) => (inventoryNamespaces = namespaces))
+  await Promise.all(promises).then((tenantList) =>
+    tenantList.forEach((tenant) => {
+      if (nsMap[tenant.spec?.inventoryNamespace]) {
+        nsMap[tenant.spec?.inventoryNamespace].push(...tenant.spec?.connectionNamespaces)
+      } else {
+        nsMap[tenant.spec?.inventoryNamespace] = tenant.spec?.connectionNamespaces
+      }
+      inventoryNamespaces.push(tenant.spec?.inventoryNamespace)
+    })
+  )
   let uniqInventoryNamespaces = [...new Set(inventoryNamespaces)]
-  return uniqInventoryNamespaces
+  return { uniqInventoryNamespaces, nsMap }
 }
 
 export async function fetchTenant(tenantName) {
@@ -323,6 +361,28 @@ export async function fetchTenant(tenantName) {
   return fetch('/api/kubernetes/apis/dbaas.redhat.com/v1alpha1/dbaastenants/' + tenantName, requestOpts)
     .then(status)
     .then(json)
+}
+
+export function filterInventoriesByConnNS(inventoryData = { inventoryList: [], nsMap: {} }, currentNS = '') {
+  let inventoryItems = []
+  inventoryData.inventoryList.forEach((inventory) => {
+    let push = false
+    let validNamespaces = []
+    if (inventory.metadata?.namespace == currentNS) {
+      push = true
+    }
+    validNamespaces = inventory.spec?.connectionNamespaces
+    if (validNamespaces == null || validNamespaces.length == null) {
+      validNamespaces = inventoryData.nsMap[inventory.metadata?.namespace]
+    }
+    if (validNamespaces.includes(currentNS) || validNamespaces.includes('*')) {
+      push = true
+    }
+    if (push) {
+      inventoryItems.push(inventory)
+    }
+  })
+  return inventoryItems
 }
 
 export async function fetchDbaasCSV(currentNS, DBaaSOperatorName) {

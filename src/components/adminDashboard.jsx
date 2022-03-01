@@ -31,21 +31,21 @@ import {
   crunchyProviderType,
   mongoProviderName,
   mongoProviderType,
-} from '../const.ts'
+} from '../const'
 import {
   disableNSSelection,
   enableNSSelection,
   fetchDbaasCSV,
-  fetchInventoryNamespaces,
+  fetchInventoriesByNSAndRules,
   fetchObjectsByNamespace,
   fetchObjectsClusterOrNS,
   isDbaasConnectionUsed,
-} from '../utils.ts'
+} from '../utils'
 import AdminConnectionsTable from './adminConnectionsTable'
-import FlexForm from './form/flexForm.tsx'
-import FormBody from './form/formBody.tsx'
-import FormHeader from './form/formHeader.tsx'
-import InstanceListFilter from './instanceListFilter.tsx'
+import FlexForm from './form/flexForm'
+import FormBody from './form/formBody'
+import FormHeader from './form/formHeader'
+import InstanceListFilter from './instanceListFilter'
 import { handleCancel, handleTryAgain } from './instanceListPage'
 import './_dbaas-import-view.css'
 
@@ -202,14 +202,17 @@ const AdminDashboard = () => {
 
   const fetchInstances = async () => {
     const inventoriesAll = []
-    const inventoryItems = await fetchInventoriesByNSAndRules()
+    const inventoryItems = await fetchInventoriesByNSAndRules().catch((error) => {
+      setFetchInstancesFailed(true)
+      setStatusMsg(error)
+    })
     if (inventoryItems.length > 0) {
       let filteredInventories = _.filter(inventoryItems, (inventory) => inventory.status?.instances !== undefined)
       filteredInventories.forEach((inventory, index) => {
         const obj = { id: 0, name: '', namespace: '', instances: [], status: {}, providername: '', alert: '' }
         obj.id = index
-        obj.name = inventory.metadata.name
-        obj.namespace = inventory.metadata.namespace
+        obj.name = inventory.metadata?.name
+        obj.namespace = inventory.metadata?.namespace
         obj.status = inventory.status
         obj.providername = inventory.spec?.providerRef?.name
 
@@ -247,21 +250,6 @@ const AdminDashboard = () => {
   const onFocus = () => {
     const element = document.getElementById('toggle-id-4')
     element.focus()
-  }
-
-  async function fetchInventoriesByNSAndRules() {
-    const inventoryNamespaces = await fetchInventoryNamespaces()
-    const inventoryItems = await fetchObjectsByNamespace(
-      'dbaas.redhat.com',
-      'v1alpha1',
-      'dbaasinventories',
-      inventoryNamespaces
-    ).catch((error) => {
-      setFetchInstancesFailed(true)
-      setStatusMsg(error)
-    })
-
-    return inventoryItems
   }
 
   const fetchCSV = async () => {
