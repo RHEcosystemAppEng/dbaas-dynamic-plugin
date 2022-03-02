@@ -29,47 +29,43 @@ import {
 import { ExclamationTriangleIcon } from '@patternfly/react-icons'
 import _ from 'lodash'
 import React from 'react'
-import { getCSRFToken, fetchDbaasCSV } from '../utils'
-import { DBaaSInventoryCRName, DBaaSOperatorName } from '../const'
+import { getCSRFToken, fetchDbaasCSV } from '../utils.ts'
+import { DBaaSInventoryCRName, DBaaSOperatorName } from '../const.ts'
 import './_dbaas-import-view.css'
 
-const IssuePopover = ({ action }) => {
-  return (
-    <Flex>
-      <FlexItem spacer={{ default: 'spacerSm' }}>
-        <ExclamationTriangleIcon color="#f0ab00"></ExclamationTriangleIcon>
-      </FlexItem>
-      <FlexItem>
-        <Popover
-          aria-label="Issue popover"
-          headerContent={<div>Issue</div>}
-          bodyContent={<div>Click on the link below for more information about this issue.</div>}
-          footerContent={
-            <Button onClick={action} variant="link" isInline>
-              Learn more
-            </Button>
-          }
-        >
-          <Button variant="link" isInline>
-            Issue
+const IssuePopover = ({ action }) => (
+  <Flex>
+    <FlexItem spacer={{ default: 'spacerSm' }}>
+      <ExclamationTriangleIcon color="#f0ab00" />
+    </FlexItem>
+    <FlexItem>
+      <Popover
+        aria-label="Issue popover"
+        headerContent={<div>Issue</div>}
+        bodyContent={<div>Click on the link below for more information about this issue.</div>}
+        footerContent={
+          <Button onClick={action} variant="link" isInline>
+            Learn more
           </Button>
-        </Popover>
-      </FlexItem>
-    </Flex>
-  )
-}
+        }
+      >
+        <Button variant="link" isInline>
+          Issue
+        </Button>
+      </Popover>
+    </FlexItem>
+  </Flex>
+)
 
-const TableEmptyState = () => {
-  return (
-    <Bullseye>
-      <EmptyState variant={EmptyStateVariant.small}>
-        <Title headingLevel="h2" size="lg">
-          No database instances found
-        </Title>
-      </EmptyState>
-    </Bullseye>
-  )
-}
+const TableEmptyState = () => (
+  <Bullseye>
+    <EmptyState variant={EmptyStateVariant.small}>
+      <Title headingLevel="h2" size="lg">
+        No database instances found
+      </Title>
+    </EmptyState>
+  </Bullseye>
+)
 class InstanceTable extends React.Component {
   constructor(props) {
     super(props)
@@ -115,6 +111,11 @@ class InstanceTable extends React.Component {
     this.handleCancel = this.handleCancel.bind(this)
   }
 
+  componentDidMount() {
+    this.getRows(this.props.data.instances)
+    this.getInventoryStatus(this.props.data)
+  }
+
   componentDidUpdate(prevProps) {
     if (
       (this.props.data.instances &&
@@ -131,9 +132,133 @@ class InstanceTable extends React.Component {
     }
   }
 
-  componentDidMount() {
-    this.getRows(this.props.data.instances)
-    this.getInventoryStatus(this.props.data)
+  handleCancel() {
+    window.history.back()
+  }
+
+  onSelect(event, isSelected, rowId) {
+    const rows = this.state.rows.map((oneRow, index) => {
+      oneRow.selected = rowId === index
+      return oneRow
+    })
+    this.setState({
+      selectedInstance: rows[rowId],
+      rows,
+    })
+  }
+
+  getRows(data) {
+    const rowList = []
+
+    if (data && data.length > 0) {
+      _.forEach(data, (dbInstance) => {
+        const connectionRows = []
+
+        if (this.props.isSelectable && !_.isEmpty(this.props.connectionAndServiceBindingList)) {
+          for (const connection of this.props.connectionAndServiceBindingList) {
+            if (
+              connection.instanceID === dbInstance.instanceID &&
+              this.props.data.name === connection.providerAcct &&
+              this.props.data.namespace === connection.providerNamespace
+            ) {
+              for (let i = 0; i < connection.applications.length; i++) {
+                if (i === 0) {
+                  connectionRows.push([connection.namespace, 'Yes', connection.applications[i].name])
+                } else {
+                  connectionRows.push(['--', 'Yes', connection.applications[i].name])
+                }
+              }
+              if (connection.applications.length === 0) {
+                connectionRows.push([connection.namespace, 'No', '--'])
+              }
+            }
+          }
+
+          rowList.push({
+            cells: [
+              // Instance name
+              dbInstance.name,
+              // Instance ID
+              dbInstance.instanceID,
+              // Provider account issue
+              this.state.inventoryHasIssue ? (
+                <>
+                  <IssuePopover action={this.goToInventoryInfoPage} />
+                </>
+              ) : null,
+              // Namespace
+              <>
+                <List isPlain>
+                  {connectionRows.map((con) => (
+                    <ListItem>{con[0]}</ListItem>
+                  ))}
+                </List>
+              </>,
+              // Bound
+              <>
+                <List isPlain>
+                  {connectionRows.map((con) => (
+                    <ListItem>{con[1]}</ListItem>
+                  ))}
+                </List>
+              </>,
+              // App names
+              <>
+                <List isPlain>
+                  {connectionRows.map((con) => (
+                    <ListItem>{con[2]}</ListItem>
+                  ))}
+                </List>
+              </>,
+            ],
+          })
+        } else {
+          rowList.push({
+            cells: [
+              // id
+              dbInstance.instanceID,
+              // instance
+              `${dbInstance.name}-${dbInstance.instanceID.slice(-10)}`,
+            ],
+          })
+        }
+      })
+    } else {
+      rowList.push({
+        heightAuto: true,
+        cells: [
+          {
+            props: { colSpan: 8 },
+            title: <TableEmptyState />,
+          },
+        ],
+      })
+    }
+
+    this.setState({ rows: rowList })
+  }
+
+  fetchCSV = async () => {
+    const dbaasCSV = await fetchDbaasCSV(this.state.currentNS, DBaaSOperatorName)
+    this.setState({ dbaaSOperatorNameWithVersion: dbaasCSV.metadata?.name })
+  }
+
+  getInventoryStatus = (inventory) => {
+    const inventoryReadyCondition = inventory?.status?.conditions?.find(
+      (condition) => condition.type?.toLowerCase() === 'inventoryready'
+    )
+
+    if (!_.isEmpty(inventoryReadyCondition) && inventoryReadyCondition?.status === 'False') {
+      this.fetchCSV()
+      this.setState({ inventoryHasIssue: true })
+    }
+  }
+
+  goToInventoryInfoPage = () => {
+    const { currentNS, dbaaSOperatorNameWithVersion } = this.state
+    const { data } = this.props
+
+    window.location.pathname = `/k8s/ns/${currentNS}/clusterserviceversions/${dbaaSOperatorNameWithVersion}/${DBaaSInventoryCRName}/${data?.name}`
   }
 
   onSort = (_event, index, direction) => {
@@ -161,27 +286,9 @@ class InstanceTable extends React.Component {
     this.setState({ sortBy: { index, direction } })
   }
 
-  fetchCSV = async () => {
-    const dbaasCSV = await fetchDbaasCSV(this.state.currentNS, DBaaSOperatorName)
-    this.setState({ dbaaSOperatorNameWithVersion: dbaasCSV.metadata?.name })
-  }
-
-  goToInventoryInfoPage = () => {
-    const { currentNS, dbaaSOperatorNameWithVersion } = this.state
-    const { data } = this.props
-
-    window.location.pathname = `/k8s/ns/${currentNS}/clusterserviceversions/${dbaaSOperatorNameWithVersion}/${DBaaSInventoryCRName}/${data?.name}`
-  }
-
-  getInventoryStatus = (inventory) => {
-    let inventoryReadyCondition = inventory?.status?.conditions?.find((condition) => {
-      return condition.type?.toLowerCase() === 'inventoryready'
-    })
-
-    if (!_.isEmpty(inventoryReadyCondition) && inventoryReadyCondition?.status === 'False') {
-      this.fetchCSV()
-      this.setState({ inventoryHasIssue: true })
-    }
+  handleSubmit = async (event) => {
+    event.preventDefault()
+    this.submitInstances()
   }
 
   toTopologyView() {
@@ -189,110 +296,12 @@ class InstanceTable extends React.Component {
     window.location.pathname = `/topology/ns/${currentNS}?view=graph`
   }
 
-  getRows(data) {
-    let rowList = []
-
-    if (data && data.length > 0) {
-      _.forEach(data, (dbInstance) => {
-        var connectionRows = []
-
-        if (this.props.isSelectable && !_.isEmpty(this.props.connectionAndServiceBindingList)) {
-          for (let connection of this.props.connectionAndServiceBindingList) {
-            if (connection.instanceID == dbInstance.instanceID) {
-              for (let i = 0; i < connection.applications.length; i++) {
-                if (i === 0) {
-                  connectionRows.push([connection.namespace, 'Yes', connection.applications[i].name])
-                } else {
-                  connectionRows.push(['--', 'Yes', connection.applications[i].name])
-                }
-              }
-              if (connection.applications.length === 0) {
-                connectionRows.push([connection.namespace, 'No', '--'])
-              }
-            }
-          }
-
-          rowList.push({
-            cells: [
-              //Instance name
-              dbInstance.name,
-              //Instance ID
-              dbInstance.instanceID,
-              //Provider account issue
-              this.state.inventoryHasIssue ? (
-                <React.Fragment>
-                  <IssuePopover action={this.goToInventoryInfoPage} />
-                </React.Fragment>
-              ) : null,
-              //Namespace
-              <React.Fragment>
-                <List isPlain>
-                  {connectionRows.map((con) => (
-                    <ListItem>{con[0]}</ListItem>
-                  ))}
-                </List>
-              </React.Fragment>,
-              //Bound
-              <React.Fragment>
-                <List isPlain>
-                  {connectionRows.map((con) => (
-                    <ListItem>{con[1]}</ListItem>
-                  ))}
-                </List>
-              </React.Fragment>,
-              //App names
-              <React.Fragment>
-                <List isPlain>
-                  {connectionRows.map((con) => (
-                    <ListItem>{con[2]}</ListItem>
-                  ))}
-                </List>
-              </React.Fragment>,
-            ],
-          })
-        } else {
-          rowList.push({
-            cells: [
-              //id
-              dbInstance.instanceID,
-              //instance
-              `${dbInstance.name}-${dbInstance.instanceID.slice(-10)}`,
-            ],
-          })
-        }
-      })
-    } else {
-      rowList.push({
-        heightAuto: true,
-        cells: [
-          {
-            props: { colSpan: 8 },
-            title: <TableEmptyState />,
-          },
-        ],
-      })
-    }
-
-    this.setState({ rows: rowList })
-  }
-
-  onSelect(event, isSelected, rowId) {
-    let rows = this.state.rows.map((oneRow, index) => {
-      oneRow.selected = rowId === index
-      return oneRow
-    })
-    this.setState({
-      selectedInstance: rows[rowId],
-      rows: rows,
-    })
-  }
-
   submitInstances() {
-    let newBody = {
+    const newBody = {
       apiVersion: 'dbaas.redhat.com/v1alpha1',
       kind: 'DBaaSConnection',
       metadata: {
-        //k8s only accept lowercase metadata.name and add last 10 chars of the instanceID to avoid same name
+        // k8s only accept lowercase metadata.name and add last 10 chars of the instanceID to avoid same name
         name: `${this.state.selectedInstance.name.toLowerCase()}-${this.state.selectedInstance.instanceID.slice(-10)}`,
         namespace: this.state.currentNS,
       },
@@ -305,7 +314,7 @@ class InstanceTable extends React.Component {
       },
     }
 
-    let requestOpts = {
+    const requestOpts = {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -315,7 +324,7 @@ class InstanceTable extends React.Component {
       body: JSON.stringify(newBody),
     }
     fetch(
-      '/api/kubernetes/apis/dbaas.redhat.com/v1alpha1/namespaces/' + this.state.currentNS + '/dbaasconnections',
+      `/api/kubernetes/apis/dbaas.redhat.com/v1alpha1/namespaces/${this.state.currentNS}/dbaasconnections`,
       requestOpts
     )
       .then((response) => response.json())
@@ -337,15 +346,6 @@ class InstanceTable extends React.Component {
       })
   }
 
-  handleCancel() {
-    window.history.back()
-  }
-
-  handleSubmit = async (event) => {
-    event.preventDefault()
-    this.submitInstances()
-  }
-
   render() {
     const { columns, rows, error, showError, sortBy } = this.state
     const { isSelectable, isLoading, filteredInstances } = this.props
@@ -362,7 +362,7 @@ class InstanceTable extends React.Component {
     }
 
     return (
-      <React.Fragment>
+      <>
         <div className="sticky-table-container">
           <OuterScrollContainer>
             <InnerScrollContainer>
@@ -414,7 +414,7 @@ class InstanceTable extends React.Component {
             </ActionGroup>
           </div>
         ) : null}
-      </React.Fragment>
+      </>
     )
   }
 }
