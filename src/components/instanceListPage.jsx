@@ -18,6 +18,7 @@ import {
 import { InfoCircleIcon } from '@patternfly/react-icons'
 import * as _ from 'lodash'
 import * as React from 'react'
+import { useK8sWatchResource } from '@openshift-console/dynamic-plugin-sdk'
 import {
   crunchyProviderName,
   crunchyProviderType,
@@ -25,22 +26,20 @@ import {
   mongoProviderName,
   mongoProviderType,
   cockroachdbProviderName,
-} from '../const'
-import { DBAAS_PROVIDER_KIND } from '../catalog/const'
+} from '../const.ts'
+import { DBAAS_PROVIDER_KIND } from '../catalog/const.ts'
 import {
   fetchInventoriesAndMapByNSAndRules,
-  fetchObjectsByNamespace,
   fetchObjectsClusterOrNS,
   isDbaasConnectionUsed,
   disableNSSelection,
   filterInventoriesByConnNS,
-} from '../utils'
-import FlexForm from './form/flexForm'
-import FormBody from './form/formBody'
-import FormHeader from './form/formHeader'
-import InstanceListFilter from './instanceListFilter'
+} from '../utils.ts'
+import FlexForm from './form/flexForm.tsx'
+import FormBody from './form/formBody.tsx'
+import FormHeader from './form/formHeader.tsx'
+import InstanceListFilter from './instanceListFilter.tsx'
 import InstanceTable from './instanceTable'
-import { useK8sWatchResource } from '@openshift-console/dynamic-plugin-sdk'
 import './_dbaas-import-view.css'
 
 export const handleTryAgain = () => {
@@ -87,41 +86,39 @@ const InstanceListPage = () => {
 
   const filteredInstances = React.useMemo(
     () =>
-      selectedInventory?.instances?.filter((instance) => {
-        return instance?.name?.toLowerCase().includes(textInputNameValue.toLowerCase())
-      }),
+      selectedInventory?.instances?.filter((instance) =>
+        instance?.name?.toLowerCase().includes(textInputNameValue.toLowerCase())
+      ),
     [selectedInventory.instances, textInputNameValue]
   )
 
   const mapDBaaSConnectionsAndServiceBindings = () => {
-    let newDbaasConnectionList = dbaasConnectionList
-    let newServiceBindingList = serviceBindingList
-    let newConnectionAndServiceBindingList = []
+    const newDbaasConnectionList = dbaasConnectionList
+    const newServiceBindingList = serviceBindingList
+    const newConnectionAndServiceBindingList = []
 
     if (newDbaasConnectionList.length > 0) {
       newDbaasConnectionList.forEach((dbaasConnection) => {
         if (
           selectedInventory?.instances?.find((instance) => instance.instanceID === dbaasConnection.spec?.instanceID)
         ) {
-          let connectionObj = {
+          const connectionObj = {
             instanceID: dbaasConnection?.spec?.instanceID,
             instanceName: dbaasConnection?.metadata?.name,
             connectionStatus: _.isEmpty(dbaasConnection?.status) ? '-' : dbaasConnection?.status?.conditions[0]?.reason,
             errMsg: 'N/A',
             applications: [],
             namespace: _.isEmpty(dbaasConnection?.metadata?.namespace) ? '-' : dbaasConnection?.metadata?.namespace,
+            providerAcct: dbaasConnection?.spec?.inventoryRef?.name,
+            providerNamespace: dbaasConnection?.spec?.inventoryRef?.namespace,
           }
           if (!_.isEmpty(dbaasConnection?.status) && dbaasConnection?.status?.conditions[0]?.status !== 'True') {
             connectionObj.errMsg = dbaasConnection?.status?.conditions[0]?.message
           }
-          if (
-            newServiceBindingList.find((serviceBinding) => {
-              return isDbaasConnectionUsed(serviceBinding, dbaasConnection)
-            })
-          ) {
+          if (newServiceBindingList.find((serviceBinding) => isDbaasConnectionUsed(serviceBinding, dbaasConnection))) {
             newServiceBindingList.forEach((serviceBinding) => {
               if (isDbaasConnectionUsed(serviceBinding, dbaasConnection)) {
-                let newConnectionObj = _.extend({}, connectionObj)
+                const newConnectionObj = _.extend({}, connectionObj)
                 newConnectionObj.applications.push(serviceBinding.spec?.application)
               }
             })
@@ -135,12 +132,12 @@ const InstanceListPage = () => {
   }
 
   async function fetchServiceBindings() {
-    let serviceBindings = await fetchObjectsClusterOrNS('binding.operators.coreos.com', 'v1alpha1', 'servicebindings')
+    const serviceBindings = await fetchObjectsClusterOrNS('binding.operators.coreos.com', 'v1alpha1', 'servicebindings')
     setServiceBindingList(serviceBindings)
   }
 
   async function fetchDBaaSConnections() {
-    let connections = await fetchObjectsClusterOrNS('dbaas.redhat.com', 'v1alpha1', 'dbaasconnections')
+    const connections = await fetchObjectsClusterOrNS('dbaas.redhat.com', 'v1alpha1', 'dbaasconnections')
     setDbaasConnectionList(connections)
   }
 
@@ -161,30 +158,26 @@ const InstanceListPage = () => {
   }
 
   const handleInventorySelection = (value) => {
-    let inventory = _.find(inventories, (inv) => {
-      return inv.name === value
-    })
+    const inventory = _.find(inventories, (inv) => inv.name === value)
     setSelectedInventory(inventory)
 
-    //clear filter value when switch inventory
+    // clear filter value when switch inventory
     setTextInputNameValue('')
     setShowResults(false)
     checkInventoryStatus(inventory)
   }
 
   const parseSelectedDBProvider = () => {
-    let dbProviderType = _.last(window.location.pathname.split('/'))
+    const dbProviderType = _.last(window.location.pathname.split('/'))
     let providerInfo = {}
     if (!_.isEmpty(dbaasProviders)) {
-      providerInfo = _.find(dbaasProviders?.items, (provider) => {
-        return provider?.metadata?.name === dbProviderType
-      })
+      providerInfo = _.find(dbaasProviders?.items, (provider) => provider?.metadata?.name === dbProviderType)
       setDBProviderLogoUrl(
         `data:${providerInfo.spec?.provider?.icon?.mediatype};base64,${providerInfo.spec?.provider?.icon?.base64data}`
       )
     }
 
-    //Cannot parse provider name from CRD
+    // Cannot parse provider name from CRD
     if (dbProviderType === crunchyProviderType) {
       setDBProviderName(crunchyProviderName)
     }
@@ -198,8 +191,8 @@ const InstanceListPage = () => {
   }
 
   async function filteredInventoriesByValidConnectionNS() {
-    let inventoryItems = []
-    let inventoryData = await fetchInventoriesAndMapByNSAndRules().catch(function (error) {
+    const inventoryItems = []
+    const inventoryData = await fetchInventoriesAndMapByNSAndRules().catch((error) => {
       setFetchInstancesFailed(true)
       setStatusMsg(error)
     })
@@ -208,16 +201,17 @@ const InstanceListPage = () => {
   }
 
   async function fetchInstances() {
-    let inventories = []
-    let inventoryItems = await filteredInventoriesByValidConnectionNS()
+    const inventories = []
+    const inventoryItems = await filteredInventoriesByValidConnectionNS()
 
     if (inventoryItems.length > 0) {
-      let filteredInventories = _.filter(inventoryItems, (inventory) => {
-        return inventory.spec?.providerRef?.name === selectedDBProvider
-      })
+      const filteredInventories = _.filter(
+        inventoryItems,
+        (inventory) => inventory.spec?.providerRef?.name === selectedDBProvider
+      )
       if (!_.isEmpty(filteredInventories)) {
         filteredInventories.forEach((inventory, index) => {
-          let obj = { id: 0, name: '', namespace: '', instances: [], status: {} }
+          const obj = { id: 0, name: '', namespace: '', instances: [], status: {} }
           obj.id = index
           obj.name = inventory.metadata.name
           obj.namespace = inventory.metadata.namespace
@@ -227,9 +221,7 @@ const InstanceListPage = () => {
             inventory.status?.conditions[0]?.status !== 'False' &&
             inventory.status?.conditions[0]?.type === 'SpecSynced'
           ) {
-            inventory.status?.instances?.map((instance) => {
-              return (instance.provider = inventory.spec?.providerRef?.name)
-            })
+            inventory.status?.instances?.map((instance) => (instance.provider = inventory.spec?.providerRef?.name))
             obj.instances = inventory.status?.instances
           }
 
@@ -242,7 +234,7 @@ const InstanceListPage = () => {
         setStatusMsg('There is no Provider Account.')
       }
 
-      //Set the first inventory as the selected inventory by default
+      // Set the first inventory as the selected inventory by default
       if (inventories.length > 0) {
         setSelectedInventory(inventories[0])
         checkInventoryStatus(inventories[0])
@@ -288,9 +280,9 @@ const InstanceListPage = () => {
             </Title>
           </EmptyState>
         ) : (
-          <React.Fragment>
+          <>
             {noInstances ? (
-              <React.Fragment>
+              <>
                 <EmptyState>
                   <EmptyStateIcon variant="container" component={InfoCircleIcon} className="warning-icon" />
                   <Title headingLevel="h2" size="md">
@@ -300,9 +292,9 @@ const InstanceListPage = () => {
                     There are no Provider Accounts available. Please work with an administrator to create one first.
                   </EmptyStateBody>
                 </EmptyState>
-              </React.Fragment>
+              </>
             ) : (
-              <React.Fragment>
+              <>
                 <FormGroup label="Provider Account" fieldId="provider-account" className="provider-account-selection">
                   <FormSelect
                     value={selectedInventory.name}
@@ -339,7 +331,7 @@ const InstanceListPage = () => {
                     </EmptyStateSecondaryActions>
                   </EmptyState>
                 ) : (
-                  <React.Fragment>
+                  <>
                     <FormGroup label="Database Instance" fieldId="instance-id-filter">
                       <Split>
                         <SplitItem>
@@ -370,11 +362,11 @@ const InstanceListPage = () => {
                         filteredInstances={filteredInstances}
                       />
                     </FormSection>
-                  </React.Fragment>
+                  </>
                 )}
-              </React.Fragment>
+              </>
             )}
-          </React.Fragment>
+          </>
         )}
       </FormBody>
     </FlexForm>
