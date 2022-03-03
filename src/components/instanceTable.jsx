@@ -78,16 +78,16 @@ class InstanceTable extends React.Component {
         ? [
             {
               title: 'Instance Name',
-              transforms: [sortable, wrappable, cellWidth(20)],
+              transforms: [sortable, wrappable, cellWidth(15)],
             },
             {
               title: 'Database ID',
-              transforms: [sortable, wrappable, cellWidth(20)],
+              transforms: [sortable, wrappable, cellWidth(15)],
             },
-            { title: 'Alert', transforms: [wrappable, cellWidth(5)] },
-            { title: 'Project', transforms: [wrappable, cellWidth(20)] },
-            { title: 'Bound', transforms: [wrappable, cellWidth(5)] },
-            { title: 'Application', transforms: [wrappable, cellWidth(20)] },
+            { title: 'Alert', transforms: [wrappable, cellWidth(15)] },
+            { title: 'Project', transforms: [wrappable, cellWidth(15)] },
+            { title: 'Bound', transforms: [wrappable, cellWidth(15)] },
+            { title: 'Application', transforms: [wrappable, cellWidth(15)] },
           ]
         : [
             { title: 'ID', transforms: [wrappable, cellWidth(45)] },
@@ -186,30 +186,44 @@ class InstanceTable extends React.Component {
                 <>
                   <IssuePopover action={this.goToInventoryInfoPage} />
                 </>
-              ) : null,
+              ) : (
+                ''
+              ),
               // Namespace
               <>
-                <List isPlain>
-                  {connectionRows.map((con) => (
-                    <ListItem>{con[0]}</ListItem>
-                  ))}
-                </List>
+                {_.isEmpty(connectionRows) ? (
+                  '--'
+                ) : (
+                  <List isPlain>
+                    {connectionRows.map((con) => (
+                      <ListItem>{con[0]}</ListItem>
+                    ))}
+                  </List>
+                )}
               </>,
               // Bound
               <>
-                <List isPlain>
-                  {connectionRows.map((con) => (
-                    <ListItem>{con[1]}</ListItem>
-                  ))}
-                </List>
+                {_.isEmpty(connectionRows) ? (
+                  '--'
+                ) : (
+                  <List isPlain>
+                    {connectionRows.map((con) => (
+                      <ListItem>{con[1]}</ListItem>
+                    ))}
+                  </List>
+                )}
               </>,
               // App names
               <>
-                <List isPlain>
-                  {connectionRows.map((con) => (
-                    <ListItem>{con[2]}</ListItem>
-                  ))}
-                </List>
+                {_.isEmpty(connectionRows) ? (
+                  '--'
+                ) : (
+                  <List isPlain>
+                    {connectionRows.map((con) => (
+                      <ListItem>{con[2]}</ListItem>
+                    ))}
+                  </List>
+                )}
               </>,
             ],
           })
