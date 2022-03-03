@@ -137,12 +137,13 @@ class InstanceTable extends React.Component {
   }
 
   onSelect(event, isSelected, rowId) {
+    const { filteredInstances } = this.props
     const rows = this.state.rows.map((oneRow, index) => {
       oneRow.selected = rowId === index
       return oneRow
     })
     this.setState({
-      selectedInstance: rows[rowId],
+      selectedInstance: filteredInstances[rowId],
       rows,
     })
   }
