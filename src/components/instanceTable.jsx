@@ -121,7 +121,8 @@ class InstanceTable extends React.Component {
       (this.props.data.instances &&
         this.props.data.instances.length > 0 &&
         !_.isEqual(prevProps.data, this.props.data)) ||
-      !_.isEqual(prevProps.filteredInstances, this.props.filteredInstances)
+      !_.isEqual(prevProps.filteredInstances, this.props.filteredInstances) ||
+      !_.isEqual(prevProps.connectionAndServiceBindingList, this.props.connectionAndServiceBindingList)
     ) {
       if (this.props.filteredInstances) {
         this.getRows(this.props.filteredInstances)
@@ -155,22 +156,24 @@ class InstanceTable extends React.Component {
       _.forEach(data, (dbInstance) => {
         const connectionRows = []
 
-        if (this.props.isSelectable && !_.isEmpty(this.props.connectionAndServiceBindingList)) {
-          for (const connection of this.props.connectionAndServiceBindingList) {
-            if (
-              connection.instanceID === dbInstance.instanceID &&
-              this.props.data.name === connection.providerAcct &&
-              this.props.data.namespace === connection.providerNamespace
-            ) {
-              for (let i = 0; i < connection.applications.length; i++) {
-                if (i === 0) {
-                  connectionRows.push([connection.namespace, 'Yes', connection.applications[i].name])
-                } else {
-                  connectionRows.push(['--', 'Yes', connection.applications[i].name])
+        if (this.props.isSelectable) {
+          if (!_.isEmpty(this.props.connectionAndServiceBindingList)) {
+            for (const connection of this.props.connectionAndServiceBindingList) {
+              if (
+                connection.instanceID === dbInstance.instanceID &&
+                this.props.data.name === connection.providerAcct &&
+                this.props.data.namespace === connection.providerNamespace
+              ) {
+                for (let i = 0; i < connection.applications.length; i++) {
+                  if (i === 0) {
+                    connectionRows.push([connection.namespace, 'Yes', connection.applications[i].name])
+                  } else {
+                    connectionRows.push(['--', 'Yes', connection.applications[i].name])
+                  }
                 }
-              }
-              if (connection.applications.length === 0) {
-                connectionRows.push([connection.namespace, 'No', '--'])
+                if (connection.applications.length === 0) {
+                  connectionRows.push([connection.namespace, 'No', '--'])
+                }
               }
             }
           }
