@@ -172,17 +172,12 @@ const ProviderClusterProvisionPage = () => {
           let provisionReadyCondition = responseJson?.status?.conditions?.find((condition) => {
             return condition.type?.toLowerCase() === 'provisionready'
           })
-          let instanceReadyCondition = responseJson?.status?.conditions?.find((condition) => {
-            return condition.type?.toLowerCase() === 'instanceready'
-          })
 
           if (responseJson?.status?.phase?.toLowerCase() === 'creating') {
-            if (instanceReadyCondition?.status.toLowerCase() === 'false') {
-              setClusterProvisionSuccess(true)
-              clearInterval(checkDBClusterStatusIntervalID.current)
-              clearTimeout(checkDBClusterStatusTimeoutID.current)
-              setShowResults(true)
-            }
+            setClusterProvisionSuccess(true)
+            clearInterval(checkDBClusterStatusIntervalID.current)
+            clearTimeout(checkDBClusterStatusTimeoutID.current)
+            setShowResults(true)
           } else if (responseJson?.status?.phase?.toLowerCase() === 'failed') {
             if (provisionReadyCondition?.status.toLowerCase() === 'false') {
               setClusterProvisionFailed(true)
@@ -191,6 +186,11 @@ const ProviderClusterProvisionPage = () => {
               clearTimeout(checkDBClusterStatusTimeoutID.current)
               setShowResults(true)
             }
+          } else if (responseJson?.status?.phase?.toLowerCase() === 'ready') {
+            setClusterProvisionSuccess(true)
+            clearInterval(checkDBClusterStatusIntervalID.current)
+            clearTimeout(checkDBClusterStatusTimeoutID.current)
+            setShowResults(true)
           } else {
             if (!_.isEmpty(provisionReadyCondition?.message)) {
               setStatusMsg(provisionReadyCondition?.message)
