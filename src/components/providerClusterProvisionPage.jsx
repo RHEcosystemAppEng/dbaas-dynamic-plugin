@@ -99,6 +99,7 @@ const ProviderClusterProvisionPage = () => {
   const [clusterName, setClusterName] = React.useState('')
   const [projectName, setProjectName] = React.useState('')
   const [statusMsg, setStatusMsg] = React.useState('')
+  const [inventoryHasIssue, setInventoryHasIssue] = React.useState(false)
   const [showResults, setShowResults] = React.useState(false)
   const [clusterProvisionFailed, setClusterProvisionFailed] = React.useState(false)
   const [clusterProvisionSuccess, setClusterProvisionSuccess] = React.useState(false)
@@ -116,6 +117,21 @@ const ProviderClusterProvisionPage = () => {
   const checkDBClusterStatusIntervalID = React.useRef()
   const checkDBClusterStatusTimeoutID = React.useRef()
 
+  const checkInventoryStatus = (inventory) => {
+    if (inventory?.status?.conditions[0]?.type === 'SpecSynced') {
+      if (inventory?.status?.conditions[0]?.status === 'False') {
+        setInventoryHasIssue(true)
+        setStatusMsg(inventory?.status?.conditions[0]?.message)
+      } else {
+        setInventoryHasIssue(false)
+        setStatusMsg('')
+      }
+    } else {
+      setInventoryHasIssue(true)
+      setStatusMsg('Could not connect with database provider')
+    }
+  }
+
   const detectSelectedDBProviderAndProviderAccount = () => {
     if (!_.isEmpty(devSelectedDBProviderName) && !_.isEmpty(providerList)) {
       let provider = _.find(providerList, (dbProvider) => {
@@ -131,6 +147,7 @@ const ProviderClusterProvisionPage = () => {
       let inventory = inventories.find((inv) => {
         return inv.name === devSelectedProviderAccountName
       })
+      checkInventoryStatus(inventory)
       setSelectedInventory(inventory)
       setIsInventoryFieldValid(ValidatedOptions.default)
       setIsInventoryFieldDisabled(true)
@@ -277,6 +294,7 @@ const ProviderClusterProvisionPage = () => {
 
       //Set the first inventory as the selected inventory by default
       if (filteredInventoryList.length > 0) {
+        checkInventoryStatus(filteredInventoryList[0])
         setSelectedInventory(filteredInventoryList[0])
       }
 
@@ -371,6 +389,7 @@ const ProviderClusterProvisionPage = () => {
     let inventory = _.find(inventories, (inv) => {
       return inv.name === value
     })
+    checkInventoryStatus(inventory)
     setSelectedInventory(inventory)
   }
 
@@ -526,52 +545,84 @@ const ProviderClusterProvisionPage = () => {
                     ))}
                   </FormSelect>
                 </FormGroup>
-                <FormGroup
-                  label="Instance Name"
-                  fieldId="instance-name"
-                  isRequired
-                  className="half-width-selection"
-                  helperTextInvalid="This is a required field"
-                  validated={isInstanceNameFieldValid}
-                >
-                  <TextInput
-                    isRequired
-                    type="text"
-                    id="instance-name"
-                    name="instance-name"
-                    value={clusterName}
-                    onChange={handleInstanceNameChange}
-                    validated={isInstanceNameFieldValid}
-                  />
-                </FormGroup>
-                {selectedDBProvider.value === mongoProviderType ? (
-                  <FormGroup
-                    label="Project Name"
-                    fieldId="project-name"
-                    isRequired
-                    className="half-width-selection"
-                    helperTextInvalid="This is a required field"
-                    validated={isProjectNameFieldValid}
-                  >
-                    <TextInput
+                {inventoryHasIssue ? (
+                  <>
+                    <EmptyState>
+                      <EmptyStateIcon variant="container" component={InfoCircleIcon} className="warning-icon" />
+                      <Title headingLevel="h2" size="md">
+                        Provider account information retrieval failed
+                      </Title>
+                      <EmptyStateBody>
+                        Provider account information could not be retrieved. Please try again.
+                      </EmptyStateBody>
+                      <Alert
+                        variant="danger"
+                        isInline
+                        title="An error occured"
+                        className="co-alert co-break-word extra-top-margin"
+                      >
+                        <div>{statusMsg}</div>
+                      </Alert>
+                      <Button variant="primary" onClick={handleTryAgain}>
+                        Try Again
+                      </Button>
+                      <EmptyStateSecondaryActions>
+                        <Button variant="link" onClick={handleCancel}>
+                          Close
+                        </Button>
+                      </EmptyStateSecondaryActions>
+                    </EmptyState>
+                  </>
+                ) : (
+                  <>
+                    <FormGroup
+                      label="Instance Name"
+                      fieldId="instance-name"
                       isRequired
-                      type="text"
-                      id="project-name"
-                      name="project-name"
-                      value={projectName}
-                      onChange={handleProjectNameChange}
-                      validated={isProjectNameFieldValid}
-                    />
-                  </FormGroup>
-                ) : null}
-                <ActionGroup>
-                  <Button id="cluster-provision-button" variant="primary" type="submit" isDisabled={!isFormValid}>
-                    Create
-                  </Button>
-                  <Button variant="secondary" onClick={handleCancel}>
-                    Cancel
-                  </Button>
-                </ActionGroup>
+                      className="half-width-selection"
+                      helperTextInvalid="This is a required field"
+                      validated={isInstanceNameFieldValid}
+                    >
+                      <TextInput
+                        isRequired
+                        type="text"
+                        id="instance-name"
+                        name="instance-name"
+                        value={clusterName}
+                        onChange={handleInstanceNameChange}
+                        validated={isInstanceNameFieldValid}
+                      />
+                    </FormGroup>
+                    {selectedDBProvider.value === mongoProviderType ? (
+                      <FormGroup
+                        label="Project Name"
+                        fieldId="project-name"
+                        isRequired
+                        className="half-width-selection"
+                        helperTextInvalid="This is a required field"
+                        validated={isProjectNameFieldValid}
+                      >
+                        <TextInput
+                          isRequired
+                          type="text"
+                          id="project-name"
+                          name="project-name"
+                          value={projectName}
+                          onChange={handleProjectNameChange}
+                          validated={isProjectNameFieldValid}
+                        />
+                      </FormGroup>
+                    ) : null}
+                    <ActionGroup>
+                      <Button id="cluster-provision-button" variant="primary" type="submit" isDisabled={!isFormValid}>
+                        Create
+                      </Button>
+                      <Button variant="secondary" onClick={handleCancel}>
+                        Cancel
+                      </Button>
+                    </ActionGroup>
+                  </>
+                )}
               </React.Fragment>
             ) : null}
           </React.Fragment>
