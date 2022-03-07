@@ -403,6 +403,7 @@ const ProviderClusterProvisionPage = () => {
       let provider = _.find(providerList, (dbProvider) => {
         return dbProvider.value === value
       })
+      setInventoryHasIssue(false)
       setSelectedDBProvider(provider)
       filterInventoriesByProvider(provider)
     }
