@@ -191,7 +191,7 @@ class ProviderAccountForm extends React.Component {
       body: JSON.stringify(newSecret),
     }
 
-    fetch('api/kubernetes/api/v1/namespaces/' + this.state.currentNS + '/secrets', postSecretRequestOpts)
+    await fetch('api/kubernetes/api/v1/namespaces/' + this.state.currentNS + '/secrets', postSecretRequestOpts)
       .then((response) => response.json())
       .then((data) => {
         this.setState({ postResponse: data })
