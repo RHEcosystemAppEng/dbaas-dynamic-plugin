@@ -64,6 +64,7 @@
     "properties": {
       "catalogId": "dev-catalog",
       "type": "dbaas-new",
+      "title": "Connected Database",
       "provider": {
         "$codeRef": "catalog.dbaasProvider"
       }
