@@ -182,7 +182,7 @@ class InstancesForm extends React.Component {
             View Provider Accounts
           </Button>
         </EmptyState>
-        <div style={{ display: 'flex' }}>
+        <div style={{ display: 'flex' }} className="instance-table-container">
           <InstanceTable isLoading={!showResults} data={inventory} isSelectable={false} />
         </div>
       </React.Fragment>
