@@ -111,6 +111,17 @@
     line-height: 21px;
   }
 
+  .vertically-center-align {
+    display: flex;
+    align-items: center;
+  }
+
+  .no-left-and-right-padding {
+    padding-left: 0px !important;
+    padding-right: 0px !important;
+  }
+
+
   .no-bottom-padding {
     padding-bottom: 0px !important;
   }
@@ -161,6 +172,7 @@
 
   .sticky-table-container {
     height: 600px;
+    width: 100%;
   }
 
   .sticky-header-table {

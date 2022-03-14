@@ -340,7 +340,7 @@ const InstanceListPage = () => {
                             setTextInputNameValue={setTextInputNameValue}
                           />
                         </SplitItem>
-                        <SplitItem>
+                        <SplitItem className="vertically-center-align">
                           <Button
                             isDisabled={inventories.length === 0}
                             component="a"

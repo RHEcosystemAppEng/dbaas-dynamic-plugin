@@ -1,6 +1,7 @@
 import * as React from 'react'
 import { TextInput, Toolbar, ToolbarContent, ToolbarItem, ToolbarGroup } from '@patternfly/react-core'
 import { KEYBOARD_SHORTCUTS } from '../const'
+import './_dbaas-import-view.css'
 
 type InstanceListFilterProps = {
   textInputNameValue: string
@@ -13,7 +14,7 @@ const InstanceListFilter: React.FC<InstanceListFilterProps> = ({
 }: InstanceListFilterProps) => {
   return (
     <Toolbar data-test-id="toolbar-filter-instances">
-      <ToolbarContent>
+      <ToolbarContent className="no-left-and-right-padding">
         <ToolbarGroup variant="filter-group">
           <ToolbarItem>
             <div className="has-feedback">
