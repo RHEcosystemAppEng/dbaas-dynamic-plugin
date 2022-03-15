@@ -5,9 +5,14 @@ name: Node.js CI
 
 on:
   push:
-    branches: [ main ]
+    branches:
+    - main
+    - release-*
+
   pull_request:
-    branches: [ main ]
+    branches:
+    - main
+    - release-*
 
 jobs:
   build:
@@ -28,5 +33,5 @@ jobs:
         cache: 'npm'
     - run: npm install --global yarn@1.22.10
     - run: yarn install
-    - run: yarn build-dev
+    - run: yarn build
     - run: git diff --exit-code
