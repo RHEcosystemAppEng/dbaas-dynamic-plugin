@@ -161,7 +161,7 @@ class ProviderAccountForm extends React.Component {
 
     let labelsMap = new Map([['related-to', 'dbaas-operator']])
     let providerName = ''
-    let labelKey = 'type'
+    let labelKey = 'db-operator/type'
 
     providerName = selectedDBProvider?.metadata?.name
     if (providerName.includes('mongodb')) {
