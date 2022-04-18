@@ -18,8 +18,8 @@
     "properties": {
       "id": "dbaasAddAction",
       "href": "/catalog?catalogType=dbaas-new",
-      "label": "Connected Database",
-      "description": "Select a cloud database provider to connect",
+      "label": "Cloud-Hosted Database",
+      "description": "Connect to a cloud-hosted database provider, such as  MongoDB Atlas, Crunchy Data Bridge or CockroachDB",
       "icon": {
         "$codeRef": "constants.dbaasServicesIcon"
       },
@@ -51,7 +51,7 @@
     "type": "console.catalog/item-type",
     "properties": {
       "type": "dbaas-new",
-      "title": "Connected Database",
+      "title": "Cloud-Hosted Database",
       "catalogDescription": "See a list of connected cloud database provider",
       "typeDescription": "DBaaS"
     },
@@ -64,6 +64,7 @@
     "properties": {
       "catalogId": "dev-catalog",
       "type": "dbaas-new",
+      "title": "Cloud-Hosted Database",
       "provider": {
         "$codeRef": "catalog.dbaasProvider"
       }
