@@ -291,7 +291,7 @@ const AdminDashboard = () => {
           No Database Instances
         </Title>
         <EmptyStateBody>
-          Database instances are shown here once you've created your first Provider Account.
+          Database instances are shown here once you've imported your first Provider Account.
         </EmptyStateBody>
         <Button variant="primary" onClick={goToCreateProviderPage}>
           Import Provider Account
