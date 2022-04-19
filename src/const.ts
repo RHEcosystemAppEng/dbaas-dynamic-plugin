@@ -20,6 +20,8 @@ export const crunchyFetchCredentialsUrl =
   'https://access.redhat.com/documentation/en-us/red_hat_openshift_database_access/1/html-single/quick_start_guide/index#find-your-crunchy-data-bridge-account-credentials_dbaas'
 export const cockroachFetchCredentialsUrl =
   'https://access.redhat.com/documentation/en-us/red_hat_openshift_database_access/1/html-single/quick_start_guide/index#find-your-cockroachdb-account-credentials_dbaas'
+export const providerAcctResourceUrl =
+  'https://access.redhat.com/documentation/en-us/red_hat_openshift_database_access/1/html-single/quick_start_guide/index#creating-a-provider-account-resource_admin'
 
 // Common shortcuts than span pages.
 export const KEYBOARD_SHORTCUTS = Object.freeze({
