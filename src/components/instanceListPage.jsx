@@ -15,7 +15,7 @@ import {
   Split,
   SplitItem,
 } from '@patternfly/react-core'
-import { InfoCircleIcon } from '@patternfly/react-icons'
+import { ExclamationTriangleIcon, ExternalLinkAltIcon, InfoCircleIcon } from '@patternfly/react-icons'
 import * as _ from 'lodash'
 import * as React from 'react'
 import { useK8sWatchResource } from '@openshift-console/dynamic-plugin-sdk'
@@ -26,6 +26,9 @@ import {
   mongoProviderName,
   mongoProviderType,
   cockroachdbProviderName,
+  DBaaSInventoryCRName,
+  DBaaSOperatorName,
+  providerAcctResourceUrl,
 } from '../const.ts'
 import { DBAAS_PROVIDER_KIND } from '../catalog/const.ts'
 import {
@@ -34,6 +37,7 @@ import {
   isDbaasConnectionUsed,
   disableNSSelection,
   filterInventoriesByConnNS,
+  fetchDbaasCSV,
 } from '../utils.ts'
 import FlexForm from './form/flexForm.tsx'
 import FormBody from './form/formBody.tsx'
@@ -64,6 +68,7 @@ const InstanceListPage = () => {
   const [dbaasConnectionList, setDbaasConnectionList] = React.useState([])
   const [serviceBindingList, setServiceBindingList] = React.useState([])
   const [connectionAndServiceBindingList, setConnectionAndServiceBindingList] = React.useState([])
+  const [dBaaSOperatorNameWithVersion, setDBaaSOperatorNameWithVersion] = React.useState()
 
   const currentNS = window.location.pathname.split('/')[3]
 
@@ -246,6 +251,14 @@ const InstanceListPage = () => {
 
     setShowResults(true)
   }
+  const fetchCSV = async () => {
+    const dbaasCSV = await fetchDbaasCSV(currentNS, DBaaSOperatorName)
+    setDBaaSOperatorNameWithVersion(dbaasCSV.metadata?.name)
+  }
+
+  React.useEffect(() => {
+    fetchCSV()
+  }, [])
 
   React.useEffect(() => {
     parseSelectedDBProvider()
@@ -284,13 +297,50 @@ const InstanceListPage = () => {
             {noInstances ? (
               <>
                 <EmptyState>
-                  <EmptyStateIcon variant="container" component={InfoCircleIcon} className="warning-icon" />
-                  <Title headingLevel="h2" size="md">
+                  <ExclamationTriangleIcon className="warning-icon" size="xl" />
+                  <Title headingLevel="h2" size="md" className="emptyState-title">
                     No Database Instances
                   </Title>
                   <EmptyStateBody>
-                    There are no Provider Accounts available. Please work with an administrator to create one first.
+                    You currently have no database Provider Accounts imported. Work with your administrator to &nbsp;
+                    <Button
+                      variant="link"
+                      component="a"
+                      href={`/k8s/ns/${currentNS}/clusterserviceversions/${dBaaSOperatorNameWithVersion}/${DBaaSInventoryCRName}/~new`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      icon={<ExternalLinkAltIcon />}
+                      iconPosition="right"
+                      isInline
+                    >
+                      Import a Provider Account
+                    </Button>
+                    &nbsp; from the supported cloud-hosted database providers. If you receive an error message when
+                    trying to import a provider account, then you do not have the required privileges to access this
+                    page.
+                    <br />
+                    <br />
+                    See the &nbsp;
+                    <Button
+                      variant="link"
+                      component="a"
+                      href={providerAcctResourceUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      icon={<ExternalLinkAltIcon />}
+                      iconPosition="right"
+                      isInline
+                    >
+                      Importing a provider account resource
+                    </Button>
+                    &nbsp; section of the Red Hat OpenShift Database Access Quick Start Guide on the Customer Portal for
+                    more details.
                   </EmptyStateBody>
+                  <EmptyStateSecondaryActions>
+                    <Button component="a" href={`/add/ns/${currentNS}`} variant="link">
+                      Close
+                    </Button>
+                  </EmptyStateSecondaryActions>
                 </EmptyState>
               </>
             ) : (
