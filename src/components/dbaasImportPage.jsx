@@ -78,9 +78,9 @@ class DBaasImportPage extends React.Component {
       <div>
         <div className="section-header-div extra-bottom-margin">
           <div className="section-padding-left">&nbsp;</div>
-          <div className="section-title">Create Provider Account</div>
+          <div className="section-title">Import Provider Account</div>
           <div className="section-subtitle">
-            Creating a Provider Account resource allows provider cloud instances to be imported
+            Importing a Provider Account resource allows provider cloud instances to be imported
           </div>
         </div>
         {!isDBaaSServiceUp ? (
