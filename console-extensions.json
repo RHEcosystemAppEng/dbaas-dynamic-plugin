@@ -64,7 +64,6 @@
     "properties": {
       "catalogId": "dev-catalog",
       "type": "dbaas-new",
-      "title": "Cloud-Hosted Database",
       "provider": {
         "$codeRef": "catalog.dbaasProvider"
       }
