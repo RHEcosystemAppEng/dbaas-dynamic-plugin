@@ -178,3 +178,7 @@
     color: '#2b9af3';
     padding-left: '3px';
   }
+
+  .emptyState-title {
+    padding-top: 20px;
+  }

@@ -6,7 +6,7 @@ COPY . /opt/app-root/src/app
 USER 0
 RUN npm i -g yarn@1.22.10
 RUN yarn install
-RUN yarn build-dev
+RUN yarn build
 
 FROM registry.access.redhat.com/ubi8/nodejs-14-minimal:1
 

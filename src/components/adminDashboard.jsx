@@ -78,10 +78,10 @@ const AdminDashboard = () => {
       key="link"
       href={`/k8s/ns/${currentNS}/clusterserviceversions/${dBaaSOperatorNameWithVersion}/${DBaaSInventoryCRName}/~new`}
     >
-      Database Provider Account
+      Import Database Provider Account
     </DropdownItem>,
     <DropdownItem key="dbinstancelink" href={`/k8s/ns/${currentNS}/rhoda-create-database-instance`}>
-      Database Instance
+      Create Database Instance
     </DropdownItem>,
   ]
 
@@ -291,10 +291,10 @@ const AdminDashboard = () => {
           No Database Instances
         </Title>
         <EmptyStateBody>
-          Database instances are shown here once you've created your first Provider Account.
+          Database instances are shown here once you've imported your first Provider Account.
         </EmptyStateBody>
         <Button variant="primary" onClick={goToCreateProviderPage}>
-          Create Provider Account
+          Import Provider Account
         </Button>
       </EmptyState>
     )
@@ -336,7 +336,7 @@ const AdminDashboard = () => {
                   <SplitItem isFilled>
                     <FormHeader
                       title={dbProviderTitle}
-                      helpText="Create database provider account and view your database instances"
+                      helpText="Import database provider account and view your database instances"
                       marginBottom="lg"
                     />
                   </SplitItem>
@@ -346,7 +346,7 @@ const AdminDashboard = () => {
                       position={DropdownPosition.right}
                       toggle={
                         <DropdownToggle onToggle={onToggle} toggleIndicator={CaretDownIcon} isPrimary id="toggle-id-4">
-                          Create
+                          Configuration
                         </DropdownToggle>
                       }
                       isOpen={isOpen}

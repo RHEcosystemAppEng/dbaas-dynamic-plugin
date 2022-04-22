@@ -1,6 +1,6 @@
 {
   "name": "@console/dbaas-dynamic-plugin",
-  "version": "0.1.4",
+  "version": "0.1.5-4.9",
   "private": true,
   "repository": {
     "type": "git",
@@ -8,7 +8,7 @@
   },
   "scripts": {
     "clean": "rm -rf ./dist",
-    "build": "yarn clean && NODE_ENV=production yarn --production ts-node ./node_modules/.bin/webpack",
+    "build": "yarn clean && NODE_ENV=production yarn ts-node ./node_modules/.bin/webpack --mode=production",
     "build-dev": "yarn lint && yarn format && yarn clean && yarn ts-node ./node_modules/.bin/webpack",
     "img-build": "docker build -f Dockerfile -t quay.io/$QUAY_USER/dbaas-dynamic-plugin:$npm_package_version .",
     "img-push": "docker push quay.io/$QUAY_USER/dbaas-dynamic-plugin:$npm_package_version",
@@ -67,7 +67,7 @@
   },
   "consolePlugin": {
     "name": "dbaas-dynamic-plugin",
-    "version": "0.1.4",
+    "version": "0.1.5-4.9",
     "displayName": "DBaaS Dynamic Plugin",
     "description": "Dynamic Plugin for Openshift Console to provide custom components for DBaaS",
     "exposedModules": {

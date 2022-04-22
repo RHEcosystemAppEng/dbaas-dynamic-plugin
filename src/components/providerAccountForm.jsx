@@ -9,7 +9,6 @@ import {
   ActionGroup,
   FormSelect,
   FormSelectOption,
-  FormSelectOptionGroup,
   ValidatedOptions,
   Popover,
 } from '@patternfly/react-core'
@@ -22,6 +21,10 @@ import {
   mongoProviderType,
   crunchyProviderType,
   cockroachdbProviderType,
+  prerequisitesUrl,
+  mongoUrl,
+  crunchyUrl,
+  cockroachUrl,
 } from '../const'
 
 class ProviderAccountForm extends React.Component {
@@ -161,7 +164,7 @@ class ProviderAccountForm extends React.Component {
 
     let labelsMap = new Map([['related-to', 'dbaas-operator']])
     let providerName = ''
-    let labelKey = 'type'
+    let labelKey = 'db-operator/type'
 
     providerName = selectedDBProvider?.metadata?.name
     if (providerName.includes('mongodb')) {
@@ -309,6 +312,76 @@ class ProviderAccountForm extends React.Component {
 
     return (
       <Form id="provider-account-form" isWidthLimited onSubmit={this.handleSubmit}>
+        <>
+          <Alert
+            variant="info"
+            isInline
+            title="NOTE! You must have an account with a cloud database provider before you can import a provider account. If you do not have an account with a cloud database provider, see one of our supported vendors to create an account:"
+            className="co-alert co-break-word"
+          >
+            <div>
+              <ul>
+                <li>
+                  <Button
+                    variant="link"
+                    component="a"
+                    href={mongoUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    icon={<ExternalLinkAltIcon />}
+                    iconPosition="right"
+                    isInline
+                  >
+                    MongoDB Atlas
+                  </Button>
+                </li>
+                <li>
+                  <Button
+                    variant="link"
+                    component="a"
+                    href={crunchyUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    icon={<ExternalLinkAltIcon />}
+                    iconPosition="right"
+                    isInline
+                  >
+                    Crunchy Data Bridge
+                  </Button>
+                </li>
+                <li>
+                  <Button
+                    variant="link"
+                    component="a"
+                    href={cockroachUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    icon={<ExternalLinkAltIcon />}
+                    iconPosition="right"
+                    isInline
+                  >
+                    CockroachDB
+                  </Button>
+                </li>
+              </ul>
+              See the &nbsp;
+              <Button
+                variant="link"
+                component="a"
+                href={prerequisitesUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                icon={<ExternalLinkAltIcon />}
+                iconPosition="right"
+                isInline
+              >
+                Prerequisites
+              </Button>
+              &nbsp; section of the Red Hat OpenShift Database Access Quick Start Guide on the Customer Portal for more
+              details.
+            </div>
+          </Alert>
+        </>
         <FormGroup
           label="Name"
           fieldId="inventory-name"
@@ -373,41 +446,20 @@ class ProviderAccountForm extends React.Component {
           <React.Fragment>
             <div className="section-subtitle extra-top-margin no-bottom-padding">
               Account Credentials
-              <span>
-                <Popover
-                  headerContent={<div>Account credentials</div>}
-                  bodyContent={
-                    <div>
-                      These are the credentials you used to create your database provider account. To create a new
-                      provider account or retrieve existing account credentials, click on the link below
-                    </div>
-                  }
-                  footerContent={
-                    <Button
-                      variant="link"
-                      component="a"
-                      href={credentialDocUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      icon={<ExternalLinkAltIcon />}
-                      iconPosition="right"
-                      isInline
-                    >
-                      Account credentials
-                    </Button>
-                  }
+              <p>
+                <Button
+                  variant="link"
+                  component="a"
+                  href={credentialDocUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  icon={<ExternalLinkAltIcon />}
+                  iconPosition="right"
+                  isInline
                 >
-                  <button
-                    type="button"
-                    aria-label="More info for name field"
-                    onClick={(e) => e.preventDefault()}
-                    aria-describedby="simple-form-name-01"
-                    className="pf-c-form__group-label-help"
-                  >
-                    <HelpIcon noVerticalAlign />
-                  </button>
-                </Popover>
-              </span>
+                  Finding your cloud database provider account credentials
+                </Button>
+              </p>
             </div>
             {selectedDBProvider?.spec?.credentialFields.map((field) => {
               return (
@@ -465,7 +517,7 @@ class ProviderAccountForm extends React.Component {
             className="submit-button"
             isDisabled={_.isEmpty(selectedDBProvider) || !isFormValid}
           >
-            Create
+            Import
           </Button>
           <Button variant="secondary" onClick={this.handleCancel}>
             Cancel
