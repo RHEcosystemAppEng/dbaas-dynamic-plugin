@@ -1,13 +1,11 @@
 import {
-  Bullseye,
   EmptyState,
   EmptyStateVariant,
   List,
   ListItem,
   Popover,
   Title,
-  ActionGroup,
-  Button,
+  EmptyStateBody,
 } from '@patternfly/react-core'
 import { ExclamationTriangleIcon } from '@patternfly/react-icons'
 import {
@@ -19,34 +17,14 @@ import {
   OuterScrollContainer,
   InnerScrollContainer,
   sortable,
-  SortByDirection,
+  SortByDirection
 } from '@patternfly/react-table'
 import _ from 'lodash'
-import React, { useState } from 'react'
+import React from 'react'
 import {
-  cockroachdbProviderName,
-  cockroachdbProviderType,
-  crunchyProviderName,
-  crunchyProviderType,
-  mongoProviderName,
-  mongoProviderType,
   DBaaSInventoryCRName,
-  DBaaSOperatorName,
 } from '../const.ts'
-import { fetchDbaasCSV } from '../utils'
 import './_dbaas-import-view.css'
-
-const TableEmptyState = () => {
-  return (
-    <Bullseye>
-      <EmptyState variant={EmptyStateVariant.small}>
-        <Title headingLevel="h2" size="lg">
-          No database instances
-        </Title>
-      </EmptyState>
-    </Bullseye>
-  )
-}
 
 class AdminConnectionsTable extends React.Component {
   constructor(props) {
@@ -65,10 +43,15 @@ class AdminConnectionsTable extends React.Component {
       ],
       rows: [],
       dBaaSOperatorNameWithVersion: this.props.dBaaSOperatorNameWithVersion,
+      noInstances: this.props.noInstances,
       sortBy: {},
     }
     this.getRows = this.getRows.bind(this)
     this.onSort = this.onSort.bind(this)
+  }
+
+  componentDidMount() {
+    this.getRows(this.props.inventoryInstances)
   }
 
   componentDidUpdate(prevProps) {
@@ -84,10 +67,6 @@ class AdminConnectionsTable extends React.Component {
         this.getRows(this.props.inventoryInstances)
       }
     }
-  }
-
-  componentDidMount() {
-    this.getRows(this.props.inventoryInstances)
   }
 
   onSort = (_event, index, direction) => {
@@ -179,15 +158,27 @@ class AdminConnectionsTable extends React.Component {
         })
       })
     } else {
+      // Empty State for the table
       rowList.push({
         heightAuto: true,
         cells: [
           {
             props: { colSpan: 8 },
-            title: <TableEmptyState />,
-          },
-        ],
-      })
+            title: (
+              <EmptyState variant={EmptyStateVariant.small}>
+                <Title headingLevel="h2" size="lg">
+                  {this.state.noInstances ? 'No database provider account imported' : 'No database instances'}
+                </Title>
+                <EmptyStateBody>
+                  {this.state.noInstances
+                    ? 'Please import your database provider account to view available database instances.'
+                    : ''}
+                </EmptyStateBody>
+              </EmptyState>
+            )
+          }
+        ]
+      });
     }
     this.setState({ rows: rowList })
   }
