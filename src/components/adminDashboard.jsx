@@ -74,10 +74,7 @@ const AdminDashboard = () => {
   )
 
   const dropdownItems = [
-    <DropdownItem
-      key="link"
-      href={`/k8s/ns/${currentNS}/clusterserviceversions/${dBaaSOperatorNameWithVersion}/${DBaaSInventoryCRName}/~new`}
-    >
+    <DropdownItem key="link" href={`/k8s/ns/${currentNS}/rhoda-admin-dashboard/import-provider-account`}>
       Import Database Provider Account
     </DropdownItem>,
     <DropdownItem

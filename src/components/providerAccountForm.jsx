@@ -11,6 +11,8 @@ import {
   FormSelectOption,
   ValidatedOptions,
   Popover,
+  HelperText,
+  HelperTextItem,
 } from '@patternfly/react-core'
 import { getCSRFToken, fetchInvAndConnNamespacesFromTenants } from '../utils'
 import { HelpIcon, ExternalLinkAltIcon } from '@patternfly/react-icons'
@@ -38,6 +40,7 @@ class ProviderAccountForm extends React.Component {
     this.validateInventoryNameField = this.validateInventoryNameField.bind(this)
 
     this.state = {
+      createProviderAccountDocUrl: '',
       credentialDocUrl: '',
       credentials: {},
       currentNS: window.location.pathname.split('/')[3],
@@ -138,13 +141,13 @@ class ProviderAccountForm extends React.Component {
         })
       }
       if (provider?.metadata?.name === mongoProviderType) {
-        this.setState({ credentialDocUrl: mongoFetchCredentialsUrl })
+        this.setState({ credentialDocUrl: mongoFetchCredentialsUrl, createProviderAccountDocUrl: mongoUrl })
       }
       if (provider?.metadata?.name === crunchyProviderType) {
-        this.setState({ credentialDocUrl: crunchyFetchCredentialsUrl })
+        this.setState({ credentialDocUrl: crunchyFetchCredentialsUrl, createProviderAccountDocUrl: crunchyUrl })
       }
       if (provider?.metadata?.name === cockroachdbProviderType) {
-        this.setState({ credentialDocUrl: cockroachFetchCredentialsUrl })
+        this.setState({ credentialDocUrl: cockroachFetchCredentialsUrl, createProviderAccountDocUrl: cockroachUrl })
       }
       this.setState({ selectedDBProvider: provider })
     }
@@ -308,6 +311,7 @@ class ProviderAccountForm extends React.Component {
       isInventoryNameFieldValid,
       inventoryNameFieldInvalidText,
       credentialDocUrl,
+      createProviderAccountDocUrl,
     } = this.state
 
     return (
@@ -316,71 +320,9 @@ class ProviderAccountForm extends React.Component {
           <Alert
             variant="info"
             isInline
-            title="NOTE! You must have an account with a cloud database provider before you can import a provider account. If you do not have an account with a cloud database provider, see one of our supported vendors to create an account:"
+            title="You must have an account with a supported database provider to use Database Access."
             className="co-alert co-break-word"
-          >
-            <div>
-              <ul>
-                <li>
-                  <Button
-                    variant="link"
-                    component="a"
-                    href={mongoUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    icon={<ExternalLinkAltIcon />}
-                    iconPosition="right"
-                    isInline
-                  >
-                    MongoDB Atlas
-                  </Button>
-                </li>
-                <li>
-                  <Button
-                    variant="link"
-                    component="a"
-                    href={crunchyUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    icon={<ExternalLinkAltIcon />}
-                    iconPosition="right"
-                    isInline
-                  >
-                    Crunchy Data Bridge
-                  </Button>
-                </li>
-                <li>
-                  <Button
-                    variant="link"
-                    component="a"
-                    href={cockroachUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    icon={<ExternalLinkAltIcon />}
-                    iconPosition="right"
-                    isInline
-                  >
-                    CockroachDB
-                  </Button>
-                </li>
-              </ul>
-              See the &nbsp;
-              <Button
-                variant="link"
-                component="a"
-                href={prerequisitesUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                icon={<ExternalLinkAltIcon />}
-                iconPosition="right"
-                isInline
-              >
-                Prerequisites
-              </Button>
-              &nbsp; section of the Red Hat OpenShift Database Access Quick Start Guide on the Customer Portal for more
-              details.
-            </div>
-          </Alert>
+          />
         </>
         <FormGroup
           label="Name"
@@ -391,6 +333,7 @@ class ProviderAccountForm extends React.Component {
         >
           <TextInput
             isRequired
+            placeholder="Name your database provider account"
             type="text"
             id="inventory-name"
             name="inventory-name"
@@ -444,23 +387,43 @@ class ProviderAccountForm extends React.Component {
         )}
         {!_.isEmpty(selectedDBProvider) ? (
           <React.Fragment>
-            <div className="section-subtitle extra-top-margin no-bottom-padding">
-              Account Credentials
-              <p>
-                <Button
-                  variant="link"
-                  component="a"
-                  href={credentialDocUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  icon={<ExternalLinkAltIcon />}
-                  iconPosition="right"
-                  isInline
-                >
-                  Finding your cloud database provider account credentials
-                </Button>
-              </p>
-            </div>
+            <FormGroup label="Account Credentials" fieldId="account credentials">
+              <HelperText>
+                <HelperTextItem variant="indeterminate">
+                  These are the credentials you used to create your database provider account. To find your
+                  {selectedDBProvider?.spec?.provider?.displayName} account credentials, click on &nbsp;
+                  <Button
+                    variant="link"
+                    component="a"
+                    href={credentialDocUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    icon={<ExternalLinkAltIcon />}
+                    iconPosition="right"
+                    isInline
+                  >
+                    Account Credentials
+                  </Button>
+                </HelperTextItem>
+                &nbsp;
+                <HelperTextItem variant="indeterminate">
+                  If you do not have a Provider Account with {selectedDBProvider?.spec?.provider?.displayName} please
+                  create one by clicking &nbsp;
+                  <Button
+                    variant="link"
+                    component="a"
+                    href={createProviderAccountDocUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    icon={<ExternalLinkAltIcon />}
+                    iconPosition="right"
+                    isInline
+                  >
+                    here
+                  </Button>
+                </HelperTextItem>
+              </HelperText>
+            </FormGroup>
             {selectedDBProvider?.spec?.credentialFields.map((field) => {
               return (
                 <FormGroup
@@ -469,6 +432,44 @@ class ProviderAccountForm extends React.Component {
                   isRequired={field.required}
                   helperTextInvalid="This is a required field"
                   validated={field.isValid}
+                  labelIcon={
+                    <Popover
+                      headerContent={<div>{field.displayName}</div>}
+                      bodyContent={
+                        <div>
+                          <div>
+                            The {field.displayName} is the credential associated with your database provider account
+                            when you created the account. To retrieve it or to create a new provider account, click on
+                            the link below.
+                          </div>
+                        </div>
+                      }
+                      footerContent={
+                        <Button
+                          variant="link"
+                          component="a"
+                          href={credentialDocUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          icon={<ExternalLinkAltIcon />}
+                          iconPosition="right"
+                          isInline
+                        >
+                          Learn more
+                        </Button>
+                      }
+                    >
+                      <button
+                        type="button"
+                        aria-label="more info"
+                        onClick={(e) => e.preventDefault()}
+                        aria-describedby="more-info"
+                        className="pf-c-form__group-label-help"
+                      >
+                        <HelpIcon noVerticalAlign />
+                      </button>
+                    </Popover>
+                  }
                 >
                   <TextInput
                     isRequired={field.required}
