@@ -116,6 +116,18 @@
     "properties": {
       "exact": false,
       "path": [
+        "/k8s/ns/:ns/rhoda-admin-dashboard/import-provider-account"
+      ],
+      "component": {
+        "$codeRef": "dbaasImportPage"
+      }
+    }
+  },
+  {
+    "type": "console.page/route",
+    "properties": {
+      "exact": false,
+      "path": [
         "/k8s/ns/:ns/rhoda-create-database-instance",
         "/k8s/ns/:ns/rhoda-create-database-instance/db/:dbProviderName/pa/:providerAccountName"
       ],
