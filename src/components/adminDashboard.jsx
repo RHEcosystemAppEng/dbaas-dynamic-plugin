@@ -77,7 +77,11 @@ const AdminDashboard = () => {
     <DropdownItem key="link" href={`/k8s/ns/${currentNS}/rhoda-admin-dashboard/import-provider-account`}>
       Import Database Provider Account
     </DropdownItem>,
-    <DropdownItem key="dbinstancelink" href={`/k8s/ns/${currentNS}/rhoda-create-database-instance`}>
+    <DropdownItem
+      key="dbinstancelink"
+      href={`/k8s/ns/${currentNS}/rhoda-create-database-instance`}
+      isDisabled={noInstances}
+    >
       Create Database Instance
     </DropdownItem>,
   ]
@@ -258,41 +262,25 @@ const AdminDashboard = () => {
     window.location.pathname = `/k8s/ns/${currentNS}/clusterserviceversions/${dBaaSOperatorNameWithVersion}/${DBaaSInventoryCRName}/~new`
   }
 
-  const displayEmptyState = () => {
-    if (fetchInstancesFailed) {
-      return (
-        <EmptyState>
-          <EmptyStateIcon variant="container" component={InfoCircleIcon} className="warning-icon" />
-          <Title headingLevel="h2" size="md">
-            Database instances retrieval failed
-          </Title>
-          <EmptyStateBody>Database instances could not be retrieved. Please try again.</EmptyStateBody>
-          <Alert variant="danger" isInline title="An error occured" className="co-alert co-break-word extra-top-margin">
-            <div>{statusMsg}</div>
-          </Alert>
-          <Button variant="primary" onClick={handleTryAgain}>
-            Try Again
-          </Button>
-          <EmptyStateSecondaryActions>
-            <Button variant="link" onClick={handleCancel}>
-              Close
-            </Button>
-          </EmptyStateSecondaryActions>
-        </EmptyState>
-      )
-    }
+  const displayInstancesFailed = () => {
     return (
       <EmptyState>
         <EmptyStateIcon variant="container" component={InfoCircleIcon} className="warning-icon" />
         <Title headingLevel="h2" size="md">
-          No Database Instances
+          Database instances retrieval failed
         </Title>
-        <EmptyStateBody>
-          Database instances are shown here once you've imported your first Provider Account.
-        </EmptyStateBody>
-        <Button variant="primary" onClick={goToCreateProviderPage}>
-          Import Provider Account
+        <EmptyStateBody>Database instances could not be retrieved. Please try again.</EmptyStateBody>
+        <Alert variant="danger" isInline title="An error occured" className="co-alert co-break-word extra-top-margin">
+          <div>{statusMsg}</div>
+        </Alert>
+        <Button variant="primary" onClick={handleTryAgain}>
+          Try Again
         </Button>
+        <EmptyStateSecondaryActions>
+          <Button variant="link" onClick={handleCancel}>
+            Close
+          </Button>
+        </EmptyStateSecondaryActions>
       </EmptyState>
     )
   }
@@ -325,8 +313,8 @@ const AdminDashboard = () => {
           </EmptyState>
         ) : (
           <>
-            {fetchInstancesFailed || noInstances ? (
-              displayEmptyState()
+            {fetchInstancesFailed ? (
+              displayInstancesFailed()
             ) : (
               <>
                 <Split>
@@ -361,6 +349,7 @@ const AdminDashboard = () => {
                     filteredInstances={filteredInstances}
                     dBaaSOperatorNameWithVersion={dBaaSOperatorNameWithVersion}
                     inventoryInstances={inventoryInstances}
+                    noInstances={noInstances}
                   />
                 </FormSection>
               </>
