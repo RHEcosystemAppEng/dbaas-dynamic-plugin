@@ -30,8 +30,8 @@ import {
 import { ExclamationTriangleIcon, ExternalLinkAltIcon } from '@patternfly/react-icons'
 import _ from 'lodash'
 import React from 'react'
-import { getCSRFToken, fetchDbaasCSV } from '../utils.ts'
-import { DBaaSInventoryCRName, DBaaSOperatorName, topologyInstructionPageUrl } from '../const.ts'
+import { getCSRFToken, fetchDbaasCSV } from '../utils'
+import { DBaaSInventoryCRName, DBaaSOperatorName, topologyInstructionPageUrl } from '../const'
 import './_dbaas-import-view.css'
 
 const IssuePopover = ({ action }) => (

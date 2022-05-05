@@ -25,13 +25,14 @@ import { InfoCircleIcon, CheckCircleIcon } from '@patternfly/react-icons'
 import FormHeader from './form/formHeader'
 import FlexForm from './form/flexForm'
 import FormBody from './form/formBody'
-import { mongoProviderType, crunchyProviderType, rdsProviderType } from '../const'
+import { mongoProviderType, crunchyProviderType, rdsProviderType, DBaaSOperatorName } from '../const'
 import {
   getCSRFToken,
   fetchInventoriesAndMapByNSAndRules,
   disableNSSelection,
   enableNSSelection,
-  filterInventoriesByConnNS,
+  filterInventoriesByConnNSandProvision,
+  fetchDbaasCSV,
 } from '../utils'
 
 const LoadingView = ({ loadingMsg }) => {
@@ -113,6 +114,7 @@ const ProviderClusterProvisionPage = () => {
   const [isProjectNameFieldValid, setIsProjectNameFieldValid] = React.useState('')
   const [isEngineFieldValid, setIsEngineFieldValid] = React.useState('')
   const [isFormValid, setIsFormValid] = React.useState(false)
+  const [installNamespace, setInstallNamespace] = React.useState('')
   const currentNS = window.location.pathname.split('/')[3]
   const devSelectedDBProviderName = window.location.pathname.split('/db/')[1]?.split('/pa/')[0]
   const devSelectedProviderAccountName = window.location.pathname.split('/pa/')[1]
@@ -150,12 +152,13 @@ const ProviderClusterProvisionPage = () => {
     }
 
     if (!_.isEmpty(devSelectedProviderAccountName) && !_.isEmpty(inventories)) {
-      let inventory = inventories.find((inv) => {
-        return inv.name === devSelectedProviderAccountName
+      let inventory = inventories.forEach((inv) => {
+        if (inv.name === devSelectedProviderAccountName) {
+          checkInventoryStatus(inv)
+          setSelectedInventory(inv)
+          setIsInventoryFieldValid(ValidatedOptions.default)
+        }
       })
-      checkInventoryStatus(inventory)
-      setSelectedInventory(inventory)
-      setIsInventoryFieldValid(ValidatedOptions.default)
     }
   }
 
@@ -296,6 +299,11 @@ const ProviderClusterProvisionPage = () => {
       })
   }
 
+  const fetchCSV = async () => {
+    const dbaasCSV = await fetchDbaasCSV(currentNS, DBaaSOperatorName)
+    setInstallNamespace(dbaasCSV?.metadata?.annotations['olm.operatorNamespace'])
+  }
+
   const filterInventoriesByProvider = (provider) => {
     if (!_.isEmpty(provider)) {
       let filteredInventoryList = _.filter(inventories, (inventory) => {
@@ -347,18 +355,15 @@ const ProviderClusterProvisionPage = () => {
   }
 
   async function fetchInventoriesByNSAndRules() {
-    let inventoryItems = await filteredInventoriesByValidConnectionNS()
+    const inventoryItems = await filteredInventoriesByValidConnectionNS(installNamespace)
     parseInventories(inventoryItems)
-
-    return inventoryItems
   }
 
-  async function filteredInventoriesByValidConnectionNS() {
-    let inventoryItems = []
-    let inventoryData = await fetchInventoriesAndMapByNSAndRules().catch(function (error) {
+  async function filteredInventoriesByValidConnectionNS(installNS = '') {
+    let inventoryData = await fetchInventoriesAndMapByNSAndRules(installNS).catch(function (error) {
       console.log(error)
     })
-    return filterInventoriesByConnNS(inventoryData, currentNS)
+    return filterInventoriesByConnNSandProvision(inventoryData, currentNS)
   }
 
   const validateForm = () => {
@@ -525,15 +530,22 @@ const ProviderClusterProvisionPage = () => {
   }
 
   React.useEffect(() => {
-    disableNSSelection()
+    fetchCSV()
     fetchProviderInfo()
-    fetchInventoriesByNSAndRules()
+  }, [])
+
+  React.useEffect(() => {
+    disableNSSelection()
 
     return () => {
       clearInterval(checkDBClusterStatusIntervalID.current)
       enableNSSelection()
     }
   }, [])
+
+  React.useEffect(() => {
+    fetchInventoriesByNSAndRules()
+  }, [installNamespace])
 
   React.useEffect(() => {
     validateForm()

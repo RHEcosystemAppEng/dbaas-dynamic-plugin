@@ -12,7 +12,7 @@ import {
   Alert,
 } from '@patternfly/react-core'
 import { InfoCircleIcon, CheckCircleIcon } from '@patternfly/react-icons'
-import { DBaaSInventoryCRName } from '../const'
+import { DBaaSInventoryCRName, CSVapiVersionKind } from '../const'
 class InstancesForm extends React.Component {
   constructor(props) {
     super(props)
@@ -124,7 +124,7 @@ class InstancesForm extends React.Component {
   goToInventoryListPage = () => {
     const { currentNS } = this.state
 
-    window.location.pathname = `/k8s/ns/${currentNS}/operators.coreos.com~v1alpha1~ClusterServiceVersion/${this.DBaaSOperatorNameWithVersion}/${DBaaSInventoryCRName}`
+    window.location.pathname = `/k8s/ns/${currentNS}/${CSVapiVersionKind}/${this.DBaaSOperatorNameWithVersion}/${DBaaSInventoryCRName}`
   }
 
   render() {
