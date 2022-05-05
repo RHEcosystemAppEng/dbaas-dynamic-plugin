@@ -49,7 +49,7 @@ const config: webpack.Configuration = {
   optimization: {
     chunkIds: 'named',
     minimize: false,
-  }
+  },
 };
 
 if (process.env.NODE_ENV === 'production') {
