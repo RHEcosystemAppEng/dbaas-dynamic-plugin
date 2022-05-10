@@ -1,12 +1,4 @@
-import {
-  EmptyState,
-  EmptyStateVariant,
-  List,
-  ListItem,
-  Popover,
-  Title,
-  EmptyStateBody,
-} from '@patternfly/react-core'
+import { EmptyState, EmptyStateVariant, List, ListItem, Popover, Title, EmptyStateBody } from '@patternfly/react-core'
 import { ExclamationTriangleIcon } from '@patternfly/react-icons'
 import {
   cellWidth,
@@ -21,9 +13,7 @@ import {
 } from '@patternfly/react-table'
 import _ from 'lodash'
 import React from 'react'
-import {
-  DBaaSInventoryCRName,
-} from '../const.ts'
+import { DBaaSInventoryCRName } from '../const.ts'
 import './_dbaas-import-view.css'
 
 class AdminConnectionsTable extends React.Component {
@@ -171,7 +161,7 @@ class AdminConnectionsTable extends React.Component {
                 </Title>
                 <EmptyStateBody>
                   {this.state.noInstances
-                    ? 'Please import your database provider account to view available database instances.'
+                    ? 'Import a database provider account to view available database instances.'
                     : ''}
                 </EmptyStateBody>
               </EmptyState>
