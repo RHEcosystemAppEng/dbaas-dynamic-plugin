@@ -31,13 +31,12 @@ import {
   crunchyProviderType,
   mongoProviderName,
   mongoProviderType,
-} from '../const'
+} from '../const.ts'
 import {
   disableNSSelection,
   enableNSSelection,
   fetchDbaasCSV,
   fetchInventoriesByNSAndRules,
-  fetchObjectsByNamespace,
   fetchObjectsClusterOrNS,
   isDbaasConnectionUsed,
 } from '../utils'
@@ -321,7 +320,7 @@ const AdminDashboard = () => {
                   <SplitItem isFilled>
                     <FormHeader
                       title={dbProviderTitle}
-                      helpText="Import database provider account and view your database instances"
+                      helpText="Create and view database instances, or import a database provider account."
                       marginBottom="lg"
                     />
                   </SplitItem>
