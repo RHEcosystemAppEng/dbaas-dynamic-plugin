@@ -27,6 +27,9 @@ export const prerequisitesUrl =
 export const mongoUrl = 'https://www.mongodb.com/atlas/database'
 export const crunchyUrl = 'https://www.crunchydata.com/products/crunchy-bridge/'
 export const cockroachUrl = 'https://www.cockroachlabs.com/get-started-cockroachdb/'
+export const mongoShortName = 'MongoDB Atlas'
+export const crunchyShortName = 'Crunchy Bridge'
+export const cockroachShortName = 'CockroachDB Cloud'
 
 // Common shortcuts than span pages.
 export const KEYBOARD_SHORTCUTS = Object.freeze({
