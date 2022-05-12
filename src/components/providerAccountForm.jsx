@@ -538,6 +538,50 @@ class ProviderAccountForm extends React.Component {
             />
           </FormGroup>
         ) : null}
+        <FormGroup
+          label="Name"
+          fieldId="inventory-name"
+          isRequired
+          validated={isInventoryNameFieldValid}
+          helperTextInvalid={inventoryNameFieldInvalidText}
+          labelIcon={
+            <Popover
+              headerContent="Name"
+              bodyContent={
+                <div>
+                  <div>This name is used to identify your provider account as a friendly name.</div>
+                </div>
+              }
+            >
+              <button
+                type="button"
+                aria-label="more info"
+                onClick={(e) => e.preventDefault()}
+                aria-describedby="more-info"
+                className="pf-c-form__group-label-help"
+              >
+                <HelpIcon noVerticalAlign />
+              </button>
+            </Popover>
+          }
+        >
+          <TextInput
+            isRequired
+            placeholder={`Give a friendly name to your ${providerShortName} account`}
+            type="text"
+            id="inventory-name"
+            name="inventory-name"
+            value={inventoryName}
+            onChange={(value) => {
+              this.setState({ inventoryName: value })
+              this.validateInventoryNameField(value)
+            }}
+            onBlur={(event) => {
+              this.validateInventoryNameField(event.target.value)
+            }}
+            validated={isInventoryNameFieldValid}
+          />
+        </FormGroup>
         {showError ? (
           <Alert variant="danger" isInline title={error.reason} className="co-alert co-break-word">
             {error.details?.causes ? (
