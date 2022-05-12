@@ -27,6 +27,9 @@ import {
   mongoUrl,
   crunchyUrl,
   cockroachUrl,
+  mongoShortName,
+  crunchyShortName,
+  cockroachShortName,
 } from '../const'
 
 class ProviderAccountForm extends React.Component {
@@ -55,6 +58,7 @@ class ProviderAccountForm extends React.Component {
       isFormValid: false,
       isInventoryNameFieldValid: '',
       inventoryNameFieldInvalidText: '',
+      providerShortName: 'provider',
     }
   }
 
@@ -141,13 +145,25 @@ class ProviderAccountForm extends React.Component {
         })
       }
       if (provider?.metadata?.name === mongoProviderType) {
-        this.setState({ credentialDocUrl: mongoFetchCredentialsUrl, createProviderAccountDocUrl: mongoUrl })
+        this.setState({
+          credentialDocUrl: mongoFetchCredentialsUrl,
+          createProviderAccountDocUrl: mongoUrl,
+          providerShortName: mongoShortName,
+        })
       }
       if (provider?.metadata?.name === crunchyProviderType) {
-        this.setState({ credentialDocUrl: crunchyFetchCredentialsUrl, createProviderAccountDocUrl: crunchyUrl })
+        this.setState({
+          credentialDocUrl: crunchyFetchCredentialsUrl,
+          createProviderAccountDocUrl: crunchyUrl,
+          providerShortName: crunchyShortName,
+        })
       }
       if (provider?.metadata?.name === cockroachdbProviderType) {
-        this.setState({ credentialDocUrl: cockroachFetchCredentialsUrl, createProviderAccountDocUrl: cockroachUrl })
+        this.setState({
+          credentialDocUrl: cockroachFetchCredentialsUrl,
+          createProviderAccountDocUrl: cockroachUrl,
+          providerShortName: cockroachShortName,
+        })
       }
       this.setState({ selectedDBProvider: provider })
     }
@@ -312,6 +328,7 @@ class ProviderAccountForm extends React.Component {
       inventoryNameFieldInvalidText,
       credentialDocUrl,
       createProviderAccountDocUrl,
+      providerShortName,
     } = this.state
 
     return (
@@ -320,34 +337,10 @@ class ProviderAccountForm extends React.Component {
           <Alert
             variant="info"
             isInline
-            title="You must have an account with a supported database provider to use Database Access."
+            title="You must have an account with a supported database provider to use OpenShift Database Access."
             className="co-alert co-break-word"
           />
         </>
-        <FormGroup
-          label="Name"
-          fieldId="inventory-name"
-          isRequired
-          validated={isInventoryNameFieldValid}
-          helperTextInvalid={inventoryNameFieldInvalidText}
-        >
-          <TextInput
-            isRequired
-            placeholder="Name your database provider account"
-            type="text"
-            id="inventory-name"
-            name="inventory-name"
-            value={inventoryName}
-            onChange={(value) => {
-              this.setState({ inventoryName: value })
-              this.validateInventoryNameField(value)
-            }}
-            onBlur={(event) => {
-              this.validateInventoryNameField(event.target.value)
-            }}
-            validated={isInventoryNameFieldValid}
-          />
-        </FormGroup>
         {this.state.showResults ? (
           <div>
             {!_.isEmpty(this.state.inventoryNamespaces) ? (
@@ -390,8 +383,8 @@ class ProviderAccountForm extends React.Component {
             <FormGroup label="Account Credentials" fieldId="account credentials">
               <HelperText>
                 <HelperTextItem variant="indeterminate">
-                  These are the credentials you used to create your database provider account. To find your
-                  {selectedDBProvider?.spec?.provider?.displayName} account credentials, click on &nbsp;
+                  These are the credentials of your {selectedDBProvider?.spec?.provider?.displayName} account. To find
+                  these credentials, click &nbsp;
                   <Button
                     variant="link"
                     component="a"
@@ -402,13 +395,14 @@ class ProviderAccountForm extends React.Component {
                     iconPosition="right"
                     isInline
                   >
-                    Account Credentials
+                    here.
                   </Button>
+                  &nbsp; Make sure you have whitelisted your IP with the provider if necessary.
                 </HelperTextItem>
                 &nbsp;
                 <HelperTextItem variant="indeterminate">
-                  If you do not have a Provider Account with {selectedDBProvider?.spec?.provider?.displayName} please
-                  create one by clicking &nbsp;
+                  If you do not have a {selectedDBProvider?.spec?.provider?.displayName} account, then you can create
+                  one by clicking &nbsp;
                   <Button
                     variant="link"
                     component="a"
@@ -498,6 +492,50 @@ class ProviderAccountForm extends React.Component {
             })}
           </React.Fragment>
         ) : null}
+        <FormGroup
+          label="Name"
+          fieldId="inventory-name"
+          isRequired
+          validated={isInventoryNameFieldValid}
+          helperTextInvalid={inventoryNameFieldInvalidText}
+          labelIcon={
+            <Popover
+              headerContent="Name"
+              bodyContent={
+                <div>
+                  <div>This name is used to identify your provider account as a friendly name.</div>
+                </div>
+              }
+            >
+              <button
+                type="button"
+                aria-label="more info"
+                onClick={(e) => e.preventDefault()}
+                aria-describedby="more-info"
+                className="pf-c-form__group-label-help"
+              >
+                <HelpIcon noVerticalAlign />
+              </button>
+            </Popover>
+          }
+        >
+          <TextInput
+            isRequired
+            placeholder={`Give a friendly name to your ${providerShortName} account`}
+            type="text"
+            id="inventory-name"
+            name="inventory-name"
+            value={inventoryName}
+            onChange={(value) => {
+              this.setState({ inventoryName: value })
+              this.validateInventoryNameField(value)
+            }}
+            onBlur={(event) => {
+              this.validateInventoryNameField(event.target.value)
+            }}
+            validated={isInventoryNameFieldValid}
+          />
+        </FormGroup>
         {showError ? (
           <Alert variant="danger" isInline title={error.reason} className="co-alert co-break-word">
             {error.details?.causes ? (
