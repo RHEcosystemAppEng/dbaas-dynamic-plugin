@@ -15,7 +15,7 @@ import {
   Split,
   SplitItem,
 } from '@patternfly/react-core'
-import { ExclamationTriangleIcon, ExternalLinkAltIcon, InfoCircleIcon } from '@patternfly/react-icons'
+import { ExclamationTriangleIcon, ExternalLinkAltIcon, InfoCircleIcon, PlusCircleIcon } from '@patternfly/react-icons'
 import * as _ from 'lodash'
 import * as React from 'react'
 import { useK8sWatchResource } from '@openshift-console/dynamic-plugin-sdk'
@@ -29,6 +29,9 @@ import {
   DBaaSInventoryCRName,
   DBaaSOperatorName,
   providerAcctResourceUrl,
+  mongoShortName,
+  crunchyShortName,
+  cockroachShortName,
 } from '../const.ts'
 import { DBAAS_PROVIDER_KIND } from '../catalog/const.ts'
 import {
@@ -78,7 +81,8 @@ const InstanceListPage = () => {
         <img className="catalog-item-header-pf-icon" src={dbProviderLogoUrl} alt="logo" aria-hidden />
       </span>
       <div>
-        Connect {dbProviderName} <Label className="ocs-preview-badge extra-left-margin">Service Preview</Label>
+        Add {dbProviderName} Instance to Topology{' '}
+        <Label className="ocs-preview-badge extra-left-margin">Service Preview</Label>
         <p className="pf-c-form__helper-text">The selected database instance will be added to the topology view.</p>
       </div>
     </div>
@@ -184,13 +188,13 @@ const InstanceListPage = () => {
 
     // Cannot parse provider name from CRD
     if (dbProviderType === crunchyProviderType) {
-      setDBProviderName(crunchyProviderName)
+      setDBProviderName(crunchyShortName)
     }
     if (dbProviderType === mongoProviderType) {
-      setDBProviderName(mongoProviderName)
+      setDBProviderName(mongoShortName)
     }
     if (dbProviderType === cockroachdbProviderType) {
-      setDBProviderName(cockroachdbProviderName)
+      setDBProviderName(cockroachShortName)
     }
     setSelectedDBProvider(dbProviderType)
   }
@@ -382,27 +386,28 @@ const InstanceListPage = () => {
                   </EmptyState>
                 ) : (
                   <>
-                    <FormGroup label="Database Instance" fieldId="instance-id-filter">
-                      <Split>
-                        <SplitItem>
+                    <Split>
+                      <SplitItem isFilled>
+                        <FormGroup label="Available Database Instances" fieldId="instance-id-filter">
                           <InstanceListFilter
                             textInputNameValue={textInputNameValue}
                             setTextInputNameValue={setTextInputNameValue}
                           />
-                        </SplitItem>
-                        <SplitItem>
-                          <Button
-                            isDisabled={inventories.length === 0}
-                            component="a"
-                            href={`/k8s/ns/${currentNS}/rhoda-create-database-instance/db/${selectedDBProvider}/pa/${selectedInventory?.name}`}
-                            variant="secondary"
-                            className="extra-left-margin"
-                          >
-                            Create Database Instance
-                          </Button>
-                        </SplitItem>
-                      </Split>
-                    </FormGroup>
+                        </FormGroup>
+                      </SplitItem>
+                      <SplitItem>
+                        <Button
+                          isDisabled={inventories.length === 0}
+                          component="a"
+                          href={`/k8s/ns/${currentNS}/rhoda-create-database-instance/db/${selectedDBProvider}/pa/${selectedInventory?.name}`}
+                          variant="link"
+                          className="extra-left-margin"
+                          icon={<PlusCircleIcon />}
+                        >
+                          Create New Database Instance
+                        </Button>
+                      </SplitItem>
+                    </Split>
                     <FormSection fullWidth flexLayout className="no-top-margin">
                       <InstanceTable
                         connectionAndServiceBindingList={connectionAndServiceBindingList}

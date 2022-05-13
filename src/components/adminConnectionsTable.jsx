@@ -9,7 +9,7 @@ import {
   OuterScrollContainer,
   InnerScrollContainer,
   sortable,
-  SortByDirection
+  SortByDirection,
 } from '@patternfly/react-table'
 import _ from 'lodash'
 import React from 'react'
@@ -165,10 +165,10 @@ class AdminConnectionsTable extends React.Component {
                     : ''}
                 </EmptyStateBody>
               </EmptyState>
-            )
-          }
-        ]
-      });
+            ),
+          },
+        ],
+      })
     }
     this.setState({ rows: rowList })
   }

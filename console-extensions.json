@@ -52,7 +52,7 @@
     "properties": {
       "type": "dbaas-new",
       "title": "Cloud-Hosted Database",
-      "catalogDescription": "See a list of connected cloud database provider",
+      "catalogDescription": "The available database providers",
       "typeDescription": "DBaaS"
     },
     "flags": {

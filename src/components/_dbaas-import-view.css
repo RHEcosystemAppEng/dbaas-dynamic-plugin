@@ -186,3 +186,21 @@
   .emptyState-title {
     padding-top: 20px;
   }
+
+  .bottom-sticky-section {
+    background-position: top;
+    position: fixed;
+    bottom: 0px;
+    border-top: 1px solid rgba(3,3,3,0.06);
+    width: 100%;
+    background: white;
+    padding: 20px 0px;
+    z-index: 100;
+  }
+
+  .bottom-sticky-alert {
+    background-position: top;
+    position: fixed;
+    bottom: 33px;
+    z-index: 101;
+  }
