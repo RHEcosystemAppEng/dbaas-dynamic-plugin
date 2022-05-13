@@ -13,6 +13,7 @@ import {
   Flex,
   FlexItem,
   Popover,
+  Modal,
 } from '@patternfly/react-core'
 import {
   cellWidth,
@@ -26,11 +27,11 @@ import {
   sortable,
   SortByDirection,
 } from '@patternfly/react-table'
-import { ExclamationTriangleIcon } from '@patternfly/react-icons'
+import { ExclamationTriangleIcon, ExternalLinkAltIcon } from '@patternfly/react-icons'
 import _ from 'lodash'
 import React from 'react'
 import { getCSRFToken, fetchDbaasCSV } from '../utils.ts'
-import { DBaaSInventoryCRName, DBaaSOperatorName } from '../const.ts'
+import { DBaaSInventoryCRName, DBaaSOperatorName, topologyInstructionPageUrl } from '../const.ts'
 import './_dbaas-import-view.css'
 
 const IssuePopover = ({ action }) => (
@@ -97,8 +98,10 @@ class InstanceTable extends React.Component {
       selectedInstance: {},
       showError: false,
       error: {},
+      isTopologyInstructionModalOpen: false,
     }
 
+    this.handleTopologyInstructionModalToggle = this.handleTopologyInstructionModalToggle.bind(this)
     this.onSort = this.onSort.bind(this)
     this.goToInventoryInfoPage = this.goToInventoryInfoPage.bind(this)
     this.fetchCSV = this.fetchCSV.bind(this)
@@ -133,6 +136,12 @@ class InstanceTable extends React.Component {
     }
   }
 
+  handleTopologyInstructionModalToggle() {
+    this.setState(({ isTopologyInstructionModalOpen }) => ({
+      isTopologyInstructionModalOpen: !isTopologyInstructionModalOpen,
+    }))
+  }
+
   handleCancel() {
     window.history.back()
   }
@@ -146,6 +155,8 @@ class InstanceTable extends React.Component {
     this.setState({
       selectedInstance: filteredInstances[rowId],
       rows,
+      showError: false,
+      error: {},
     })
   }
 
@@ -350,7 +361,7 @@ class InstanceTable extends React.Component {
         if (data.status === 'Failure') {
           this.setState({ showError: true, error: data })
         } else {
-          this.toTopologyView()
+          this.handleTopologyInstructionModalToggle()
         }
       })
       .catch((err) => {
@@ -365,7 +376,7 @@ class InstanceTable extends React.Component {
   }
 
   render() {
-    const { columns, rows, error, showError, sortBy } = this.state
+    const { columns, rows, error, showError, sortBy, isTopologyInstructionModalOpen } = this.state
     const { isSelectable, isLoading, filteredInstances } = this.props
 
     if (isLoading) {
@@ -381,6 +392,41 @@ class InstanceTable extends React.Component {
 
     return (
       <>
+        <Modal
+          width={'50%'}
+          title="Topology View Binding Instructions"
+          isOpen={isTopologyInstructionModalOpen}
+          onClose={this.handleTopologyInstructionModalToggle}
+          actions={[
+            <Button key="confirm" variant="primary" onClick={this.toTopologyView}>
+              Continue
+            </Button>,
+          ]}
+        >
+          <Alert
+            variant="info"
+            isInline
+            title="A database instance resource will be added to your project"
+            className="co-info co-break-word"
+          >
+            <p>
+              Create a binding connector by dragging the arrow from your application to your database instance in the
+              topology view.
+            </p>
+            <Button
+              variant="link"
+              component="a"
+              href={topologyInstructionPageUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              icon={<ExternalLinkAltIcon />}
+              iconPosition="right"
+              isInline
+            >
+              Learn more
+            </Button>
+          </Alert>
+        </Modal>
         <div className="sticky-table-container">
           <OuterScrollContainer>
             <InnerScrollContainer>
@@ -405,7 +451,12 @@ class InstanceTable extends React.Component {
         {isSelectable ? (
           <div>
             {showError ? (
-              <Alert variant="danger" isInline title={error.reason} className="co-alert co-break-word">
+              <Alert
+                variant="danger"
+                isInline
+                title={error.reason}
+                className="co-alert co-break-word bottom-sticky-alert"
+              >
                 {error.details?.causes ? (
                   <ul>
                     {_.map(error.details?.causes, (err, index) => (
@@ -417,14 +468,14 @@ class InstanceTable extends React.Component {
                 )}
               </Alert>
             ) : null}
-            <ActionGroup>
+            <ActionGroup className="bottom-sticky-section">
               <Button
                 id="instance-select-button"
                 variant="primary"
-                onClick={this.handleSubmit}
+                onClick={this.submitInstances}
                 isDisabled={_.isEmpty(this.state.selectedInstance)}
               >
-                Connect
+                Add to Topology
               </Button>
               <Button variant="secondary" onClick={this.handleCancel}>
                 Cancel

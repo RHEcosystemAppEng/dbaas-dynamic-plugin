@@ -23,12 +23,12 @@ const useDBaaSCatalog: ExtensionHook<CatalogItem[]> = ({ namespace }): [CatalogI
         uid: provider.metadata?.uid,
         description: provider.spec?.provider?.displayDescription,
         provider: provider.spec?.provider?.name,
-        tags: ['mongodb', 'crunchy'],
+        tags: ['database'],
         icon: {
           url: `data:${provider.spec?.provider?.icon?.mediatype};base64,${provider.spec?.provider?.icon?.base64data}`,
         },
         cta: {
-          label: 'Connect',
+          label: 'Add to Topology',
           href: `/k8s/ns/${namespace}/${provider.metadata?.name}`,
         },
         details: {
