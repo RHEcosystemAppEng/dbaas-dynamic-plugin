@@ -14,6 +14,8 @@ export const crunchyProviderName = 'Crunchy Bridge Managed PostgreSQL'
 export const mongoProviderName = 'MongoDB Atlas Cloud Database Service'
 export const cockroachdbProviderType = 'cockroachdb-cloud-registration'
 export const cockroachdbProviderName = 'CockroachDB Cloud'
+export const topologyInstructionPageUrl =
+  'https://access.redhat.com/documentation/en-us/red_hat_openshift_database_access/1/html/quick_start_guide/connecting-an-application-to-a-database-instance-using-the-topology-view_rhoda-qsg'
 export const mongoFetchCredentialsUrl =
   'https://access.redhat.com/documentation/en-us/red_hat_openshift_database_access/1/html-single/quick_start_guide/index#find-your-mongodb-atlas-account-credentials_dbaas'
 export const crunchyFetchCredentialsUrl =
