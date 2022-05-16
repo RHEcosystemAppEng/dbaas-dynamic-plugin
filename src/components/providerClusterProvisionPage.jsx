@@ -4,7 +4,6 @@ import './_dbaas-import-view.css'
 import {
   Title,
   TextInput,
-  Label,
   FormGroup,
   FormSelect,
   FormSelectOption,
@@ -18,6 +17,9 @@ import {
   Spinner,
   Divider,
   ValidatedOptions,
+  HelperTextItem,
+  HelperText,
+  Form,
 } from '@patternfly/react-core'
 import { InfoCircleIcon, CheckCircleIcon } from '@patternfly/react-icons'
 import FormHeader from './form/formHeader'
@@ -27,7 +29,6 @@ import { mongoProviderType, crunchyProviderType } from '../const'
 import {
   getCSRFToken,
   fetchInventoriesAndMapByNSAndRules,
-  fetchObjectsByNamespace,
   disableNSSelection,
   enableNSSelection,
   filterInventoriesByConnNS,
@@ -105,9 +106,7 @@ const ProviderClusterProvisionPage = () => {
   const [clusterProvisionSuccess, setClusterProvisionSuccess] = React.useState(false)
   const [provisionRequestFired, setProvisionRequestFired] = React.useState(false)
   const [isDBProviderFieldValid, setIsDBProviderFieldValid] = React.useState('')
-  const [isDBProviderFieldDisabled, setIsDBProviderFieldDisabled] = React.useState(false)
   const [isInventoryFieldValid, setIsInventoryFieldValid] = React.useState('')
-  const [isInventoryFieldDisabled, setIsInventoryFieldDisabled] = React.useState(false)
   const [isInstanceNameFieldValid, setIsInstanceNameFieldValid] = React.useState('')
   const [isProjectNameFieldValid, setIsProjectNameFieldValid] = React.useState('')
   const [isFormValid, setIsFormValid] = React.useState(false)
@@ -140,7 +139,6 @@ const ProviderClusterProvisionPage = () => {
       setSelectedDBProvider(provider)
       filterInventoriesByProvider(provider)
       setIsDBProviderFieldValid(ValidatedOptions.default)
-      setIsDBProviderFieldDisabled(true)
     }
 
     if (!_.isEmpty(devSelectedProviderAccountName) && !_.isEmpty(inventories)) {
@@ -150,7 +148,6 @@ const ProviderClusterProvisionPage = () => {
       checkInventoryStatus(inventory)
       setSelectedInventory(inventory)
       setIsInventoryFieldValid(ValidatedOptions.default)
-      setIsInventoryFieldDisabled(true)
     }
   }
 
@@ -471,9 +468,8 @@ const ProviderClusterProvisionPage = () => {
     <FlexForm className="instance-table-container" onSubmit={provisionDBCluster}>
       <FormBody flexLayout>
         <FormHeader
-          title="Create Database Instance"
-          helpText="Creating an instance allows it to be connected to an application"
-          marginBottom="lg"
+          title="Create New Database Instance"
+          helpText="A trial version of a database instance for learning, and exploring."
         />
         <Divider />
         {!showResults && provisionRequestFired ? <LoadingView /> : null}
@@ -490,11 +486,13 @@ const ProviderClusterProvisionPage = () => {
               variant="info"
               isInline
               title="Information to create a Production database instance"
-              className="co-info co-break-word"
+              className="co-info co-break-word half-width-selection"
             >
               <p>
-                For more information about creating a production database instance, please select a Database Provider
-                below.
+                To create a database for production use, please directly log-in to the database provider's website.
+                <br />
+                <br />
+                Fill in the form below to create a database instance for trial use.
               </p>
               {!_.isEmpty(selectedDBProvider) ? (
                 <a href={selectedDBProvider?.externalProvisionInfo?.url} target="_blank" rel="noopener noreferrer">
@@ -511,7 +509,6 @@ const ProviderClusterProvisionPage = () => {
               validated={isDBProviderFieldValid}
             >
               <FormSelect
-                isDisabled={isDBProviderFieldDisabled}
                 isRequired
                 value={selectedDBProvider.value}
                 onChange={handleDBProviderSelection}
@@ -534,7 +531,6 @@ const ProviderClusterProvisionPage = () => {
                   validated={isInventoryFieldValid}
                 >
                   <FormSelect
-                    isDisabled={isInventoryFieldDisabled}
                     isRequired
                     value={selectedInventory.name}
                     onChange={handleInventorySelection}
@@ -593,6 +589,11 @@ const ProviderClusterProvisionPage = () => {
                         onChange={handleInstanceNameChange}
                         validated={isInstanceNameFieldValid}
                       />
+                      <HelperText>
+                        <HelperTextItem variant="indeterminate">
+                          Name of DB instance that will be created at Database Provider
+                        </HelperTextItem>
+                      </HelperText>
                     </FormGroup>
                     {selectedDBProvider.value === mongoProviderType ? (
                       <FormGroup
@@ -612,6 +613,11 @@ const ProviderClusterProvisionPage = () => {
                           onChange={handleProjectNameChange}
                           validated={isProjectNameFieldValid}
                         />
+                        <HelperText>
+                          <HelperTextItem variant="indeterminate">
+                            Name of project under which database instance will be created at MongoDB Atlas
+                          </HelperTextItem>
+                        </HelperText>
                       </FormGroup>
                     ) : null}
                     <ActionGroup>
