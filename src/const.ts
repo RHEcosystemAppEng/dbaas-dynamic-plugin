@@ -17,15 +17,11 @@ export const cockroachdbProviderName = 'CockroachDB Cloud'
 export const topologyInstructionPageUrl =
   'https://access.redhat.com/documentation/en-us/red_hat_openshift_database_access/1/html/quick_start_guide/connecting-an-application-to-a-database-instance-using-the-topology-view_rhoda-qsg'
 export const mongoFetchCredentialsUrl =
-  'https://access.redhat.com/documentation/en-us/red_hat_openshift_database_access/1/html-single/quick_start_guide/index#find-your-mongodb-atlas-account-credentials_dbaas'
+  'https://access.redhat.com/documentation/en-us/red_hat_openshift_database_access/1/html/quick_start_guide/find-your-mongodb-atlas-account-credentials_rhoda-qsg'
 export const crunchyFetchCredentialsUrl =
-  'https://access.redhat.com/documentation/en-us/red_hat_openshift_database_access/1/html-single/quick_start_guide/index#find-your-crunchy-data-bridge-account-credentials_dbaas'
+  'https://access.redhat.com/documentation/en-us/red_hat_openshift_database_access/1/html/quick_start_guide/find-your-crunchy-data-bridge-account-credentials_rhoda-qsg'
 export const cockroachFetchCredentialsUrl =
-  'https://access.redhat.com/documentation/en-us/red_hat_openshift_database_access/1/html-single/quick_start_guide/index#find-your-cockroachdb-account-credentials_dbaas'
-export const providerAcctResourceUrl =
-  'https://access.redhat.com/documentation/en-us/red_hat_openshift_database_access/1/html-single/quick_start_guide/index#creating-a-provider-account-resource_admin'
-export const prerequisitesUrl =
-  'https://access.redhat.com/documentation/en-us/red_hat_openshift_database_access/1/html-single/quick_start_guide/index#prerequisites'
+  'https://access.redhat.com/documentation/en-us/red_hat_openshift_database_access/1/html/quick_start_guide/find-your-cockroachdb-account-credentials_rhoda-qsg '
 export const mongoUrl = 'https://www.mongodb.com/atlas/database'
 export const crunchyUrl = 'https://www.crunchydata.com/products/crunchy-bridge/'
 export const cockroachUrl = 'https://www.cockroachlabs.com/get-started-cockroachdb/'
