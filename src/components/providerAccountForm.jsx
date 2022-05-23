@@ -149,19 +149,21 @@ class ProviderAccountForm extends React.Component {
           createProviderAccountDocUrl: mongoUrl,
           providerShortName: mongoShortName,
         })
-      }
-      if (provider?.metadata?.name === crunchyProviderType) {
+      } else if (provider?.metadata?.name === crunchyProviderType) {
         this.setState({
           credentialDocUrl: crunchyFetchCredentialsUrl,
           createProviderAccountDocUrl: crunchyUrl,
           providerShortName: crunchyShortName,
         })
-      }
-      if (provider?.metadata?.name === cockroachdbProviderType) {
+      } else if (provider?.metadata?.name === cockroachdbProviderType) {
         this.setState({
           credentialDocUrl: cockroachFetchCredentialsUrl,
           createProviderAccountDocUrl: cockroachUrl,
           providerShortName: cockroachShortName,
+        })
+      } else {
+        this.setState({
+          providerShortName: 'provider',
         })
       }
       this.setState({ selectedDBProvider: provider })
