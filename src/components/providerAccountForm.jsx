@@ -23,7 +23,6 @@ import {
   mongoProviderType,
   crunchyProviderType,
   cockroachdbProviderType,
-  prerequisitesUrl,
   mongoUrl,
   crunchyUrl,
   cockroachUrl,

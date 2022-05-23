@@ -28,7 +28,6 @@ import {
   cockroachdbProviderName,
   DBaaSInventoryCRName,
   DBaaSOperatorName,
-  providerAcctResourceUrl,
   mongoShortName,
   crunchyShortName,
   cockroachShortName,
@@ -322,23 +321,6 @@ const InstanceListPage = () => {
                     &nbsp; from the supported cloud-hosted database providers. If you receive an error message when
                     trying to import a provider account, then you do not have the required privileges to access this
                     page.
-                    <br />
-                    <br />
-                    See the &nbsp;
-                    <Button
-                      variant="link"
-                      component="a"
-                      href={providerAcctResourceUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      icon={<ExternalLinkAltIcon />}
-                      iconPosition="right"
-                      isInline
-                    >
-                      Importing a provider account resource
-                    </Button>
-                    &nbsp; section of the Red Hat OpenShift Database Access Quick Start Guide on the Customer Portal for
-                    more details.
                   </EmptyStateBody>
                   <EmptyStateSecondaryActions>
                     <Button component="a" href={`/add/ns/${currentNS}`} variant="link">
