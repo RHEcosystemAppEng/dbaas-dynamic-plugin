@@ -55,7 +55,7 @@ const FailedView = ({ handleTryAgain, handleCancel, statusMsg }) => {
         <Title headingLevel="h2" size="md">
           Database instance creation failed
         </Title>
-        <EmptyStateBody>Database instance creation failed. Please try again.</EmptyStateBody>
+        <EmptyStateBody>The instance was not created. Try again.</EmptyStateBody>
         <Alert variant="danger" isInline title="An error occured" className="co-alert co-break-word extra-top-margin">
           <div>{statusMsg}</div>
         </Alert>
