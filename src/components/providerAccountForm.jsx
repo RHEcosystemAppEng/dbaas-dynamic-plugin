@@ -14,8 +14,8 @@ import {
   HelperText,
   HelperTextItem,
 } from '@patternfly/react-core'
-import { getCSRFToken, fetchInvAndConnNamespacesFromTenants } from '../utils'
 import { HelpIcon, ExternalLinkAltIcon } from '@patternfly/react-icons'
+import { getCSRFToken, fetchInvAndConnNamespacesFromTenants } from '../utils'
 import {
   mongoFetchCredentialsUrl,
   crunchyFetchCredentialsUrl,
@@ -52,7 +52,8 @@ class ProviderAccountForm extends React.Component {
       dbProviderOptions: [{ value: '', label: 'Select provider' }],
       postResponse: '',
       showError: false,
-      showResults: true,
+      showResults: false,
+      showAlert: false,
       error: {},
       isFormValid: false,
       isInventoryNameFieldValid: '',
@@ -63,17 +64,17 @@ class ProviderAccountForm extends React.Component {
 
   async componentDidUpdate(prevProps, prevState) {
     if (!_.isEmpty(this.props.dbProviderInfo) && prevProps.dbProviderInfo !== this.props.dbProviderInfo) {
-      let dbProviderList = []
-      let namespaces = await fetchInvAndConnNamespacesFromTenants()
+      const dbProviderList = []
+      const namespaces = await fetchInvAndConnNamespacesFromTenants()
       this.setState({ inventoryNamespaces: namespaces.uniqInventoryNamespaces })
       if (this.state.inventoryNamespaces.includes(this.state.currentNS)) {
         this.props.dbProviderInfo.items.forEach((dbProvider) => {
           dbProviderList.push({ value: dbProvider?.metadata?.name, label: dbProvider?.spec?.provider?.displayName })
         })
       } else {
-        this.state.showResults = false
+        this.setState({ showResults: false, showAlert: true })
       }
-      this.setState({ dbProviderOptions: this.state.dbProviderOptions.concat(dbProviderList) })
+      this.setState({ dbProviderOptions: this.state.dbProviderOptions.concat(dbProviderList), showResults: true })
     }
     if (
       prevState.isInventoryNameFieldValid !== this.state.isInventoryNameFieldValid &&
@@ -88,24 +89,23 @@ class ProviderAccountForm extends React.Component {
   }
 
   validateForm = () => {
-    let isValid = _.every(this.state.selectedDBProvider?.spec?.credentialFields, (field) => {
-      return field.isValid === ValidatedOptions.default
-    })
+    let isValid = _.every(
+      this.state.selectedDBProvider?.spec?.credentialFields,
+      (field) => field.isValid === ValidatedOptions.default
+    )
     isValid = isValid && this.state.isInventoryNameFieldValid === ValidatedOptions.default
     this.setState({ isFormValid: isValid })
   }
 
   validateInventoryNameField = (value) => {
-    let pattern = '^[a-z0-9]+(?:[.-][a-z0-9]+)*$'
-    let regEx = new RegExp(pattern)
+    const pattern = '^[a-z0-9]+(?:[.-][a-z0-9]+)*$'
+    const regEx = new RegExp(pattern)
     let validField = ValidatedOptions.error
     let text = ''
     if (_.isEmpty(value)) {
       text = 'This is a required field'
     } else if (!regEx.test(value)) {
-      text =
-        "Must consist of lower case alphanumeric characters, '-' or '.', and must start and end with an alphanumeric character; regex used for validation is " +
-        pattern
+      text = `Must consist of lower case alphanumeric characters, '-' or '.', and must start and end with an alphanumeric character; regex used for validation is ${pattern}`
     } else if (value.length > 63) {
       text = 'Should be no more than 63 characters'
     } else {
@@ -116,10 +116,11 @@ class ProviderAccountForm extends React.Component {
   }
 
   validateField = (value, field) => {
-    let newProviderObj = _.extend({}, this.state.selectedDBProvider)
-    let currentField = _.find(newProviderObj?.spec?.credentialFields, (credentialField) => {
-      return credentialField.key === field.key
-    })
+    const newProviderObj = _.extend({}, this.state.selectedDBProvider)
+    const currentField = _.find(
+      newProviderObj?.spec?.credentialFields,
+      (credentialField) => credentialField.key === field.key
+    )
 
     if (currentField) {
       if (_.isEmpty(value)) {
@@ -134,9 +135,7 @@ class ProviderAccountForm extends React.Component {
 
   handleDBProviderSelection = (value) => {
     if (!_.isEmpty(this.props.dbProviderInfo)) {
-      let provider = _.find(this.props.dbProviderInfo.items, (dbProvider) => {
-        return dbProvider.metadata?.name === value
-      })
+      const provider = _.find(this.props.dbProviderInfo.items, (dbProvider) => dbProvider.metadata?.name === value)
       if (provider?.spec?.credentialFields) {
         provider.spec.credentialFields.forEach((field) => {
           field.isValid = ''
@@ -177,12 +176,12 @@ class ProviderAccountForm extends React.Component {
   handleSubmit = async (event) => {
     event.preventDefault()
 
-    let secretName = 'dbaas-vendor-credentials-' + Date.now()
+    const secretName = `dbaas-vendor-credentials-${Date.now()}`
     const { selectedDBProvider, inventoryName, credentials, isFormValid } = this.state
 
     if (!isFormValid) return
 
-    let labelsMap = new Map([['related-to', 'dbaas-operator']])
+    const labelsMap = new Map([['related-to', 'dbaas-operator']])
     let providerName = ''
     let labelKey = 'db-operator/type'
 
@@ -192,7 +191,7 @@ class ProviderAccountForm extends React.Component {
     }
     labelsMap.set(labelKey, 'credentials')
 
-    let newSecret = {
+    const newSecret = {
       apiVersion: 'v1',
       kind: 'Secret',
       metadata: {
@@ -204,7 +203,7 @@ class ProviderAccountForm extends React.Component {
       type: 'Opaque',
     }
 
-    let postSecretRequestOpts = {
+    const postSecretRequestOpts = {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -214,7 +213,7 @@ class ProviderAccountForm extends React.Component {
       body: JSON.stringify(newSecret),
     }
 
-    await fetch('api/kubernetes/api/v1/namespaces/' + this.state.currentNS + '/secrets', postSecretRequestOpts)
+    await fetch(`api/kubernetes/api/v1/namespaces/${this.state.currentNS}/secrets`, postSecretRequestOpts)
       .then((response) => response.json())
       .then((data) => {
         this.setState({ postResponse: data })
@@ -227,7 +226,7 @@ class ProviderAccountForm extends React.Component {
         }
       })
 
-    let requestOpts = {
+    const requestOpts = {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -257,7 +256,7 @@ class ProviderAccountForm extends React.Component {
       }),
     }
     fetch(
-      '/api/kubernetes/apis/dbaas.redhat.com/v1alpha1/namespaces/' + this.state.currentNS + '/dbaasinventories',
+      `/api/kubernetes/apis/dbaas.redhat.com/v1alpha1/namespaces/${this.state.currentNS}/dbaasinventories`,
       requestOpts
     )
       .then((response) => response.json())
@@ -266,7 +265,7 @@ class ProviderAccountForm extends React.Component {
           this.setState({ showError: true, error: data })
         } else {
           this.props.setCurrentCreatedInventoryInfo(data)
-          let patchPayload = [
+          const patchPayload = [
             {
               op: 'add',
               path: '/metadata/ownerReferences',
@@ -283,7 +282,7 @@ class ProviderAccountForm extends React.Component {
             },
           ]
 
-          let patchSecretRequestOpts = {
+          const patchSecretRequestOpts = {
             method: 'PATCH',
             headers: {
               'Content-Type': 'application/json-patch+json',
@@ -294,7 +293,7 @@ class ProviderAccountForm extends React.Component {
           }
 
           fetch(
-            'api/kubernetes/api/v1/namespaces/' + this.state.currentNS + '/secrets/' + secretName,
+            `api/kubernetes/api/v1/namespaces/${this.state.currentNS}/secrets/${secretName}`,
             patchSecretRequestOpts
           )
             .then((response) => response.json())
@@ -342,23 +341,7 @@ class ProviderAccountForm extends React.Component {
             className="co-alert co-break-word"
           />
         </>
-        {this.state.showResults ? (
-          <div>
-            {!_.isEmpty(this.state.inventoryNamespaces) ? (
-              <FormGroup label="Database provider" fieldId="db-provider">
-                <FormSelect
-                  value={selectedDBProvider?.metadata?.name}
-                  onChange={this.handleDBProviderSelection}
-                  aria-label="Database Provider"
-                >
-                  {dbProviderOptions.map((option, index) => (
-                    <FormSelectOption key={index} value={option.value} label={option.label} />
-                  ))}
-                </FormSelect>
-              </FormGroup>
-            ) : null}
-          </div>
-        ) : (
+        {this.state.showAlert === true ? (
           <Alert
             variant="warning"
             isInline
@@ -378,9 +361,27 @@ class ProviderAccountForm extends React.Component {
               <div>no tenant namespaces detected</div>
             )}
           </Alert>
-        )}
+        ) : null}
+
+        {this.state.showResults === true && this.state.showAlert === false ? (
+          <div>
+            {!_.isEmpty(this.state.inventoryNamespaces) ? (
+              <FormGroup label="Database provider" fieldId="db-provider">
+                <FormSelect
+                  value={selectedDBProvider?.metadata?.name}
+                  onChange={this.handleDBProviderSelection}
+                  aria-label="Database Provider"
+                >
+                  {dbProviderOptions.map((option, index) => (
+                    <FormSelectOption key={index} value={option.value} label={option.label} />
+                  ))}
+                </FormSelect>
+              </FormGroup>
+            ) : null}
+          </div>
+        ) : null}
         {!_.isEmpty(selectedDBProvider) ? (
-          <React.Fragment>
+          <>
             <FormGroup label="Account Credentials" fieldId="account credentials">
               <HelperText>
                 <HelperTextItem variant="indeterminate">
@@ -419,124 +420,124 @@ class ProviderAccountForm extends React.Component {
                 </HelperTextItem>
               </HelperText>
             </FormGroup>
-            {selectedDBProvider?.spec?.credentialFields.map((field) => {
-              return (
-                <FormGroup
-                  label={field.displayName}
-                  fieldId={`${selectedDBProvider?.metadata?.name}-${field.key}`}
-                  isRequired={field.required}
-                  helperTextInvalid="This is a required field"
-                  validated={field.isValid}
-                  labelIcon={
-                    <Popover
-                      headerContent={<div>{field.displayName}</div>}
-                      bodyContent={
+            {selectedDBProvider?.spec?.credentialFields.map((field) => (
+              <FormGroup
+                label={field.displayName}
+                fieldId={`${selectedDBProvider?.metadata?.name}-${field.key}`}
+                isRequired={field.required}
+                helperTextInvalid="This is a required field"
+                validated={field.isValid}
+                labelIcon={
+                  <Popover
+                    headerContent={<div>{field.displayName}</div>}
+                    bodyContent={
+                      <div>
                         <div>
-                          <div>
-                            The {field.displayName} is the credential associated with your database provider account
-                            when you created the account. To retrieve it or to create a new provider account, click on
-                            the link below.
-                          </div>
+                          The {field.displayName} is the credential associated with your database provider account when
+                          you created the account. To retrieve it or to create a new provider account, click on the link
+                          below.
                         </div>
-                      }
-                      footerContent={
-                        <Button
-                          variant="link"
-                          component="a"
-                          href={credentialDocUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          icon={<ExternalLinkAltIcon />}
-                          iconPosition="right"
-                          isInline
-                        >
-                          Learn more
-                        </Button>
-                      }
-                    >
-                      <button
-                        type="button"
-                        aria-label="more info"
-                        onClick={(e) => e.preventDefault()}
-                        aria-describedby="more-info"
-                        className="pf-c-form__group-label-help"
+                      </div>
+                    }
+                    footerContent={
+                      <Button
+                        variant="link"
+                        component="a"
+                        href={credentialDocUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        icon={<ExternalLinkAltIcon />}
+                        iconPosition="right"
+                        isInline
                       >
-                        <HelpIcon noVerticalAlign />
-                      </button>
-                    </Popover>
-                  }
-                >
-                  <TextInput
-                    isRequired={field.required}
-                    type={field.type === 'maskedstring' ? 'password' : 'text'}
-                    id={`${selectedDBProvider?.metadata?.name}-${field.key}`}
-                    name={`${selectedDBProvider?.metadata?.name}-${field.key}`}
-                    value={field.value}
-                    validated={field.isValid}
-                    onChange={(value) => {
-                      field.value = value
-                      this.setState((prevState) => {
-                        let newCredentials = Object.assign({}, prevState.credentials)
-                        newCredentials[field.key] = value.toString('base64')
-                        return { credentials: newCredentials }
-                      })
-                      this.validateField(value, field)
-                      this.validateForm()
-                    }}
-                    onBlur={(event) => {
-                      this.validateField(event.target.value, field)
-                      this.validateForm()
-                    }}
-                  />
-                </FormGroup>
-              )
-            })}
-          </React.Fragment>
-        ) : null}
-        <FormGroup
-          label="Name"
-          fieldId="inventory-name"
-          isRequired
-          validated={isInventoryNameFieldValid}
-          helperTextInvalid={inventoryNameFieldInvalidText}
-          labelIcon={
-            <Popover
-              headerContent="Name"
-              bodyContent={
-                <div>
-                  <div>This name is used to identify your provider account as a friendly name.</div>
-                </div>
-              }
-            >
-              <button
-                type="button"
-                aria-label="more info"
-                onClick={(e) => e.preventDefault()}
-                aria-describedby="more-info"
-                className="pf-c-form__group-label-help"
+                        Learn more
+                      </Button>
+                    }
+                  >
+                    <button
+                      type="button"
+                      aria-label="more info"
+                      onClick={(e) => e.preventDefault()}
+                      aria-describedby="more-info"
+                      className="pf-c-form__group-label-help"
+                    >
+                      <HelpIcon noVerticalAlign />
+                    </button>
+                  </Popover>
+                }
               >
-                <HelpIcon noVerticalAlign />
-              </button>
-            </Popover>
-          }
-        >
-          <TextInput
+                <TextInput
+                  isRequired={field.required}
+                  type={field.type === 'maskedstring' ? 'password' : 'text'}
+                  id={`${selectedDBProvider?.metadata?.name}-${field.key}`}
+                  name={`${selectedDBProvider?.metadata?.name}-${field.key}`}
+                  value={field.value}
+                  validated={field.isValid}
+                  onChange={(value) => {
+                    field.value = value
+                    this.setState((prevState) => {
+                      const newCredentials = { ...prevState.credentials }
+                      newCredentials[field.key] = value.toString('base64')
+                      return { credentials: newCredentials }
+                    })
+                    this.validateField(value, field)
+                    this.validateForm()
+                  }}
+                  onBlur={(event) => {
+                    this.validateField(event.target.value, field)
+                    this.validateForm()
+                  }}
+                />
+              </FormGroup>
+            ))}
+          </>
+        ) : null}
+        {this.state.showResults === true && this.state.showAlert === false ? (
+          <FormGroup
+            label="Name"
+            fieldId="inventory-name"
             isRequired
-            placeholder={`Give a friendly name to your ${providerShortName} account`}
-            type="text"
-            id="inventory-name"
-            name="inventory-name"
-            value={inventoryName}
-            onChange={(value) => {
-              this.setState({ inventoryName: value })
-              this.validateInventoryNameField(value)
-            }}
-            onBlur={(event) => {
-              this.validateInventoryNameField(event.target.value)
-            }}
             validated={isInventoryNameFieldValid}
-          />
-        </FormGroup>
+            helperTextInvalid={inventoryNameFieldInvalidText}
+            labelIcon={
+              <Popover
+                headerContent="Name"
+                bodyContent={
+                  <div>
+                    <div>This name is used to identify your provider account as a friendly name.</div>
+                  </div>
+                }
+              >
+                <button
+                  type="button"
+                  aria-label="more info"
+                  onClick={(e) => e.preventDefault()}
+                  aria-describedby="more-info"
+                  className="pf-c-form__group-label-help"
+                >
+                  <HelpIcon noVerticalAlign />
+                </button>
+              </Popover>
+            }
+          >
+            <TextInput
+              isRequired
+              placeholder={`Give a friendly name to your ${providerShortName} account`}
+              type="text"
+              id="inventory-name"
+              name="inventory-name"
+              value={inventoryName}
+              onChange={(value) => {
+                this.setState({ inventoryName: value })
+                this.validateInventoryNameField(value)
+              }}
+              onBlur={(event) => {
+                this.validateInventoryNameField(event.target.value)
+              }}
+              validated={isInventoryNameFieldValid}
+            />
+          </FormGroup>
+        ) : null}
         {showError ? (
           <Alert variant="danger" isInline title={error.reason} className="co-alert co-break-word">
             {error.details?.causes ? (
