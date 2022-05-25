@@ -41,7 +41,6 @@ import {
   isDbaasConnectionUsed,
 } from '../utils'
 import AdminConnectionsTable from './adminConnectionsTable'
-import FlexForm from './form/flexForm'
 import FormBody from './form/formBody'
 import FormHeader from './form/formHeader'
 import InstanceListFilter from './instanceListFilter'
@@ -301,7 +300,7 @@ const AdminDashboard = () => {
   }, [dbaasConnectionList, serviceBindingList, inventories])
 
   return (
-    <FlexForm className="instance-table-container">
+    <div className="instance-table-container">
       <FormBody flexLayout>
         {!showResults ? (
           <EmptyState>
@@ -356,7 +355,7 @@ const AdminDashboard = () => {
           </>
         )}
       </FormBody>
-    </FlexForm>
+    </div>
   )
 }
 
