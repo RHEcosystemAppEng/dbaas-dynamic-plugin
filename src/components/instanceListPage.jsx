@@ -41,7 +41,6 @@ import {
   filterInventoriesByConnNS,
   fetchDbaasCSV,
 } from '../utils.ts'
-import FlexForm from './form/flexForm.tsx'
 import FormBody from './form/formBody.tsx'
 import FormHeader from './form/formHeader.tsx'
 import InstanceListFilter from './instanceListFilter.tsx'
@@ -285,7 +284,7 @@ const InstanceListPage = () => {
   }, [dbaasConnectionList, serviceBindingList, selectedInventory])
 
   return (
-    <FlexForm className="instance-table-container">
+    <div className="instance-table-container">
       <FormBody flexLayout>
         <FormHeader title={dbProviderTitle} helpText="" marginBottom="lg" />
         {!showResults ? (
@@ -406,7 +405,7 @@ const InstanceListPage = () => {
           </>
         )}
       </FormBody>
-    </FlexForm>
+    </div>
   )
 }
 
