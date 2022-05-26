@@ -34,13 +34,13 @@ import {
   filterInventoriesByConnNS,
 } from '../utils'
 
-const LoadingView = () => {
+const LoadingView = ({ loadingMsg }) => {
   return (
     <React.Fragment>
       <EmptyState>
         <EmptyStateIcon variant="container" component={Spinner} />
         <Title size="lg" headingLevel="h3">
-          Creating Database Instance...
+          {loadingMsg}
         </Title>
       </EmptyState>
     </React.Fragment>
@@ -92,6 +92,7 @@ const SuccessView = ({ goToInstancesPage }) => {
 }
 
 const ProviderClusterProvisionPage = () => {
+  const [loadingMsg, setLoadingMsg] = React.useState('Fetching Database Providers and Provider Accounts...')
   const [providerList, setProviderList] = React.useState([{ value: '', label: 'Select database provider' }])
   const [selectedDBProvider, setSelectedDBProvider] = React.useState({})
   const [inventories, setInventories] = React.useState([])
@@ -258,6 +259,10 @@ const ProviderClusterProvisionPage = () => {
         },
       }),
     }
+
+    setShowResults(false)
+    setLoadingMsg('Creating Database Instance...')
+
     fetch('/api/kubernetes/apis/dbaas.redhat.com/v1alpha1/namespaces/' + currentNS + '/dbaasinstances', requestOpts)
       .then((response) => response.json())
       .then((data) => {
@@ -328,6 +333,7 @@ const ProviderClusterProvisionPage = () => {
         inventories.push(obj)
       })
       setInventories(inventories)
+      setShowResults(true)
     }
   }
 
@@ -472,7 +478,7 @@ const ProviderClusterProvisionPage = () => {
           helpText="A trial version of a database instance for learning, and exploring."
         />
         <Divider />
-        {!showResults && provisionRequestFired ? <LoadingView /> : null}
+        {!showResults ? <LoadingView loadingMsg={loadingMsg} /> : null}
         {provisionRequestFired && showResults && clusterProvisionFailed ? (
           <FailedView handleTryAgain={handleTryAgain} handleCancel={handleCancel} statusMsg={statusMsg} />
         ) : null}
@@ -480,7 +486,7 @@ const ProviderClusterProvisionPage = () => {
           <SuccessView goToInstancesPage={goToInstancesPage} />
         ) : null}
 
-        {!provisionRequestFired ? (
+        {showResults && !provisionRequestFired ? (
           <React.Fragment>
             <Alert
               variant="info"
