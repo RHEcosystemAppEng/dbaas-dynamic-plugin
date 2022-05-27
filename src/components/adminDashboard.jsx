@@ -225,7 +225,11 @@ const AdminDashboard = () => {
           inventory.status?.instances?.map((instance) => (instance.provider = inventory.spec?.providerRef?.name))
           obj.instances = inventory.status?.instances
           if (specSyncedCondition.status === 'False' || inventoryReadyCondition.status === 'False') {
-            obj.alert = 'alert'
+            if (specSyncedCondition.reason === 'AuthenticationError') {
+              obj.alert = 'Can not establish a connection to this database instance.'
+            } else {
+              obj.alert = 'alert'
+            }
           }
         }
 
