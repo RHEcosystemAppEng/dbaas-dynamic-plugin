@@ -86,6 +86,7 @@ class AdminConnectionsTable extends React.Component {
 
   getRows(data) {
     let rowList = []
+    const genericAlert = 'Click on the link below for more information about this issue.'
     if (data && data.length > 0) {
       data.forEach((inventoryInstance) => {
         rowList.push({
@@ -98,7 +99,15 @@ class AdminConnectionsTable extends React.Component {
                 <Popover
                   aria-label="Basic popover"
                   headerContent={<div>Issue</div>}
-                  bodyContent={<div>Click on the link below for more information about this issue.</div>}
+                  bodyContent={
+                    inventoryInstance.alert !== 'alert' ? (
+                      <div>
+                        {inventoryInstance.alert} {genericAlert}
+                      </div>
+                    ) : (
+                      <div>{genericAlert}</div>
+                    )
+                  }
                   footerContent={
                     <a
                       href={`/k8s/ns/${this.state.currentNS}/clusterserviceversions/${this.state.dBaaSOperatorNameWithVersion}/${DBaaSInventoryCRName}/${inventoryInstance.providerAcct}`}
