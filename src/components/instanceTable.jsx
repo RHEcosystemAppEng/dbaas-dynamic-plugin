@@ -427,7 +427,7 @@ class InstanceTable extends React.Component {
             </Button>
           </Alert>
         </Modal>
-        <div className="sticky-table-container">
+        <div className="sticky-table-container extra-bottom-margin">
           <OuterScrollContainer>
             <InnerScrollContainer>
               <Table
