@@ -399,7 +399,7 @@ class ProviderAccountForm extends React.Component {
                   >
                     here.
                   </Button>
-                  &nbsp; Make sure you have whitelisted your IP with the provider if necessary.
+                  &nbsp; Make sure you have your application pod IP address on your provider's access list if necessary.
                 </HelperTextItem>
                 &nbsp;
                 <HelperTextItem variant="indeterminate">
