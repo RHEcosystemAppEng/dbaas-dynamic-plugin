@@ -135,7 +135,7 @@ class InstancesForm extends React.Component {
         <EmptyState>
           <EmptyStateIcon variant="container" component={Spinner} />
           <Title size="lg" headingLevel="h3">
-            Creating Provider Account...
+            Importing Provider Account...
           </Title>
         </EmptyState>
       )
