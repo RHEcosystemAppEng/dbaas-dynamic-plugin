@@ -84,7 +84,7 @@ const SuccessView = ({ goToInstancesPage }) => {
           The database instance is being created, please click the button below to view it.
         </EmptyStateBody>
         <Button variant="primary" onClick={goToInstancesPage}>
-          View Instances
+          View Database Instances
         </Button>
       </EmptyState>
     </React.Fragment>
