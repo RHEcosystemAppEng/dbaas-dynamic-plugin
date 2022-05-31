@@ -98,7 +98,7 @@ class AdminConnectionsTable extends React.Component {
               <div>
                 <Popover
                   aria-label="Basic popover"
-                  headerContent={<div>Issue</div>}
+                  headerContent={inventoryInstance.alert !== 'alert' ? <div>Connection issue</div> : <div>Issue</div>}
                   bodyContent={
                     inventoryInstance.alert !== 'alert' ? (
                       <div>
