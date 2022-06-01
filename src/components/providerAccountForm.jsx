@@ -250,7 +250,6 @@ class ProviderAccountForm extends React.Component {
           },
           credentialsRef: {
             name: secretName,
-            namespace: this.state.currentNS,
           },
         },
       }),
