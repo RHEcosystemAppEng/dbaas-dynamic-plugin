@@ -20,15 +20,19 @@ import {
   mongoFetchCredentialsUrl,
   crunchyFetchCredentialsUrl,
   cockroachFetchCredentialsUrl,
+  rdsFetchCredentialsUrl,
   mongoProviderType,
   crunchyProviderType,
   cockroachdbProviderType,
+  rdsProviderType,
   mongoUrl,
   crunchyUrl,
   cockroachUrl,
+  rdsUrl,
   mongoShortName,
   crunchyShortName,
   cockroachShortName,
+  rdsShortName
 } from '../const'
 
 class ProviderAccountForm extends React.Component {
@@ -159,6 +163,12 @@ class ProviderAccountForm extends React.Component {
           credentialDocUrl: cockroachFetchCredentialsUrl,
           createProviderAccountDocUrl: cockroachUrl,
           providerShortName: cockroachShortName,
+        })
+      } else if (provider?.metadata?.name === rdsProviderType) {
+        this.setState({
+          credentialDocUrl: rdsFetchCredentialsUrl,
+          createProviderAccountDocUrl: rdsUrl,
+          providerShortName: rdsShortName,
         })
       } else {
         this.setState({

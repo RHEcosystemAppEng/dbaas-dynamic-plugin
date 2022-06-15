@@ -26,11 +26,14 @@ import {
   mongoProviderName,
   mongoProviderType,
   cockroachdbProviderName,
+  rdsProviderType,
+  rdsProviderName,
   DBaaSInventoryCRName,
   DBaaSOperatorName,
   mongoShortName,
   crunchyShortName,
   cockroachShortName,
+  rdsShortName,
 } from '../const.ts'
 import { DBAAS_PROVIDER_KIND } from '../catalog/const.ts'
 import {
@@ -193,6 +196,9 @@ const InstanceListPage = () => {
     }
     if (dbProviderType === cockroachdbProviderType) {
       setDBProviderName(cockroachShortName)
+    }
+    if (dbProviderType === rdsProviderType) {
+      setDBProviderName(rdsShortName)
     }
     setSelectedDBProvider(dbProviderType)
   }

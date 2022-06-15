@@ -31,6 +31,8 @@ import {
   crunchyProviderType,
   mongoProviderName,
   mongoProviderType,
+  rdsProviderName,
+  rdsProviderType,
 } from '../const.ts'
 import {
   disableNSSelection,
@@ -137,6 +139,8 @@ const AdminDashboard = () => {
         dbProvider = mongoProviderName
       } else if (inventory.providername === cockroachdbProviderType) {
         dbProvider = cockroachdbProviderName
+      } else if (inventory.providername === rdsProviderType) {
+        dbProvider = rdsProviderName
       }
       if (inventory.instances?.length > 0) {
         for (let dbInstance of inventory.instances) {
