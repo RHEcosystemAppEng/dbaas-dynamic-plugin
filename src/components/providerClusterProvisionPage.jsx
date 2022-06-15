@@ -660,7 +660,7 @@ const ProviderClusterProvisionPage = () => {
                         </HelperTextItem>
                       </HelperText>
                     </FormGroup>
-                    //TODO
+                    {/* add RDS */}
                     {selectedDBProvider.value === mongoProviderType ? (
                       <FormGroup
                         label="Project Name"
