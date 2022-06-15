@@ -14,6 +14,8 @@ export const crunchyProviderName = 'Crunchy Bridge Managed PostgreSQL'
 export const mongoProviderName = 'MongoDB Atlas Cloud Database Service'
 export const cockroachdbProviderType = 'cockroachdb-cloud-registration'
 export const cockroachdbProviderName = 'CockroachDB Cloud'
+export const rdsProviderType = 'rds-registration'
+export const rdsProviderName = 'Amazon Relational Database Service'
 export const topologyInstructionPageUrl =
   'https://access.redhat.com/documentation/en-us/red_hat_openshift_database_access/1/html/quick_start_guide/connecting-an-application-to-a-database-instance-using-the-topology-view_rhoda-qsg'
 export const mongoFetchCredentialsUrl =
@@ -21,13 +23,17 @@ export const mongoFetchCredentialsUrl =
 export const crunchyFetchCredentialsUrl =
   'https://access.redhat.com/documentation/en-us/red_hat_openshift_database_access/1/html/quick_start_guide/find-your-crunchy-data-bridge-account-credentials_rhoda-qsg'
 export const cockroachFetchCredentialsUrl =
-  'https://access.redhat.com/documentation/en-us/red_hat_openshift_database_access/1/html/quick_start_guide/find-your-cockroachdb-account-credentials_rhoda-qsg '
+  'https://access.redhat.com/documentation/en-us/red_hat_openshift_database_access/1/html/quick_start_guide/find-your-cockroachdb-account-credentials_rhoda-qsg'
+export const rdsFetchCredentialsUrl =
+  'https://access.redhat.com/documentation/en-us/red_hat_openshift_database_access/1/html/quick_start_guide/find-your-amazon-rds-account-credentials_rhoda-qsg'
 export const mongoUrl = 'https://www.mongodb.com/atlas/database'
 export const crunchyUrl = 'https://www.crunchydata.com/products/crunchy-bridge/'
 export const cockroachUrl = 'https://www.cockroachlabs.com/get-started-cockroachdb/'
+export const rdsUrl = 'https://docs.aws.amazon.com/rds/index.html'
 export const mongoShortName = 'MongoDB Atlas'
 export const crunchyShortName = 'Crunchy Bridge'
 export const cockroachShortName = 'CockroachDB Cloud'
+export const rdsShortName = 'Amazon RDS'
 
 // Common shortcuts than span pages.
 export const KEYBOARD_SHORTCUTS = Object.freeze({

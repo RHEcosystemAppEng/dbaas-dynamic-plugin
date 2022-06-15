@@ -25,7 +25,7 @@ import { InfoCircleIcon, CheckCircleIcon } from '@patternfly/react-icons'
 import FormHeader from './form/formHeader'
 import FlexForm from './form/flexForm'
 import FormBody from './form/formBody'
-import { mongoProviderType, crunchyProviderType } from '../const'
+import { mongoProviderType, crunchyProviderType, rdsProviderType } from '../const'
 import {
   getCSRFToken,
   fetchInventoriesAndMapByNSAndRules,
@@ -100,6 +100,10 @@ const ProviderClusterProvisionPage = () => {
   const [selectedInventory, setSelectedInventory] = React.useState({})
   const [clusterName, setClusterName] = React.useState('')
   const [projectName, setProjectName] = React.useState('')
+  const [engine, setEngine] = React.useState('')
+  const [dbInstanceIdentifier, setDBInstanceIdentifier] = React.useState('')
+  const [dbInstanceClass, setDBInstanceClass] = React.useState('')
+  const [allocatedStorage, setAllocatedStorage] = React.useState('20')
   const [statusMsg, setStatusMsg] = React.useState('')
   const [inventoryHasIssue, setInventoryHasIssue] = React.useState(false)
   const [showResults, setShowResults] = React.useState(false)
@@ -110,6 +114,10 @@ const ProviderClusterProvisionPage = () => {
   const [isInventoryFieldValid, setIsInventoryFieldValid] = React.useState('')
   const [isInstanceNameFieldValid, setIsInstanceNameFieldValid] = React.useState('')
   const [isProjectNameFieldValid, setIsProjectNameFieldValid] = React.useState('')
+  const [isEngineFieldValid, setIsEngineFieldValid] = React.useState('')
+  const [isDBInstanceIdentifierFieldValid, setIsDBInstanceIdentifierFieldValid] = React.useState('')
+  const [isDBInstanceClassFieldValid, setIsDBInstanceClassFieldValid] = React.useState('')
+  const [isAllocatedStorageFieldValid, setIsAllocatedStorageFieldValid] = React.useState('')
   const [isFormValid, setIsFormValid] = React.useState(false)
   const currentNS = window.location.pathname.split('/')[3]
   const devSelectedDBProviderName = window.location.pathname.split('/db/')[1]?.split('/pa/')[0]
@@ -233,6 +241,14 @@ const ProviderClusterProvisionPage = () => {
 
     if (selectedDBProvider.value === mongoProviderType) {
       otherInstanceParams = { projectName: projectName }
+
+    } else if (selectedDBProvider.value === rdsProviderType) {
+      otherInstanceParams = {
+        Engine: engine,
+        DBInstanceIdentifier: dbInstanceIdentifier,
+        DBInstanceClass: dbInstanceClass,
+        AllocatedStorage: allocatedStorage
+      }
     }
 
     let requestOpts = {
@@ -361,6 +377,13 @@ const ProviderClusterProvisionPage = () => {
     if (selectedDBProvider.value === mongoProviderType) {
       isValid = isValid && isProjectNameFieldValid === ValidatedOptions.default
     }
+    if (selectedDBProvider.value === rdsProviderType) {
+      isValid = isValid &&
+          isEngineFieldValid === ValidatedOptions.default &&
+          isDBInstanceIdentifierFieldValid === ValidatedOptions.default &&
+          isDBInstanceClassFieldValid === ValidatedOptions.default &&
+          isAllocatedStorageFieldValid === ValidatedOptions.default
+    }
 
     setIsFormValid(isValid)
   }
@@ -372,6 +395,42 @@ const ProviderClusterProvisionPage = () => {
       setIsProjectNameFieldValid(ValidatedOptions.default)
     }
     setProjectName(value)
+  }
+
+  const handleEngineChange = (value) => {
+    if (_.isEmpty(value)) {
+      setIsEngineFieldValid(ValidatedOptions.error)
+    } else {
+      setIsEngineFieldValid(ValidatedOptions.default)
+    }
+    setEngine(value)
+  }
+
+  const handleDBInstanceIdentifierChange = (value) => {
+    if (_.isEmpty(value)) {
+      setIsDBInstanceIdentifierFieldValid(ValidatedOptions.error)
+    } else {
+      setIsDBInstanceIdentifierFieldValid(ValidatedOptions.default)
+    }
+    setDBInstanceIdentifier(value)
+  }
+
+  const handleDBInstanceClassChange = (value) => {
+    if (_.isEmpty(value)) {
+      setIsDBInstanceClassFieldValid(ValidatedOptions.error)
+    } else {
+      setIsDBInstanceClassFieldValid(ValidatedOptions.default)
+    }
+    setDBInstanceClass(value)
+  }
+
+  const handleAllocatedStorageChange = (value) => {
+    if (_.isEmpty(value)) {
+      setIsAllocatedStorageFieldValid(ValidatedOptions.error)
+    } else {
+      setIsAllocatedStorageFieldValid(ValidatedOptions.default)
+    }
+    setAllocatedStorage(value)
   }
 
   const handleInstanceNameChange = (value) => {
@@ -601,6 +660,7 @@ const ProviderClusterProvisionPage = () => {
                         </HelperTextItem>
                       </HelperText>
                     </FormGroup>
+                    //TODO
                     {selectedDBProvider.value === mongoProviderType ? (
                       <FormGroup
                         label="Project Name"
