@@ -33,7 +33,11 @@ export const rdsUrl = 'https://docs.aws.amazon.com/rds/index.html'
 export const mongoShortName = 'MongoDB Atlas'
 export const crunchyShortName = 'Crunchy Bridge'
 export const cockroachShortName = 'CockroachDB Cloud'
+<<<<<<< HEAD
 export const rdsShortName = 'Amazon RDS'
+=======
+export const rdsShortName = 'Amazon Relational Database Service'
+>>>>>>> de494e7... Modify developer view to show RDS catalog item
 
 // Common shortcuts than span pages.
 export const KEYBOARD_SHORTCUTS = Object.freeze({
