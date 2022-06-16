@@ -502,6 +502,118 @@ const ProviderClusterProvisionPage = () => {
       })
   }
 
+  const setDBProviderFields = () => {
+    if (selectedDBProvider.value === mongoProviderType) {
+      return (
+        <FormGroup
+          label="Project Name"
+          fieldId="project-name"
+          isRequired
+          className="half-width-selection"
+          helperTextInvalid="This is a required field"
+          validated={isProjectNameFieldValid}
+        >
+          <TextInput
+            isRequired
+            type="text"
+            id="project-name"
+            name="project-name"
+            value={projectName}
+            onChange={handleProjectNameChange}
+            validated={isProjectNameFieldValid}
+          />
+          <HelperText>
+            <HelperTextItem variant="indeterminate">
+              Name of project under which database instance will be created at MongoDB Atlas
+            </HelperTextItem>
+          </HelperText>
+        </FormGroup>
+      )
+    }
+    if (selectedDBProvider.value === rdsProviderType) {
+      return (
+        <>
+          <FormGroup
+            label="Engine Type"
+            fieldId="engine"
+            isRequired
+            className="half-width-selection"
+            helperTextInvalid="This is a required field"
+            validated={isEngineFieldValid}
+          >
+            <TextInput
+              isRequired
+              type="text"
+              id="engine"
+              name="engine"
+              value={engine}
+              onChange={handleEngineChange}
+              validated={isProjectNameFieldValid}
+            />
+          </FormGroup>
+
+          <FormGroup
+            label="DB Instance Identifier"
+            fieldId="db-instance-identifier"
+            isRequired
+            className="half-width-selection"
+            helperTextInvalid="This is a required field"
+            validated={isDBInstanceIdentifierFieldValid}
+          >
+            <TextInput
+              isRequired
+              type="text"
+              id="db-instance-identifier"
+              name="db-instance-identifier"
+              value={dbInstanceIdentifier}
+              onChange={handleDBInstanceIdentifierChange}
+              validated={isDBInstanceIdentifierFieldValid}
+            />
+          </FormGroup>
+
+          <FormGroup
+            label="DB Instance Class"
+            fieldId="db-instance-class"
+            isRequired
+            className="half-width-selection"
+            helperTextInvalid="This is a required field"
+            validated={isDBInstanceClassFieldValid}
+          >
+            <TextInput
+              isRequired
+              type="text"
+              id="db-instance-class"
+              name="db-instance-class"
+              value={dbInstanceClass}
+              onChange={handleDBInstanceClassChange}
+              validated={isDBInstanceClassFieldValid}
+            />
+          </FormGroup>
+
+          <FormGroup
+            label="Allocated Storage"
+            fieldId="allocated-storage"
+            isRequired
+            className="half-width-selection"
+            helperTextInvalid="This is a required field"
+            validated={isAllocatedStorageFieldValid}
+          >
+            <TextInput
+              isRequired
+              type="number"
+              id="allocated-storage"
+              name="allocated-storage"
+              value={allocatedStorage}
+              onChange={handleAllocatedStorageChange}
+              validated={isAllocatedStorageFieldValid}
+            />
+          </FormGroup>
+        </>
+      )
+    }
+    return null
+  }
+
   React.useEffect(() => {
     disableNSSelection()
     fetchProviderInfo()
@@ -660,32 +772,7 @@ const ProviderClusterProvisionPage = () => {
                         </HelperTextItem>
                       </HelperText>
                     </FormGroup>
-                    {/* add RDS */}
-                    {selectedDBProvider.value === mongoProviderType ? (
-                      <FormGroup
-                        label="Project Name"
-                        fieldId="project-name"
-                        isRequired
-                        className="half-width-selection"
-                        helperTextInvalid="This is a required field"
-                        validated={isProjectNameFieldValid}
-                      >
-                        <TextInput
-                          isRequired
-                          type="text"
-                          id="project-name"
-                          name="project-name"
-                          value={projectName}
-                          onChange={handleProjectNameChange}
-                          validated={isProjectNameFieldValid}
-                        />
-                        <HelperText>
-                          <HelperTextItem variant="indeterminate">
-                            Name of project under which database instance will be created at MongoDB Atlas
-                          </HelperTextItem>
-                        </HelperText>
-                      </FormGroup>
-                    ) : null}
+                    {setDBProviderFields()}
                     <ActionGroup>
                       <Button id="cluster-provision-button" variant="primary" type="submit" isDisabled={!isFormValid}>
                         Create
