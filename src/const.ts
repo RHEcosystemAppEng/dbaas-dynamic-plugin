@@ -14,6 +14,7 @@ export const crunchyProviderName = 'Crunchy Bridge Managed PostgreSQL'
 export const mongoProviderName = 'MongoDB Atlas Cloud Database Service'
 export const cockroachdbProviderType = 'cockroachdb-cloud-registration'
 export const cockroachdbProviderName = 'CockroachDB Cloud'
+export const rdsProviderType = 'rds-registration'
 export const topologyInstructionPageUrl =
   'https://access.redhat.com/documentation/en-us/red_hat_openshift_database_access/1/html/quick_start_guide/connecting-an-application-to-a-database-instance-using-the-topology-view_rhoda-qsg'
 export const mongoFetchCredentialsUrl =
@@ -28,6 +29,7 @@ export const cockroachUrl = 'https://www.cockroachlabs.com/get-started-cockroach
 export const mongoShortName = 'MongoDB Atlas'
 export const crunchyShortName = 'Crunchy Bridge'
 export const cockroachShortName = 'CockroachDB Cloud'
+export const rdsShortName = 'Amazon Relational Database Service'
 
 // Common shortcuts than span pages.
 export const KEYBOARD_SHORTCUTS = Object.freeze({

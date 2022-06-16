@@ -20,17 +20,16 @@ import * as _ from 'lodash'
 import * as React from 'react'
 import { useK8sWatchResource } from '@openshift-console/dynamic-plugin-sdk'
 import {
-  crunchyProviderName,
   crunchyProviderType,
-  cockroachdbProviderType,
-  mongoProviderName,
   mongoProviderType,
-  cockroachdbProviderName,
+  cockroachdbProviderType,
+  rdsProviderType,
   DBaaSInventoryCRName,
   DBaaSOperatorName,
   mongoShortName,
   crunchyShortName,
   cockroachShortName,
+  rdsShortName,
 } from '../const.ts'
 import { DBAAS_PROVIDER_KIND } from '../catalog/const.ts'
 import {
@@ -193,6 +192,9 @@ const InstanceListPage = () => {
     }
     if (dbProviderType === cockroachdbProviderType) {
       setDBProviderName(cockroachShortName)
+    }
+    if (dbProviderType === rdsProviderType) {
+      setDBProviderName(rdsShortName)
     }
     setSelectedDBProvider(dbProviderType)
   }
