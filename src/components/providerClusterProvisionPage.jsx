@@ -25,7 +25,7 @@ import { InfoCircleIcon, CheckCircleIcon } from '@patternfly/react-icons'
 import FormHeader from './form/formHeader'
 import FlexForm from './form/flexForm'
 import FormBody from './form/formBody'
-import { mongoProviderType, crunchyProviderType } from '../const'
+import { mongoProviderType, crunchyProviderType, rdsProviderType } from '../const'
 import {
   getCSRFToken,
   fetchInventoriesAndMapByNSAndRules,
@@ -100,6 +100,7 @@ const ProviderClusterProvisionPage = () => {
   const [selectedInventory, setSelectedInventory] = React.useState({})
   const [clusterName, setClusterName] = React.useState('')
   const [projectName, setProjectName] = React.useState('')
+  const [engine, setEngine] = React.useState('')
   const [statusMsg, setStatusMsg] = React.useState('')
   const [inventoryHasIssue, setInventoryHasIssue] = React.useState(false)
   const [showResults, setShowResults] = React.useState(false)
@@ -110,13 +111,19 @@ const ProviderClusterProvisionPage = () => {
   const [isInventoryFieldValid, setIsInventoryFieldValid] = React.useState('')
   const [isInstanceNameFieldValid, setIsInstanceNameFieldValid] = React.useState('')
   const [isProjectNameFieldValid, setIsProjectNameFieldValid] = React.useState('')
+  const [isEngineFieldValid, setIsEngineFieldValid] = React.useState('')
   const [isFormValid, setIsFormValid] = React.useState(false)
   const currentNS = window.location.pathname.split('/')[3]
   const devSelectedDBProviderName = window.location.pathname.split('/db/')[1]?.split('/pa/')[0]
   const devSelectedProviderAccountName = window.location.pathname.split('/pa/')[1]
   const checkDBClusterStatusIntervalID = React.useRef()
   const checkDBClusterStatusTimeoutID = React.useRef()
-
+  const engineTypeOptions = [
+    { value: '', label: 'Select one', disabled: true, isPlaceholder: true },
+    { value: 'mariadb', label: 'MariaDB', disabled: false },
+    { value: 'mysql', label: 'MySQL', disabled: false },
+    { value: 'postgres', label: 'PostgreSQL', disabled: false },
+  ]
   const checkInventoryStatus = (inventory) => {
     if (inventory?.status?.conditions[0]?.type === 'SpecSynced') {
       if (inventory?.status?.conditions[0]?.status === 'False') {
@@ -233,6 +240,8 @@ const ProviderClusterProvisionPage = () => {
 
     if (selectedDBProvider.value === mongoProviderType) {
       otherInstanceParams = { projectName: projectName }
+    } else if (selectedDBProvider.value === rdsProviderType) {
+      otherInstanceParams = { Engine: engine.value }
     }
 
     let requestOpts = {
@@ -361,6 +370,9 @@ const ProviderClusterProvisionPage = () => {
     if (selectedDBProvider.value === mongoProviderType) {
       isValid = isValid && isProjectNameFieldValid === ValidatedOptions.default
     }
+    if (selectedDBProvider.value === rdsProviderType) {
+      isValid = isValid && isEngineFieldValid === ValidatedOptions.default
+    }
 
     setIsFormValid(isValid)
   }
@@ -372,6 +384,18 @@ const ProviderClusterProvisionPage = () => {
       setIsProjectNameFieldValid(ValidatedOptions.default)
     }
     setProjectName(value)
+  }
+
+  const handleEngineChange = (value) => {
+    if (_.isEmpty(value)) {
+      setIsEngineFieldValid(ValidatedOptions.error)
+    } else {
+      setIsEngineFieldValid(ValidatedOptions.default)
+    }
+    let engineType = _.find(engineTypeOptions, (eng) => {
+      return eng.value === value
+    })
+    setEngine(engineType)
   }
 
   const handleInstanceNameChange = (value) => {
@@ -443,6 +467,63 @@ const ProviderClusterProvisionPage = () => {
       })
   }
 
+  const setDBProviderFields = () => {
+    if (selectedDBProvider.value === mongoProviderType) {
+      return (
+        <FormGroup
+          label="Project Name"
+          fieldId="project-name"
+          isRequired
+          className="half-width-selection"
+          helperTextInvalid="This is a required field"
+          validated={isProjectNameFieldValid}
+        >
+          <TextInput
+            isRequired
+            type="text"
+            id="project-name"
+            name="project-name"
+            value={projectName}
+            onChange={handleProjectNameChange}
+            validated={isProjectNameFieldValid}
+          />
+          <HelperText>
+            <HelperTextItem variant="indeterminate">
+              Name of project under which database instance will be created at MongoDB Atlas
+            </HelperTextItem>
+          </HelperText>
+        </FormGroup>
+      )
+    }
+    if (selectedDBProvider.value === rdsProviderType) {
+      return (
+        <>
+          <FormGroup
+            label="Engine Type"
+            fieldId="engine"
+            isRequired
+            className="half-width-selection"
+            helperTextInvalid="This is a required field"
+            validated={isEngineFieldValid}
+          >
+            <FormSelect
+              isRequired
+              value={engine.value}
+              onChange={handleEngineChange}
+              aria-label="Engine Type"
+              validated={isEngineFieldValid}
+            >
+              {engineTypeOptions.map((option, index) => (
+                <FormSelectOption isDisabled={option.disabled} key={index} value={option.value} label={option.label} />
+              ))}
+            </FormSelect>
+          </FormGroup>
+        </>
+      )
+    }
+    return null
+  }
+
   React.useEffect(() => {
     disableNSSelection()
     fetchProviderInfo()
@@ -462,6 +543,7 @@ const ProviderClusterProvisionPage = () => {
     isInventoryFieldValid,
     isProjectNameFieldValid,
     selectedDBProvider,
+    isEngineFieldValid,
   ])
 
   React.useEffect(() => {
@@ -601,31 +683,7 @@ const ProviderClusterProvisionPage = () => {
                         </HelperTextItem>
                       </HelperText>
                     </FormGroup>
-                    {selectedDBProvider.value === mongoProviderType ? (
-                      <FormGroup
-                        label="Project Name"
-                        fieldId="project-name"
-                        isRequired
-                        className="half-width-selection"
-                        helperTextInvalid="This is a required field"
-                        validated={isProjectNameFieldValid}
-                      >
-                        <TextInput
-                          isRequired
-                          type="text"
-                          id="project-name"
-                          name="project-name"
-                          value={projectName}
-                          onChange={handleProjectNameChange}
-                          validated={isProjectNameFieldValid}
-                        />
-                        <HelperText>
-                          <HelperTextItem variant="indeterminate">
-                            Name of project under which database instance will be created at MongoDB Atlas
-                          </HelperTextItem>
-                        </HelperText>
-                      </FormGroup>
-                    ) : null}
+                    {setDBProviderFields()}
                     <ActionGroup>
                       <Button id="cluster-provision-button" variant="primary" type="submit" isDisabled={!isFormValid}>
                         Create
