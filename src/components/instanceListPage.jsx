@@ -20,14 +20,10 @@ import * as _ from 'lodash'
 import * as React from 'react'
 import { useK8sWatchResource } from '@openshift-console/dynamic-plugin-sdk'
 import {
-  crunchyProviderName,
   crunchyProviderType,
-  cockroachdbProviderType,
-  mongoProviderName,
   mongoProviderType,
-  cockroachdbProviderName,
+  cockroachdbProviderType,
   rdsProviderType,
-  rdsProviderName,
   DBaaSInventoryCRName,
   DBaaSOperatorName,
   mongoShortName,
