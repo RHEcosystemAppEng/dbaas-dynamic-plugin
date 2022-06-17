@@ -13,7 +13,7 @@ import {
 } from '@patternfly/react-table'
 import _ from 'lodash'
 import React from 'react'
-import { DBaaSInventoryCRName } from '../const.ts'
+import { DBaaSInventoryCRName } from '../const'
 import './_dbaas-import-view.css'
 
 class AdminConnectionsTable extends React.Component {
