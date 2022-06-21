@@ -41,7 +41,6 @@ import {
   fetchDbaasCSV,
   fetchObjectsClusterOrNS,
   isDbaasConnectionUsed,
-  filterInventoriesByConnNS,
   fetchInventoriesAndMapByNSAndRules,
   filterInventoriesByConnNSandProvision,
 } from '../utils'
@@ -219,8 +218,8 @@ const AdminDashboard = () => {
     setDbaasConnectionList(connections)
   }
 
-  async function filteredInventoriesByValidConnectionNS(installNS = '') {
-    const inventoryData = await fetchInventoriesAndMapByNSAndRules(installNS).catch((error) => {
+  const fetchInstances = async () => {
+    const inventoryData = await fetchInventoriesAndMapByNSAndRules(installNamespace).catch((error) => {
       setFetchInstancesFailed(true)
       setStatusMsg(error)
     })
@@ -229,15 +228,13 @@ const AdminDashboard = () => {
     if (provisionItems.length > 0) {
       setNoProvisionableInstances(false)
     } else setNoProvisionableInstances(true)
-    return filterInventoriesByConnNS(inventoryData, currentNS)
-  }
 
-  const fetchInstances = async () => {
     const inventoriesAll = []
-    const inventoryItems = await filteredInventoriesByValidConnectionNS(installNamespace)
-
-    if (inventoryItems.length > 0) {
-      let filteredInventories = _.filter(inventoryItems, (inventory) => inventory.status?.instances !== undefined)
+    if (inventoryData.inventoryList.length > 0) {
+      let filteredInventories = _.filter(
+        inventoryData.inventoryList,
+        (inventory) => inventory.status?.instances !== undefined
+      )
       filteredInventories.forEach((inventory, index) => {
         const obj = { id: 0, name: '', namespace: '', instances: [], status: {}, providername: '', alert: '' }
         obj.id = index
