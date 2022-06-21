@@ -123,7 +123,7 @@ class ProviderAccountForm extends React.Component {
     )
 
     if (currentField) {
-      if (_.isEmpty(value)) {
+      if (field.required && _.isEmpty(value)) {
         currentField.isValid = ValidatedOptions.error
       } else {
         currentField.isValid = ValidatedOptions.default
@@ -138,7 +138,7 @@ class ProviderAccountForm extends React.Component {
       const provider = _.find(this.props.dbProviderInfo.items, (dbProvider) => dbProvider.metadata?.name === value)
       if (provider?.spec?.credentialFields) {
         provider.spec.credentialFields.forEach((field) => {
-          field.isValid = ''
+          field.required ? (field.isValid = '') : (field.isValid = ValidatedOptions.default)
           field.value = ''
         })
       }
