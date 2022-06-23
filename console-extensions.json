@@ -92,7 +92,8 @@
       "path": [
         "/k8s/ns/:ns/mongodb-atlas-registration",
         "/k8s/ns/:ns/crunchy-bridge-registration",
-        "/k8s/ns/:ns/cockroachdb-cloud-registration"
+        "/k8s/ns/:ns/cockroachdb-cloud-registration",
+        "/k8s/ns/:ns/rds-registration"
       ],
       "component": {
         "$codeRef": "instanceListPage"

@@ -20,19 +20,19 @@ import * as _ from 'lodash'
 import * as React from 'react'
 import { useK8sWatchResource } from '@openshift-console/dynamic-plugin-sdk'
 import {
-  crunchyProviderName,
   crunchyProviderType,
-  cockroachdbProviderType,
-  mongoProviderName,
   mongoProviderType,
-  cockroachdbProviderName,
+  cockroachdbProviderType,
+  rdsProviderType,
   DBaaSInventoryCRName,
   DBaaSOperatorName,
   mongoShortName,
   crunchyShortName,
   cockroachShortName,
-} from '../const.ts'
-import { DBAAS_PROVIDER_KIND } from '../catalog/const.ts'
+  rdsShortName,
+  API_GROUP,
+} from '../const'
+import { DBAAS_PROVIDER_KIND } from '../catalog/const'
 import {
   fetchInventoriesAndMapByNSAndRules,
   fetchObjectsClusterOrNS,
@@ -40,10 +40,12 @@ import {
   disableNSSelection,
   filterInventoriesByConnNS,
   fetchDbaasCSV,
-} from '../utils.ts'
-import FormBody from './form/formBody.tsx'
-import FormHeader from './form/formHeader.tsx'
-import InstanceListFilter from './instanceListFilter.tsx'
+  filterInventoriesByConnNSandProvision,
+} from '../utils'
+import FlexForm from './form/flexForm'
+import FormBody from './form/formBody'
+import FormHeader from './form/formHeader'
+import InstanceListFilter from './instanceListFilter'
 import InstanceTable from './instanceTable'
 import './_dbaas-import-view.css'
 
@@ -57,6 +59,7 @@ export const handleCancel = () => {
 
 const InstanceListPage = () => {
   const [noInstances, setNoInstances] = React.useState(false)
+  const [noProvisionableInstances, setNoProvisionableInstances] = React.useState(false)
   const [statusMsg, setStatusMsg] = React.useState('')
   const [fetchInstancesFailed, setFetchInstancesFailed] = React.useState(false)
   const [textInputNameValue, setTextInputNameValue] = React.useState('')
@@ -70,6 +73,7 @@ const InstanceListPage = () => {
   const [serviceBindingList, setServiceBindingList] = React.useState([])
   const [connectionAndServiceBindingList, setConnectionAndServiceBindingList] = React.useState([])
   const [dBaaSOperatorNameWithVersion, setDBaaSOperatorNameWithVersion] = React.useState()
+  const [installNamespace, setInstallNamespace] = React.useState('')
 
   const currentNS = window.location.pathname.split('/')[3]
 
@@ -139,12 +143,17 @@ const InstanceListPage = () => {
   }
 
   async function fetchServiceBindings() {
-    const serviceBindings = await fetchObjectsClusterOrNS('binding.operators.coreos.com', 'v1alpha1', 'servicebindings')
+    const serviceBindings = await fetchObjectsClusterOrNS(
+      'binding.operators.coreos.com',
+      'v1alpha1',
+      'servicebindings',
+      installNamespace
+    )
     setServiceBindingList(serviceBindings)
   }
 
   async function fetchDBaaSConnections() {
-    const connections = await fetchObjectsClusterOrNS('dbaas.redhat.com', 'v1alpha1', 'dbaasconnections')
+    const connections = await fetchObjectsClusterOrNS(API_GROUP, 'v1alpha1', 'dbaasconnections', installNamespace)
     setDbaasConnectionList(connections)
   }
 
@@ -165,7 +174,7 @@ const InstanceListPage = () => {
   }
 
   const handleInventorySelection = (value) => {
-    const inventory = _.find(inventories, (inv) => inv.name === value)
+    let inventory = _.find(inventories, (inv) => inv.name === value)
     setSelectedInventory(inventory)
 
     // clear filter value when switch inventory
@@ -194,22 +203,28 @@ const InstanceListPage = () => {
     if (dbProviderType === cockroachdbProviderType) {
       setDBProviderName(cockroachShortName)
     }
+    if (dbProviderType === rdsProviderType) {
+      setDBProviderName(rdsShortName)
+    }
     setSelectedDBProvider(dbProviderType)
   }
 
-  async function filteredInventoriesByValidConnectionNS() {
-    const inventoryItems = []
-    const inventoryData = await fetchInventoriesAndMapByNSAndRules().catch((error) => {
+  async function filteredInventoriesByValidConnectionNS(installNS = '') {
+    const inventoryData = await fetchInventoriesAndMapByNSAndRules(installNS).catch((error) => {
       setFetchInstancesFailed(true)
       setStatusMsg(error)
     })
 
+    let provisionItems = filterInventoriesByConnNSandProvision(inventoryData, currentNS)
+    if (provisionItems.length > 0) {
+      setNoProvisionableInstances(false)
+    } else setNoProvisionableInstances(true)
     return filterInventoriesByConnNS(inventoryData, currentNS)
   }
 
   async function fetchInstances() {
-    const inventories = []
-    const inventoryItems = await filteredInventoriesByValidConnectionNS()
+    let newInventories = []
+    const inventoryItems = await filteredInventoriesByValidConnectionNS(installNamespace)
 
     if (inventoryItems.length > 0) {
       const filteredInventories = _.filter(
@@ -232,30 +247,18 @@ const InstanceListPage = () => {
             obj.instances = inventory.status?.instances
           }
 
-          inventories.push(obj)
+          newInventories.push(obj)
         })
-
-        setInventories(inventories)
-      } else {
-        setNoInstances(true)
-        setStatusMsg('There is no Provider Account.')
       }
-
-      // Set the first inventory as the selected inventory by default
-      if (inventories.length > 0) {
-        setSelectedInventory(inventories[0])
-        checkInventoryStatus(inventories[0])
-      }
-    } else {
-      setNoInstances(true)
-      setStatusMsg('There is no Provider Account.')
     }
-
+    setInventories(newInventories)
     setShowResults(true)
   }
+
   const fetchCSV = async () => {
     const dbaasCSV = await fetchDbaasCSV(currentNS, DBaaSOperatorName)
     setDBaaSOperatorNameWithVersion(dbaasCSV.metadata?.name)
+    setInstallNamespace(dbaasCSV?.metadata?.annotations['olm.operatorNamespace'])
   }
 
   React.useEffect(() => {
@@ -267,17 +270,28 @@ const InstanceListPage = () => {
   }, [isProviderFetched])
 
   React.useEffect(() => {
+    fetchDBaaSConnections()
+    fetchServiceBindings()
+  }, [installNamespace])
+
+  React.useEffect(() => {
     disableNSSelection()
-    parseSelectedDBProvider()
     if (!_.isEmpty(selectedDBProvider)) {
       fetchInstances()
     }
-  }, [currentNS, selectedDBProvider])
+  }, [currentNS, selectedDBProvider, installNamespace])
 
   React.useEffect(() => {
-    fetchDBaaSConnections()
-    fetchServiceBindings()
-  }, [currentNS, selectedDBProvider, selectedInventory])
+    // Set the first inventory as the selected inventory by default
+    if (inventories.length > 0) {
+      setSelectedInventory(inventories[0])
+      checkInventoryStatus(inventories[0])
+      setNoInstances(false)
+    } else {
+      setNoInstances(true)
+      setStatusMsg('There is no Provider Account.')
+    }
+  }, [inventories])
 
   React.useEffect(() => {
     mapDBaaSConnectionsAndServiceBindings()
@@ -378,7 +392,7 @@ const InstanceListPage = () => {
                       </SplitItem>
                       <SplitItem>
                         <Button
-                          isDisabled={inventories.length === 0}
+                          isDisabled={noProvisionableInstances}
                           component="a"
                           href={`/k8s/ns/${currentNS}/rhoda-create-database-instance/db/${selectedDBProvider}/pa/${selectedInventory?.name}`}
                           variant="link"

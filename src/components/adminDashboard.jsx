@@ -31,14 +31,18 @@ import {
   crunchyProviderType,
   mongoProviderName,
   mongoProviderType,
-} from '../const.ts'
+  rdsProviderName,
+  rdsProviderType,
+  API_GROUP,
+} from '../const'
 import {
   disableNSSelection,
   enableNSSelection,
   fetchDbaasCSV,
-  fetchInventoriesByNSAndRules,
   fetchObjectsClusterOrNS,
   isDbaasConnectionUsed,
+  fetchInventoriesAndMapByNSAndRules,
+  filterInventoriesByConnNSandProvision,
 } from '../utils'
 import AdminConnectionsTable from './adminConnectionsTable'
 import FormBody from './form/formBody'
@@ -49,6 +53,7 @@ import './_dbaas-import-view.css'
 
 const AdminDashboard = () => {
   const [noInstances, setNoInstances] = useState(false)
+  const [noProvisionableInstances, setNoProvisionableInstances] = useState(false)
   const [statusMsg, setStatusMsg] = useState('')
   const [fetchInstancesFailed, setFetchInstancesFailed] = useState(false)
   const [showResults, setShowResults] = useState(false)
@@ -57,8 +62,9 @@ const AdminDashboard = () => {
   const [serviceBindingList, setServiceBindingList] = useState([])
   const [inventoryInstances, setInventoryInstances] = useState([])
   const [isOpen, setIsOpen] = useState(false)
-  const [dBaaSOperatorNameWithVersion, setDBaaSOperatorNameWithVersion] = useState()
+  const [dBaaSOperatorNameWithVersion, setDBaaSOperatorNameWithVersion] = useState('')
   const [textInputNameValue, setTextInputNameValue] = useState('')
+  const [installNamespace, setInstallNamespace] = useState('')
 
   const currentNS = window.location.pathname.split('/')[3]
 
@@ -78,7 +84,7 @@ const AdminDashboard = () => {
     <DropdownItem
       key="dbinstancelink"
       href={`/k8s/ns/${currentNS}/rhoda-create-database-instance`}
-      isDisabled={noInstances}
+      isDisabled={noProvisionableInstances}
     >
       Create Database Instance
     </DropdownItem>,
@@ -94,6 +100,7 @@ const AdminDashboard = () => {
     const newDbaasConnectionList = dbaasConnectionList
     const newServiceBindingList = serviceBindingList
     const newConnectionAndServiceBindingList = []
+    let invInstances = []
 
     if (newDbaasConnectionList.length > 0) {
       newDbaasConnectionList.forEach((dbaasConnection) => {
@@ -137,6 +144,8 @@ const AdminDashboard = () => {
         dbProvider = mongoProviderName
       } else if (inventory.providername === cockroachdbProviderType) {
         dbProvider = cockroachdbProviderName
+      } else if (inventory.providername === rdsProviderType) {
+        dbProvider = rdsProviderName
       }
       if (inventory.instances?.length > 0) {
         for (let dbInstance of inventory.instances) {
@@ -182,31 +191,50 @@ const AdminDashboard = () => {
               inventoryInstance.connections.push(['--', '--', '--', '--'])
             }
           }
-          inventoryInstances.push(inventoryInstance)
+          invInstances.push(inventoryInstance)
         }
       }
     })
-    setInventoryInstances(inventoryInstances)
+    setInventoryInstances(invInstances)
   }
 
   const fetchServiceBindings = async () => {
-    const serviceBindings = await fetchObjectsClusterOrNS('binding.operators.coreos.com', 'v1alpha1', 'servicebindings')
+    const serviceBindings = await fetchObjectsClusterOrNS(
+      'binding.operators.coreos.com',
+      'v1alpha1',
+      'servicebindings',
+      installNamespace
+    )
     setServiceBindingList(serviceBindings)
   }
 
   const fetchDBaaSConnections = async () => {
-    const connections = await fetchObjectsClusterOrNS('dbaas.redhat.com', 'v1alpha1', 'dbaasconnections')
+    const connections = await fetchObjectsClusterOrNS(
+      'dbaas.redhat.com',
+      'v1alpha1',
+      'dbaasconnections',
+      installNamespace
+    )
     setDbaasConnectionList(connections)
   }
 
   const fetchInstances = async () => {
-    const inventoriesAll = []
-    const inventoryItems = await fetchInventoriesByNSAndRules().catch((error) => {
+    const inventoryData = await fetchInventoriesAndMapByNSAndRules(installNamespace).catch((error) => {
       setFetchInstancesFailed(true)
       setStatusMsg(error)
     })
-    if (inventoryItems.length > 0) {
-      let filteredInventories = _.filter(inventoryItems, (inventory) => inventory.status?.instances !== undefined)
+
+    let provisionItems = filterInventoriesByConnNSandProvision(inventoryData, currentNS)
+    if (provisionItems.length > 0) {
+      setNoProvisionableInstances(false)
+    } else setNoProvisionableInstances(true)
+
+    const inventoriesAll = []
+    if (inventoryData.inventoryList.length > 0) {
+      let filteredInventories = _.filter(
+        inventoryData.inventoryList,
+        (inventory) => inventory.status?.instances !== undefined
+      )
       filteredInventories.forEach((inventory, index) => {
         const obj = { id: 0, name: '', namespace: '', instances: [], status: {}, providername: '', alert: '' }
         obj.id = index
@@ -238,7 +266,6 @@ const AdminDashboard = () => {
       setInventories(inventoriesAll)
       setShowResults(true)
     } else {
-      setNoInstances(true)
       setShowResults(true)
     }
   }
@@ -256,8 +283,9 @@ const AdminDashboard = () => {
   }
 
   const fetchCSV = async () => {
-    const dbaasCSV = await fetchDbaasCSV(currentNS, DBaaSOperatorName)
-    setDBaaSOperatorNameWithVersion(dbaasCSV.metadata?.name)
+    let dbaasCSV = await fetchDbaasCSV(currentNS, DBaaSOperatorName)
+    setDBaaSOperatorNameWithVersion(dbaasCSV?.metadata?.name)
+    setInstallNamespace(dbaasCSV?.metadata?.annotations['olm.operatorNamespace'])
   }
 
   const goToCreateProviderPage = () => {
@@ -289,10 +317,6 @@ const AdminDashboard = () => {
 
   React.useEffect(() => {
     disableNSSelection()
-    fetchInstances()
-    fetchDBaaSConnections()
-    fetchServiceBindings()
-    fetchCSV()
 
     return () => {
       enableNSSelection()
@@ -300,7 +324,20 @@ const AdminDashboard = () => {
   }, [])
 
   React.useEffect(() => {
+    fetchCSV()
+  }, [])
+
+  React.useEffect(() => {
+    fetchInstances()
+    fetchDBaaSConnections()
+    fetchServiceBindings()
+  }, [installNamespace, dBaaSOperatorNameWithVersion])
+
+  React.useEffect(() => {
     mapDBaaSConnectionsAndServiceBindings()
+    if (inventories.length > 0) {
+      setNoInstances(false)
+    } else setNoInstances(true)
   }, [dbaasConnectionList, serviceBindingList, inventories])
 
   return (

@@ -16,22 +16,16 @@ class DBaasImportPage extends React.Component {
       providerInfo: {},
       dbaasCSV: {},
     }
-    this.fetchCSV = this.fetchCSV.bind(this)
     this.fetchProviderInfo = this.fetchProviderInfo.bind(this)
     this.goBack = this.goBack.bind(this)
     this.setDBaaSServiceStatus = this.setDBaaSServiceStatus.bind(this)
     this.setCurrentCreatedInventoryInfo = this.setCurrentCreatedInventoryInfo.bind(this)
   }
 
-  componentDidMount() {
-    this.fetchProviderInfo()
-    this.fetchCSV()
-  }
-
-  fetchCSV = async () => {
-    const { currentNS } = this.state
-    const dbaasCSV = await fetchDbaasCSV(currentNS, DBaaSOperatorName)
+  async componentDidMount() {
+    let dbaasCSV = await fetchDbaasCSV(this.state.currentNS, DBaaSOperatorName)
     this.setState({ dbaasCSV: dbaasCSV })
+    this.fetchProviderInfo()
   }
 
   fetchProviderInfo = () => {
@@ -73,6 +67,10 @@ class DBaasImportPage extends React.Component {
 
   render() {
     const { activeTabKey, isDBaaSServiceUp, currentCreatedInventoryInfo, providerInfo, dbaasCSV } = this.state
+    let installNamespace = ''
+    installNamespace = dbaasCSV?.metadata?.annotations['olm.operatorNamespace']
+    let dbaasOperatorNameWithVersion = ''
+    dbaasOperatorNameWithVersion = dbaasCSV?.metadata?.name
 
     return (
       <div>
@@ -88,6 +86,8 @@ class DBaasImportPage extends React.Component {
             dbProviderInfo={providerInfo}
             setDBaaSServiceStatus={this.setDBaaSServiceStatus}
             setCurrentCreatedInventoryInfo={this.setCurrentCreatedInventoryInfo}
+            installNamespace={installNamespace}
+            dbaasOperatorNameWithVersion={dbaasOperatorNameWithVersion}
           />
         ) : (
           <InstancesForm
