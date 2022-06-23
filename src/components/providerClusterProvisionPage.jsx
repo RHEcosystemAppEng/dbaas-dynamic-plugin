@@ -522,6 +522,22 @@ const ProviderClusterProvisionPage = () => {
                 <FormSelectOption isDisabled={option.disabled} key={index} value={option.value} label={option.label} />
               ))}
             </FormSelect>
+            <HelperText>
+              <HelperTextItem variant="indeterminate">
+                The name of the database engine to be used for this instance <br />
+                The following options are set, regardless of which database engine is selected: <br />
+                <div className="rds-help-box">
+                  <div>
+                    <p>&#8226; DBInstanceClass: "db.t3.micro"</p>
+                    <p>&#8226; AllocatedStorage: 20 (GB)</p>
+                  </div>
+                  <div>
+                    <p>&#8226; PubliclyAccessible: true</p>
+                    <p>&#8226; AvailabilityZone: "us-east-1a"</p>
+                  </div>
+                </div>
+              </HelperTextItem>
+            </HelperText>
           </FormGroup>
         </>
       )
@@ -600,6 +616,28 @@ const ProviderClusterProvisionPage = () => {
                 </a>
               ) : null}
             </Alert>
+
+            {selectedDBProvider.value === rdsProviderType ? (
+              <Alert variant="warning" isInline title="Warning" className="co-info co-break-word half-width-selection">
+                <p>
+                  Using the{' '}
+                  <a href="https://aws.amazon.com/rds/pricing/" target="_blank" rel="noreferrer">
+                    Amazon Relational Database Service (RDS)
+                  </a>{' '}
+                  provider account does not provide a free trial database instance. Creating a new database instance
+                  using Amazon’s RDS creates the instance at Amazon Web Services’ (AWS){' '}
+                  <a
+                    href="https://aws.amazon.com/free/?all-free-tier.sort-by=item.additionalFields.SortRank&all-free-tier.sort-order=asc&awsf.Free%20Tier%20Types=*all&awsf.Free%20Tier%20Categories=*all"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    free-tier level,
+                  </a>{' '}
+                  but be aware that there is still a possibility of accruing a cost for running this instance.
+                </p>
+              </Alert>
+            ) : null}
+
             <FormGroup
               label="Database Provider"
               fieldId="database-provider"
