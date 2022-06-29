@@ -20,12 +20,19 @@ import {
   HelperTextItem,
   HelperText,
   Form,
+  Popover,
 } from '@patternfly/react-core'
-import { InfoCircleIcon, CheckCircleIcon } from '@patternfly/react-icons'
+import { InfoCircleIcon, CheckCircleIcon, ExternalLinkAltIcon, HelpIcon } from '@patternfly/react-icons'
 import FormHeader from './form/formHeader'
 import FlexForm from './form/flexForm'
 import FormBody from './form/formBody'
-import { mongoProviderType, crunchyProviderType, rdsProviderType, DBaaSOperatorName } from '../const'
+import {
+  mongoProviderType,
+  crunchyProviderType,
+  rdsProviderType,
+  DBaaSOperatorName,
+  rdsEngineTypeDocUrl,
+} from '../const'
 import {
   getCSRFToken,
   fetchInventoriesAndMapByNSAndRules,
@@ -510,6 +517,46 @@ const ProviderClusterProvisionPage = () => {
             className="half-width-selection"
             helperTextInvalid="This is a required field"
             validated={isEngineFieldValid}
+            labelIcon={
+              <Popover
+                headerContent={<div>Engine Type</div>}
+                bodyContent={
+                  <div>
+                    The following options are set, regardless of which database engine is selected: <br />
+                    <ul>
+                      <li>DBInstanceClass: "db.t3.micro"</li>
+                      <li>AllocatedStorage: 20 (GB)</li>
+                      <li>PubliclyAccessible: true</li>
+                      <li>AvailabilityZone: "us-east-1a"</li>
+                    </ul>
+                  </div>
+                }
+                footerContent={
+                  <Button
+                    variant="link"
+                    component="a"
+                    href={rdsEngineTypeDocUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    icon={<ExternalLinkAltIcon />}
+                    iconPosition="right"
+                    isInline
+                  >
+                    Learn more
+                  </Button>
+                }
+              >
+                <button
+                  type="button"
+                  aria-label="more info"
+                  onClick={(e) => e.preventDefault()}
+                  aria-describedby="more-info"
+                  className="pf-c-form__group-label-help"
+                >
+                  <HelpIcon noVerticalAlign />
+                </button>
+              </Popover>
+            }
           >
             <FormSelect
               isRequired
@@ -524,18 +571,7 @@ const ProviderClusterProvisionPage = () => {
             </FormSelect>
             <HelperText>
               <HelperTextItem variant="indeterminate">
-                The name of the database engine to be used for this instance <br />
-                The following options are set, regardless of which database engine is selected: <br />
-                <div className="rds-help-box">
-                  <div>
-                    <p>&#8226; DBInstanceClass: "db.t3.micro"</p>
-                    <p>&#8226; AllocatedStorage: 20 (GB)</p>
-                  </div>
-                  <div>
-                    <p>&#8226; PubliclyAccessible: true</p>
-                    <p>&#8226; AvailabilityZone: "us-east-1a"</p>
-                  </div>
-                </div>
+                The name of the database engine to be used for this instance
               </HelperTextItem>
             </HelperText>
           </FormGroup>

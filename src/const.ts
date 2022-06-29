@@ -29,6 +29,8 @@ export const cockroachFetchCredentialsUrl =
   'https://access.redhat.com/documentation/en-us/red_hat_openshift_database_access/1/html/quick_start_guide/find-your-cockroachdb-account-credentials_rhoda-qsg'
 export const rdsFetchCredentialsUrl =
   'https://access.redhat.com/documentation/en-us/red_hat_openshift_database_access/1/html/quick_start_guide/find-your-amazon-rds-account-credentials_rhoda-qsg'
+export const rdsEngineTypeDocUrl =
+  'https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.DBInstanceClass.html'
 export const mongoUrl = 'https://www.mongodb.com/atlas/database'
 export const crunchyUrl = 'https://www.crunchydata.com/products/crunchy-bridge/'
 export const cockroachUrl = 'https://www.cockroachlabs.com/get-started-cockroachdb/'
