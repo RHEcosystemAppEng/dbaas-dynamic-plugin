@@ -571,18 +571,7 @@ const ProviderClusterProvisionPage = () => {
             </FormSelect>
             <HelperText>
               <HelperTextItem variant="indeterminate">
-                The name of the database engine to be used for this instance <br />
-                The following options are set, regardless of which database engine is selected: <br />
-                <div className="rds-help-box">
-                  <div>
-                    <p>&#8226; DBInstanceClass: "db.t3.micro"</p>
-                    <p>&#8226; AllocatedStorage: 20 (GB)</p>
-                  </div>
-                  <div>
-                    <p>&#8226; PubliclyAccessible: true</p>
-                    <p>&#8226; AvailabilityZone: "us-east-1a"</p>
-                  </div>
-                </div>
+                The name of the database engine to be used for this instance
               </HelperTextItem>
             </HelperText>
           </FormGroup>
