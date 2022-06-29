@@ -105,7 +105,7 @@ class InstancesForm extends React.Component {
             statusMsg: 'Could not connect with database provider',
             showResults: true,
           })
-        }, 30000)
+        }, 60000)
       }
     }
   }
