@@ -69,6 +69,10 @@ class InstancesForm extends React.Component {
   }
 
   parsePayload = (responseJson) => {
+    let inventoryReadyCondition = responseJson?.status?.conditions?.find(
+      (condition) => condition.type?.toLowerCase() === 'inventoryready'
+    )
+
     if (responseJson?.status?.conditions[0]?.type === 'SpecSynced') {
       if (responseJson?.status?.conditions[0]?.status === 'False') {
         this.setState({
@@ -95,6 +99,14 @@ class InstancesForm extends React.Component {
           })
         }
       }
+      clearInterval(this.fetchInventoryIntervalID)
+      clearTimeout(this.fetchInventoryTimeoutID)
+    } else if (inventoryReadyCondition?.reason && inventoryReadyCondition?.reason !== 'ProviderReconcileInprogress') {
+      this.setState({
+        fetchInstancesFailed: true,
+        statusMsg: inventoryReadyCondition?.message,
+        showResults: true,
+      })
       clearInterval(this.fetchInventoryIntervalID)
       clearTimeout(this.fetchInventoryTimeoutID)
     } else {
