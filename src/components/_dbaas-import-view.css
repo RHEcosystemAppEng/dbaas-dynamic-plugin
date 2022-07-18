@@ -111,6 +111,20 @@
     line-height: 21px;
   }
 
+  .vertically-center-align {
+    display: flex;
+    align-items: center;
+  }
+
+  .no-left-and-right-padding {
+    padding-left: 0px !important;
+    padding-right: 0px !important;
+  }
+
+  .large-bottom-padding {
+    padding-bottom: 30px !important;
+  }
+
   .no-bottom-padding {
     padding-bottom: 0px !important;
   }
