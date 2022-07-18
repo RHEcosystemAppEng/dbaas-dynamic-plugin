@@ -121,6 +121,9 @@
     padding-right: 0px !important;
   }
 
+  .large-bottom-padding {
+    padding-bottom: 30px !important;
+  }
 
   .no-bottom-padding {
     padding-bottom: 0px !important;
