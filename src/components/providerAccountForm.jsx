@@ -37,6 +37,7 @@ import {
   DBaaSPolicyCRName,
   CSVapiVersionKind,
 } from '../const'
+import './_dbaas-import-view.css'
 
 class ProviderAccountForm extends React.Component {
   constructor(props) {
@@ -579,7 +580,7 @@ class ProviderAccountForm extends React.Component {
             )}
           </Alert>
         ) : null}
-        <ActionGroup>
+        <ActionGroup className="large-bottom-padding">
           <Button
             variant="primary"
             type="submit"
