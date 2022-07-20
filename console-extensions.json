@@ -19,7 +19,7 @@
       "id": "dbaasAddAction",
       "href": "/catalog?catalogType=dbaas-new",
       "label": "Cloud-Hosted Database",
-      "description": "Connect to a cloud-hosted database provider, such as MongoDB Atlas, Crunchy Data Bridge or Cockroach Labs or Amazon RDS",
+      "description": "Connect to a cloud-hosted database provider, such as MongoDB Atlas, Crunchy Data Bridge, Cockroach Labs or Amazon RDS",
       "icon": {
         "$codeRef": "constants.dbaasServicesIcon"
       },
