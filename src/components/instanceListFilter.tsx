@@ -26,8 +26,8 @@ const InstanceListFilter: React.FC<InstanceListFilterProps> = ({
                 placeholder="Search by name..."
                 className="co-text-filter"
               />
-              <span className="form-control-feedback form-control-feedback--keyboard-hint">
-                <kbd>{KEYBOARD_SHORTCUTS.focusFilterInput}</kbd>
+              <span className="custom-text-filter-feedback">
+                <kbd className="co-kbd co-kbd__filter-input">{KEYBOARD_SHORTCUTS.focusFilterInput}</kbd>
               </span>
             </div>
           </ToolbarItem>
