@@ -108,6 +108,13 @@ class ProviderAccountForm extends React.Component {
     }
   }
 
+  getHelpText = (field) => {
+    if (field.helpText !== undefined) {
+      return field.helpText
+    }
+    return `The ${field.displayName} is the credential associated with your database provider account when you created the account. To retrieve it or to create a new provider account, click on the link  below.`
+  }
+
   validateForm = () => {
     let isValid = _.every(
       this.state.selectedDBProvider?.spec?.credentialFields,
@@ -461,11 +468,7 @@ class ProviderAccountForm extends React.Component {
                     headerContent={<div>{field.displayName}</div>}
                     bodyContent={
                       <div>
-                        <div>
-                          The {field.displayName} is the credential associated with your database provider account when
-                          you created the account. To retrieve it or to create a new provider account, click on the link
-                          below.
-                        </div>
+                        <div>{this.getHelpText(field)}</div>
                       </div>
                     }
                     footerContent={
