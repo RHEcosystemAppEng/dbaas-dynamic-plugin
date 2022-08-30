@@ -13,6 +13,8 @@ import {
   Popover,
   HelperText,
   HelperTextItem,
+  ExpandableSection,
+  Checkbox,
 } from '@patternfly/react-core'
 import { HelpIcon, ExternalLinkAltIcon } from '@patternfly/react-icons'
 import { getCSRFToken, fetchInvAndConnNamespacesFromPolicies } from '../utils'
@@ -42,6 +44,7 @@ import './_dbaas-import-view.css'
 class ProviderAccountForm extends React.Component {
   constructor(props) {
     super(props)
+    this.onRDSWarningSectionToggle = this.onRDSWarningSectionToggle.bind(this)
     this.handleDBProviderSelection = this.handleDBProviderSelection.bind(this)
     this.handleCancel = this.handleCancel.bind(this)
     this.handleSubmit = this.handleSubmit.bind(this)
@@ -50,6 +53,8 @@ class ProviderAccountForm extends React.Component {
     this.validateInventoryNameField = this.validateInventoryNameField.bind(this)
 
     this.state = {
+      isRDSWarningSectionChecked: false,
+      isRDSWarningSectionExpanded: false,
       createProviderAccountDocUrl: '',
       credentialDocUrl: '',
       credentials: {},
@@ -104,8 +109,15 @@ class ProviderAccountForm extends React.Component {
     }
     if (prevState.selectedDBProvider?.metadata?.name !== this.state.selectedDBProvider?.metadata?.name) {
       this.validateForm()
-      this.setState({ credentials: {} })
+      this.setState({ credentials: {}, isRDSWarningSectionChecked: false })
     }
+    if (prevState.isRDSWarningSectionChecked !== this.state.isRDSWarningSectionChecked) {
+      this.validateForm()
+    }
+  }
+
+  onRDSWarningSectionToggle = () => {
+    this.setState({ isRDSWarningSectionExpanded: !this.state.isRDSWarningSectionExpanded })
   }
 
   getHelpText = (field) => {
@@ -120,7 +132,14 @@ class ProviderAccountForm extends React.Component {
       this.state.selectedDBProvider?.spec?.credentialFields,
       (field) => field.isValid === ValidatedOptions.default
     )
+    const { selectedDBProvider, isRDSWarningSectionChecked } = this.state
+
     isValid = isValid && this.state.isInventoryNameFieldValid === ValidatedOptions.default
+
+    if (!_.isEmpty(selectedDBProvider) && selectedDBProvider?.metadata?.name === rdsProviderType) {
+      isValid = isValid && isRDSWarningSectionChecked
+    }
+
     this.setState({ isFormValid: isValid })
   }
 
@@ -349,6 +368,8 @@ class ProviderAccountForm extends React.Component {
 
   render() {
     const {
+      isRDSWarningSectionChecked,
+      isRDSWarningSectionExpanded,
       selectedDBProvider,
       showError,
       error,
@@ -418,6 +439,53 @@ class ProviderAccountForm extends React.Component {
         ) : null}
         {!_.isEmpty(selectedDBProvider) ? (
           <>
+            {selectedDBProvider?.metadata?.name === rdsProviderType ? (
+              <FormGroup fieldId="rds-warning-section">
+                <ExpandableSection
+                  toggleText="Before you begin, read this important information"
+                  onToggle={this.onRDSWarningSectionToggle}
+                  isExpanded={isRDSWarningSectionExpanded}
+                  className="required-section"
+                >
+                  <HelperText>
+                    <HelperTextItem variant="indeterminate">
+                      Before you import Amazon's Relational Database Service (RDS) as a provider account and use RDS
+                      database instances, there is some important information you need to be aware of.
+                      <ul>
+                        <li>
+                          You are limited to one Amazon RDS provider account per OpenShift cluster. Using your AWS
+                          credentials on more than one OpenShift cluster breaks established connections on all OpenShift
+                          clusters, except for the last established OpenShift cluster.
+                        </li>
+                        <li>
+                          OpenShift Database Access only supports RDS database instance deployments, and does not
+                          support database cluster deployments.
+                        </li>
+                        <li>
+                          Database instances using a custom Oracle or custom SQL Server engine type are not supported.
+                        </li>
+                      </ul>
+                    </HelperTextItem>
+                    &nbsp;
+                    <HelperTextItem variant="indeterminate">
+                      <b>NOTE:</b> Amazon only allows two secret access keys for each user. You might need to deactivate
+                      unused keys, or delete lost keys before you can create a new access key.
+                    </HelperTextItem>
+                  </HelperText>
+                </ExpandableSection>
+                <Checkbox
+                  label="I've read and understand the above important information"
+                  id="rds-warning-section-checkbox"
+                  name="rds-warning-section-checkbox"
+                  aria-label="RDS warning section checkbox"
+                  className="required-checkbox"
+                  isChecked={isRDSWarningSectionChecked}
+                  onChange={(checked) => {
+                    this.setState({ isRDSWarningSectionChecked: checked })
+                  }}
+                />
+              </FormGroup>
+            ) : null}
             <FormGroup label="Account Credentials" fieldId="account credentials">
               <HelperText>
                 <HelperTextItem variant="indeterminate">
