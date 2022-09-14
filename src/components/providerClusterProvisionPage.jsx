@@ -370,7 +370,7 @@ const ProviderClusterProvisionPage = () => {
     let inventoryData = await fetchInventoriesAndMapByNSAndRules(installNS).catch(function (error) {
       console.log(error)
     })
-    return filterInventoriesByConnNSandProvision(inventoryData, currentNS)
+    return await filterInventoriesByConnNSandProvision(inventoryData, currentNS)
   }
 
   const validateForm = () => {
