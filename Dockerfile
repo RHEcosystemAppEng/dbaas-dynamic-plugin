@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/ubi8/nodejs-14:1 AS BUILD_IMAGE
+FROM registry.access.redhat.com/ubi8/nodejs-16:1 AS BUILD_IMAGE
 
 WORKDIR /opt/app-root/src/app
 COPY . /opt/app-root/src/app
@@ -8,7 +8,7 @@ RUN npm i -g yarn@1.22.10
 RUN yarn install
 RUN yarn build
 
-FROM registry.access.redhat.com/ubi8/nodejs-14-minimal:1
+FROM registry.access.redhat.com/ubi8/nodejs-16-minimal:1
 
 COPY LICENSE /licenses/LICENSE
 USER 65532:65532
