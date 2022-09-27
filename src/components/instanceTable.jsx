@@ -30,7 +30,6 @@ import {
 import { ExclamationTriangleIcon, ExternalLinkAltIcon } from '@patternfly/react-icons'
 import _ from 'lodash'
 import React from 'react'
-import md5 from 'md5'
 import { getCSRFToken, fetchDbaasCSV } from '../utils'
 import { DBaaSInventoryCRName, DBaaSOperatorName, topologyInstructionPageUrl } from '../const'
 import './_dbaas-import-view.css'
@@ -327,17 +326,12 @@ class InstanceTable extends React.Component {
   }
 
   submitInstances() {
-    // Hashing DBaaSConnection name to be under 27 chars, so the SB name length would not reach it's max of 63 chars
-    const hashHex = md5(`${this.state.selectedInstance.name.toLowerCase()}-${this.state.selectedInstance.instanceID}`)
-    const hashDec = BigInt(`0x${hashHex}`)
-    const hashAlphConnName = hashDec.toString(36)
-
     const newBody = {
       apiVersion: 'dbaas.redhat.com/v1alpha1',
       kind: 'DBaaSConnection',
       metadata: {
-        // k8s only accept lowercase metadata.name
-        name: hashAlphConnName,
+        // k8s only accept lowercase metadata.name and add last 10 chars of the instanceID to avoid same name
+        name: `${this.state.selectedInstance.name.toLowerCase()}-${this.state.selectedInstance.instanceID.slice(-10)}`,
         namespace: this.state.currentNS,
       },
       spec: {
