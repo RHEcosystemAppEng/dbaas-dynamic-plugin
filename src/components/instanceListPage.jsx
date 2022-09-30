@@ -215,16 +215,16 @@ const InstanceListPage = () => {
       setStatusMsg(error)
     })
 
-    let provisionItems = filterInventoriesByConnNSandProvision(inventoryData, currentNS)
+    let provisionItems = await filterInventoriesByConnNSandProvision(inventoryData, currentNS)
     if (provisionItems.length > 0) {
       setNoProvisionableInstances(false)
     } else setNoProvisionableInstances(true)
-    return filterInventoriesByConnNS(inventoryData, currentNS)
+    return await filterInventoriesByConnNS(inventoryData, currentNS)
   }
 
   async function fetchInstances() {
     let newInventories = []
-    const inventoryItems = await filteredInventoriesByValidConnectionNS(installNamespace)
+    let inventoryItems = await filteredInventoriesByValidConnectionNS(installNamespace)
 
     if (inventoryItems.length > 0) {
       const filteredInventories = _.filter(
