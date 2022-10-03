@@ -130,8 +130,7 @@ class InstancesForm extends React.Component {
   }
 
   handleCancel = () => {
-    const { currentNS } = this.state
-    window.location.pathname = `/add/ns/${currentNS}`
+    window.history.back()
   }
 
   goToInventoryListPage = () => {
