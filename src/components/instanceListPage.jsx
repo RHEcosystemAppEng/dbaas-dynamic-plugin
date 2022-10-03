@@ -323,7 +323,6 @@ const InstanceListPage = () => {
                       variant="link"
                       component="a"
                       href={`/k8s/ns/${currentNS}/clusterserviceversions/${dBaaSOperatorNameWithVersion}/${DBaaSInventoryCRName}/~new`}
-                      target="_blank"
                       rel="noopener noreferrer"
                       icon={<ExternalLinkAltIcon />}
                       iconPosition="right"
