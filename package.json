@@ -1,5 +1,5 @@
 {
-  "name": "@console/dbaas-dynamic-plugin",
+  "name": "dbaas-dynamic-plugin",
   "version": "0.3.0",
   "private": true,
   "repository": {
@@ -10,9 +10,10 @@
     "clean": "rm -rf ./dist",
     "build": "yarn clean && NODE_ENV=production yarn ts-node ./node_modules/.bin/webpack --mode=production",
     "build-dev": "yarn lint && yarn format && yarn clean && yarn ts-node ./node_modules/.bin/webpack",
-    "img-build": "podman build --pull -f Dockerfile --platform linux/amd64 -t quay.io/$QUAY_USER/dbaas-dynamic-plugin:$npm_package_version .",
-    "img-push": "podman push quay.io/$QUAY_USER/dbaas-dynamic-plugin:$npm_package_version",
-    "img-run": "podman run -it -p 9001:9001 quay.io/$QUAY_USER/dbaas-dynamic-plugin:$npm_package_version",
+    "img": "echo quay.io/$QUAY_USER/$npm_package_name:$npm_package_version",
+    "img-build": "podman build --pull -f Dockerfile --platform linux/amd64 -t quay.io/$QUAY_USER/$npm_package_name:$npm_package_version .",
+    "img-push": "podman push quay.io/$QUAY_USER/$npm_package_name:$npm_package_version",
+    "img-run": "podman run -it -p 9001:9001 quay.io/$QUAY_USER/$npm_package_name:$npm_package_version",
     "http-server": "./http-server.sh ./dist",
     "ts-node": "ts-node -O '{\"module\":\"commonjs\"}' -I '/node_modules/(?!(@console)/)/'",
     "format": "prettier --trailing-comma es5 --no-semi --single-quote --write 'src/**/*.{ts,tsx,js,jsx}'",
@@ -69,7 +70,7 @@
   },
   "consolePlugin": {
     "name": "dbaas-dynamic-plugin",
-    "version": "0.2.0-4.9",
+    "version": "0.3.0",
     "displayName": "DBaaS Dynamic Plugin",
     "description": "Dynamic Plugin for Openshift Console to provide custom components for DBaaS",
     "exposedModules": {
