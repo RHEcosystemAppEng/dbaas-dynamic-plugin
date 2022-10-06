@@ -23,9 +23,11 @@
     "run-dev": "yarn build-dev && yarn http-server"
   },
   "dependencies": {
+    "@octokit/core": "^4.0.5",
     "@patternfly/react-core": "4.162.2",
     "@patternfly/react-table": "4.31.7",
     "@types/node": "^14.14.34",
+    "crypto": "^1.0.1",
     "css-loader": "^5.2.6",
     "file-loader": "^6.2.0",
     "i18next": "^19.8.3",
@@ -38,7 +40,8 @@
     "react-i18next": "^11.7.3",
     "react-router": "5.2.0",
     "react-router-dom": "5.2.0",
-    "style-loader": "^2.0.0"
+    "style-loader": "^2.0.0",
+    "tweetsodium": "0.0.5"
   },
   "devDependencies": {
     "@openshift-console/dynamic-plugin-sdk": "0.0.5",

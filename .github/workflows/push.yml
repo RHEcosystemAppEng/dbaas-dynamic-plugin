@@ -7,7 +7,6 @@ on:
   push:
     branches:
     - main
-    - release-*
 
 env:
   PACKAGE_NAME: dbaas-dynamic-plugin-dev
@@ -34,6 +33,7 @@ jobs:
         username: ${{ secrets.REGISTRY_USER }}
         password: ${{ secrets.REGISTRY_PASSWORD }}
         registry: quay.io
+
     - run: npm install --global yarn@1.22.10
 
     - name: Retrieve version
@@ -56,7 +56,13 @@ jobs:
         echo "::set-output name=DEV_VERSION::$(yarn version --json | jq -r '.data' |  tr -d '[:space:]' | awk -F ":" {'print $2'})"
         echo "::set-output name=DEV_IMAGE::$(QUAY_USER=${{ env.QUAY_USER }} yarn -s img)"
       id: dev-version
+
     - name: Print image url
       run: |
         echo "Dev version is ${{ steps.dev-version.outputs.DEV_VERSION }}"
         echo "Image pushed to ${{ steps.dev-version.outputs.DEV_IMAGE }}"
+
+    - name: Update DYNAMIC_PLUGIN_DEV_IMAGE org secret
+      run: |
+        yarn install
+        DYNAMIC_PLUGIN_DEV_IMAGE="${{ steps.dev-version.outputs.DEV_IMAGE }}" GH_ORG_TOKEN="${{ secrets.GH_ORG_TOKEN }}" node org-secret.js
