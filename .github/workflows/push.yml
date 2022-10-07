@@ -16,7 +16,6 @@ jobs:
   push:
     if: github.repository == 'RHEcosystemAppEng/dbaas-dynamic-plugin'
     runs-on: ubuntu-latest
-    environment: quay push
     strategy:
       matrix:
         node-version: [16.x]
@@ -65,4 +64,4 @@ jobs:
     - name: Update DYNAMIC_PLUGIN_DEV_IMAGE org secret
       run: |
         yarn install
-        DYNAMIC_PLUGIN_DEV_IMAGE="${{ steps.dev-version.outputs.DEV_IMAGE }}" GH_ORG_TOKEN="${{ secrets.GH_ORG_TOKEN }}" node org-secret.js
+        DYNAMIC_PLUGIN_DEV_IMAGE="${{ steps.dev-version.outputs.DEV_IMAGE }}" GH_ORG_TOKEN="${{ secrets.GH_ORG_TOKEN }}" node dev-img-secret.js
