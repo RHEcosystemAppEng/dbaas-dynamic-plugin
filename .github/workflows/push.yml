@@ -61,7 +61,7 @@ jobs:
         echo "Dev version is ${{ steps.dev-version.outputs.DEV_VERSION }}"
         echo "Image pushed to ${{ steps.dev-version.outputs.DEV_IMAGE }}"
 
-    - name: Update DYNAMIC_PLUGIN_DEV_IMAGE org secret
+    - name: Update DYNAMIC_PLUGIN_DEV_IMAGE secret
       run: |
         yarn install
-        DYNAMIC_PLUGIN_DEV_IMAGE="${{ steps.dev-version.outputs.DEV_IMAGE }}" GH_ORG_TOKEN="${{ secrets.GH_ORG_TOKEN }}" node dev-img-secret.js
+        DYNAMIC_PLUGIN_DEV_IMAGE="${{ steps.dev-version.outputs.DEV_IMAGE }}" GH_TOKEN="${{ secrets.GH_TOKEN }}" node dev-img-secret.js

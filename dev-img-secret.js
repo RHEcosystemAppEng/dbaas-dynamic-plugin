@@ -2,7 +2,7 @@ const sodium = require('tweetsodium')
 const { Octokit } = require('@octokit/core')
 
 // Create a personal access token at https://github.com/settings/tokens/new?scopes=repo
-const octokit = new Octokit({ auth: process.env.GH_ORG_TOKEN })
+const octokit = new Octokit({ auth: process.env.GH_TOKEN })
 
 async function updateSecret() {
   const image = process.env.DYNAMIC_PLUGIN_DEV_IMAGE
