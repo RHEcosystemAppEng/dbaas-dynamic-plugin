@@ -1,4 +1,5 @@
 import * as _ from 'lodash'
+import { stringify } from 'k8s-selector'
 import { API_GROUP } from './const'
 
 export const cookiePrefix = 'csrf-token='
@@ -16,7 +17,7 @@ export const getCSRFToken = () => {
   }
 }
 
-export async function fetchObjectsClusterOrNS(group, version, kindPlural, installNS = '') {
+export async function fetchObjectsClusterOrNS(group = '', version = '', kindPlural = '', installNS = '') {
   let objectArray = []
   let listAllowed = await isListAllowed(group, kindPlural, '')
   if (listAllowed) {
@@ -42,7 +43,7 @@ export async function fetchObjectsClusterOrNS(group, version, kindPlural, instal
   return objectArray
 }
 
-export async function isListAllowed(group, kindPlural, namespace) {
+export async function isListAllowed(group = '', kindPlural = '', namespace = '') {
   let listAllowed = false
 
   let rulesBody = {
@@ -110,7 +111,55 @@ async function fetchProjects(installNS = '') {
   return projectNames
 }
 
-export async function fetchObjectsByNamespaces(group, version, kindPlural, namespaces = []) {
+async function fetchProjectsWithSelector(
+  installNS = '',
+  inventory = {
+    metadata: { namespace: '' },
+    spec: {
+      connectionNamespaces: [''],
+      connectionNsSelector: {
+        matchExpressions: [{ key: '', operator: {}, values: [''] }],
+        matchLabels: {},
+      },
+    },
+  },
+  inventoryData = { inventoryList: [], nsMap: {} }
+) {
+  let projectNames = []
+  if (!_.isEmpty(installNS)) {
+    projectNames.push(installNS)
+  }
+
+  var labelSelector = ''
+  if (!_.isNil(inventory.spec?.connectionNsSelector)) {
+    labelSelector = stringify(inventory.spec.connectionNsSelector)
+  } else if (!_.isNil(inventoryData.nsMap[inventory.metadata?.namespace]?.connectionNsSelector)) {
+    labelSelector = stringify(inventoryData.nsMap[inventory.metadata.namespace].connectionNsSelector)
+  }
+
+  if (!_.isEmpty(labelSelector)) {
+    var requestOpts = {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+    }
+    await fetch(
+      '/api/kubernetes/apis/project.openshift.io/v1/projects?limit=250&labelSelector=' + labelSelector,
+      requestOpts
+    )
+      .then(status)
+      .then(json)
+      .then((projectList) => projectList.items.forEach((project) => projectNames.push(project.metadata?.name)))
+
+    projectNames = [...new Set(projectNames)]
+  }
+
+  return projectNames
+}
+
+export async function fetchObjectsByNamespaces(group = '', version = '', kindPlural = '', namespaces = []) {
   let promises = []
   let items = []
 
@@ -126,7 +175,7 @@ export async function fetchObjectsByNamespaces(group, version, kindPlural, names
   return items
 }
 
-export async function objectsFromRulesReview(group, version, kindPlural, namespace) {
+export async function objectsFromRulesReview(group = '', version = '', kindPlural = '', namespace = '') {
   let items = []
   let promises = []
   let listAllowed = await isListAllowed(group, kindPlural, namespace)
@@ -183,7 +232,7 @@ export async function objectsFromRulesReview(group, version, kindPlural, namespa
   return items
 }
 
-function parseRulesReview(responseJson, kindPlural) {
+function parseRulesReview(responseJson, kindPlural = '') {
   let kindNames = []
   if (responseJson.status.resourceRules?.length > 0) {
     let resourceRule = { verbs: [], apiGroups: [], resources: [], resourceNames: [] }
@@ -218,7 +267,7 @@ export async function fetchInventoriesAndMapByNSAndRules(installNS = '') {
   return { inventoryList, nsMap }
 }
 
-export async function fetchObjects(objectNames, namespace, group, version, kindPlural) {
+export async function fetchObjects(objectNames = [], namespace = '', group = '', version = '', kindPlural = '') {
   let promises = []
   let items = []
   if (typeof objectNames === 'object') {
@@ -234,7 +283,7 @@ export async function fetchObjects(objectNames, namespace, group, version, kindP
   return items
 }
 
-export async function fetchObject(objectName, namespace, group, version, kindPlural) {
+export async function fetchObject(objectName = '', namespace = '', group = '', version = '', kindPlural = '') {
   var requestOpts = {
     method: 'GET',
     headers: {
@@ -274,12 +323,13 @@ export async function fetchInvAndConnNamespacesFromPolicies(installNS = '') {
   let policies = await fetchObjectsClusterOrNS(API_GROUP, 'v1alpha1', 'dbaaspolicies', installNS)
 
   policies.forEach((policy) => {
-    let policySpec = { connectionNamespaces: [], disableProvisions: false }
+    let policySpec = { connectionNamespaces: [''], connectionNsSelector: {}, disableProvisions: false }
     if (policy.status?.conditions?.length > 0 && policy.status.conditions[0].status === 'True') {
       policySpec = policy.spec
       if (nsMap[policy.metadata?.namespace]) {
-        nsMap[policy.metadata?.namespace].connectionNamespaces.push(...policy.spec?.connectionNamespaces)
-        nsMap[policy.metadata?.namespace].disableProvisions = policySpec.disableProvisions
+        nsMap[policy.metadata?.namespace].connectionNamespaces.push(...policySpec?.connectionNamespaces)
+        nsMap[policy.metadata?.namespace].connectionNsSelector = policySpec?.connectionNsSelector
+        nsMap[policy.metadata?.namespace].disableProvisions = policySpec?.disableProvisions
       } else {
         nsMap[policy.metadata?.namespace] = policySpec
       }
@@ -292,25 +342,45 @@ export async function fetchInvAndConnNamespacesFromPolicies(installNS = '') {
   return { uniqInventoryNamespaces, nsMap }
 }
 
-export function filterInventoriesByConnNS(inventoryData = { inventoryList: [], nsMap: {} }, currentNS = '') {
+async function returnInvIfValidNs(
+  currentNS = '',
+  inventory = {
+    metadata: { namespace: '' },
+    spec: {
+      connectionNamespaces: [''],
+      connectionNsSelector: { matchExpressions: [{ key: '', operator: {}, values: [''] }], matchLabels: {} },
+    },
+  },
+  inventoryData = { inventoryList: [], nsMap: {} }
+) {
+  let valid = await isValidNamespace(currentNS, inventory, inventoryData)
+  if (valid) {
+    return inventory
+  }
+}
+
+export async function filterInventoriesByConnNS(inventoryData = { inventoryList: [], nsMap: {} }, currentNS = '') {
+  let promises = []
   let inventoryItems = []
 
   inventoryData.inventoryList.forEach((inventory) => {
-    let push = false
-    if (isValidNamespace(currentNS, inventory, inventoryData)) {
-      push = true
-    }
-    if (push) {
-      inventoryItems.push(inventory)
-    }
+    promises.push(returnInvIfValidNs(currentNS, inventory, inventoryData))
+  })
+  await Promise.all(promises).then((inventories) => {
+    inventories.forEach((inventory) => {
+      if (!_.isNil(inventory)) {
+        inventoryItems.push(inventory)
+      }
+    })
   })
   return inventoryItems
 }
 
-export function filterInventoriesByConnNSandProvision(
+export async function filterInventoriesByConnNSandProvision(
   inventoryData = { inventoryList: [], nsMap: {} },
   currentNS = ''
 ) {
+  let promises = []
   let inventoryItems = []
   inventoryData.inventoryList.forEach((inventory) => {
     let disableProvision = false
@@ -320,22 +390,38 @@ export function filterInventoriesByConnNSandProvision(
       disableProvision = inventoryData.nsMap[inventory.metadata.namespace].disableProvisions
     }
 
-    let push = false
-    if (!disableProvision && isValidNamespace(currentNS, inventory, inventoryData)) {
-      push = true
+    if (!disableProvision) {
+      promises.push(returnInvIfValidNs(currentNS, inventory, inventoryData))
     }
-    if (push) {
-      inventoryItems.push(inventory)
-    }
+  })
+  await Promise.all(promises).then((inventories) => {
+    inventories.forEach((inventory) => {
+      if (!_.isNil(inventory)) {
+        inventoryItems.push(inventory)
+      }
+    })
   })
   return inventoryItems
 }
 
-export function isValidNamespace(
+async function isValidNamespace(
   currentNS = '',
-  inventory = { metadata: { namespace: '' }, spec: { connectionNamespaces: [''] } },
+  inventory = {
+    metadata: { namespace: '' },
+    spec: {
+      connectionNamespaces: [''],
+      connectionNsSelector: {
+        matchExpressions: [{ key: '', operator: {}, values: [''] }],
+        matchLabels: {},
+      },
+    },
+  },
   inventoryData = { inventoryList: [], nsMap: {} }
 ) {
+  if (inventory.metadata?.namespace === currentNS) {
+    return true
+  }
+
   let validNamespaces = []
   if (!_.isNil(inventory.spec?.connectionNamespaces)) {
     validNamespaces.push(...inventory.spec.connectionNamespaces)
@@ -343,14 +429,17 @@ export function isValidNamespace(
     validNamespaces.push(...inventoryData.nsMap[inventory.metadata.namespace].connectionNamespaces)
   }
 
-  return (
-    inventory.metadata?.namespace === currentNS ||
-    validNamespaces?.includes(currentNS) ||
-    validNamespaces?.includes('*')
-  )
+  if (validNamespaces?.includes('*') || validNamespaces?.includes(currentNS)) {
+    return true
+  }
+
+  let nsBySelectors = await fetchProjectsWithSelector('', inventory, inventoryData)
+  validNamespaces.push(...nsBySelectors)
+
+  return validNamespaces?.includes(currentNS)
 }
 
-export async function fetchDbaasCSV(currentNS, DBaaSOperatorName) {
+export async function fetchDbaasCSV(currentNS = '', DBaaSOperatorName = '') {
   let dbaasCSV = {}
   let requestOpts = {
     method: 'GET',

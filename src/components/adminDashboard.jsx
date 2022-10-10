@@ -224,7 +224,7 @@ const AdminDashboard = () => {
       setStatusMsg(error)
     })
 
-    let provisionItems = filterInventoriesByConnNSandProvision(inventoryData, currentNS)
+    let provisionItems = await filterInventoriesByConnNSandProvision(inventoryData, currentNS)
     if (provisionItems.length > 0) {
       setNoProvisionableInstances(false)
     } else setNoProvisionableInstances(true)

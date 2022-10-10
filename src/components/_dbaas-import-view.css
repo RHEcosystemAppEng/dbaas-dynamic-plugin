@@ -223,3 +223,29 @@
     display: grid;
     grid-template-columns: 200px 200px;
   }
+
+  .custom-text-filter-feedback {
+    display: block;
+    height: 29px;
+    pointer-events: none;
+    position: absolute;
+    right: 0;
+    text-align: center;
+    top: 5px;
+    width: 29px;
+    z-index: 2;
+  }
+
+  .required-section > button:after {
+    content:" *";
+    margin-left: var(--pf-c-form__label-required--MarginLeft);
+    font-size: var(--pf-c-form__label-required--FontSize);
+    color: var(--pf-c-form__label-required--Color);
+  }
+
+  .required-checkbox > label:after {
+    content:" *";
+    margin-left: var(--pf-c-form__label-required--MarginLeft);
+    font-size: var(--pf-c-form__label-required--FontSize);
+    color: var(--pf-c-form__label-required--Color);
+  }
