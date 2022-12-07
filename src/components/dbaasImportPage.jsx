@@ -1,6 +1,6 @@
 import * as _ from 'lodash'
 import React from 'react'
-import { DBaaSOperatorName } from '../const'
+import { DBaaSOperatorName, DBAAS_API_VERSION } from '../const'
 import { fetchDbaasCSV } from '../utils'
 import InstancesForm from './instancesForm'
 import ProviderAccountForm from './providerAccountForm'
@@ -37,7 +37,7 @@ class DBaasImportPage extends React.Component {
       },
     }
 
-    fetch('/api/kubernetes/apis/dbaas.redhat.com/v1alpha1/dbaasproviders', requestOpts)
+    fetch('/api/kubernetes/apis/dbaas.redhat.com/' + DBAAS_API_VERSION + '/dbaasproviders', requestOpts)
       .then((response) => response.json())
       .then((data) => {
         this.setState({ providerInfo: data })

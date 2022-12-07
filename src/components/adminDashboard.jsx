@@ -33,7 +33,7 @@ import {
   mongoProviderType,
   rdsProviderName,
   rdsProviderType,
-  API_GROUP,
+  DBAAS_API_VERSION,
 } from '../const'
 import {
   disableNSSelection,
@@ -211,7 +211,7 @@ const AdminDashboard = () => {
   const fetchDBaaSConnections = async () => {
     const connections = await fetchObjectsClusterOrNS(
       'dbaas.redhat.com',
-      'v1alpha1',
+      DBAAS_API_VERSION,
       'dbaasconnections',
       installNamespace
     )

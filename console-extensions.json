@@ -78,7 +78,7 @@
     "properties": {
       "model": {
         "group": "dbaas.redhat.com",
-        "version": "v1alpha1",
+        "version": "v1beta1",
         "kind": "DBaaSInventory"
       },
       "component": {
