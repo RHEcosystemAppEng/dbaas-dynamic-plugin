@@ -1,8 +1,8 @@
 // import { K8sKind } from '@openshift-console/dynamic-plugin-sdk';
-import { API_GROUP, API_VERSION } from '../const'
+import { DBAAS_API_GROUP, API_VERSION } from '../const'
 
 export const DBaaSServiceModel: any = {
-  apiGroup: API_GROUP,
+  apiGroup: DBAAS_API_GROUP,
   apiVersion: API_VERSION,
   kind: 'DBaaSService',
   id: 'dbaasservice',

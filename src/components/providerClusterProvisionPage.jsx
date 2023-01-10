@@ -32,6 +32,7 @@ import {
   rdsProviderType,
   DBaaSOperatorName,
   rdsEngineTypeDocUrl,
+  DBAAS_API_VERSION,
 } from '../const'
 import {
   getCSRFToken,
@@ -196,7 +197,12 @@ const ProviderClusterProvisionPage = () => {
       }
 
       fetch(
-        '/api/kubernetes/apis/dbaas.redhat.com/v1alpha1/namespaces/' + currentNS + '/dbaasinstances/' + clusterName,
+        '/api/kubernetes/apis/dbaas.redhat.com/' +
+          DBAAS_API_VERSION +
+          '/namespaces/' +
+          currentNS +
+          '/dbaasinstances/' +
+          clusterName,
         requestOpts
       )
         .then((response) => response.json())
@@ -262,7 +268,7 @@ const ProviderClusterProvisionPage = () => {
         'X-CSRFToken': getCSRFToken(),
       },
       body: JSON.stringify({
-        apiVersion: 'dbaas.redhat.com/v1alpha1',
+        apiVersion: 'dbaas.redhat.com/' + DBAAS_API_VERSION,
         kind: 'DBaaSInstance',
         metadata: {
           name: clusterName,
@@ -282,7 +288,10 @@ const ProviderClusterProvisionPage = () => {
     setShowResults(false)
     setLoadingMsg('Creating Database Instance...')
 
-    fetch('/api/kubernetes/apis/dbaas.redhat.com/v1alpha1/namespaces/' + currentNS + '/dbaasinstances', requestOpts)
+    fetch(
+      '/api/kubernetes/apis/dbaas.redhat.com/' + DBAAS_API_VERSION + '/namespaces/' + currentNS + '/dbaasinstances',
+      requestOpts
+    )
       .then((response) => response.json())
       .then((data) => {
         if (data.status === 'Failure') {
@@ -457,7 +466,7 @@ const ProviderClusterProvisionPage = () => {
       },
     }
 
-    fetch('/api/kubernetes/apis/dbaas.redhat.com/v1alpha1/dbaasproviders', requestOpts)
+    fetch('/api/kubernetes/apis/dbaas.redhat.com/' + DBAAS_API_VERSION + '/dbaasproviders', requestOpts)
       .then((response) => response.json())
       .then((data) => {
         let dbProviderList = []

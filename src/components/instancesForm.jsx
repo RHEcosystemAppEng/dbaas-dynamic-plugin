@@ -12,7 +12,7 @@ import {
   Alert,
 } from '@patternfly/react-core'
 import { InfoCircleIcon, CheckCircleIcon } from '@patternfly/react-icons'
-import { DBaaSInventoryCRName, CSVapiVersionKind } from '../const'
+import { DBaaSInventoryCRName, CSVapiVersionKind, DBAAS_API_VERSION } from '../const'
 class InstancesForm extends React.Component {
   constructor(props) {
     super(props)
@@ -58,7 +58,9 @@ class InstancesForm extends React.Component {
     const { currentCreatedInventoryInfo } = this.props
 
     fetch(
-      '/api/kubernetes/apis/dbaas.redhat.com/v1alpha1/namespaces/' +
+      '/api/kubernetes/apis/dbaas.redhat.com/' +
+        DBAAS_API_VERSION +
+        '/namespaces/' +
         this.state.currentNS +
         '/dbaasinventories/' +
         currentCreatedInventoryInfo?.metadata?.name,

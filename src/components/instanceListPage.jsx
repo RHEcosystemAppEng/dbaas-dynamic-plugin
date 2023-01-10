@@ -30,7 +30,8 @@ import {
   crunchyShortName,
   cockroachShortName,
   rdsShortName,
-  API_GROUP,
+  DBAAS_API_GROUP,
+  DBAAS_API_VERSION,
 } from '../const'
 import { DBAAS_PROVIDER_KIND } from '../catalog/const'
 import {
@@ -153,7 +154,12 @@ const InstanceListPage = () => {
   }
 
   async function fetchDBaaSConnections() {
-    const connections = await fetchObjectsClusterOrNS(API_GROUP, 'v1alpha1', 'dbaasconnections', installNamespace)
+    const connections = await fetchObjectsClusterOrNS(
+      DBAAS_API_GROUP,
+      DBAAS_API_VERSION,
+      'dbaasconnections',
+      installNamespace
+    )
     setDbaasConnectionList(connections)
   }
 
