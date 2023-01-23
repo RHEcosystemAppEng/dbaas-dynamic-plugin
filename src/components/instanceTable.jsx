@@ -31,7 +31,7 @@ import { ExclamationTriangleIcon, ExternalLinkAltIcon } from '@patternfly/react-
 import _ from 'lodash'
 import React from 'react'
 import { getCSRFToken, fetchDbaasCSV } from '../utils'
-import { DBaaSInventoryCRName, DBaaSOperatorName, topologyInstructionPageUrl } from '../const'
+import { DBaaSInventoryCRName, DBaaSOperatorName, topologyInstructionPageUrl, DBAAS_API_VERSION } from '../const'
 import './_dbaas-import-view.css'
 
 const IssuePopover = ({ action }) => (
@@ -327,7 +327,7 @@ class InstanceTable extends React.Component {
 
   submitInstances() {
     const newBody = {
-      apiVersion: 'dbaas.redhat.com/v1alpha1',
+      apiVersion: 'dbaas.redhat.com/' + DBAAS_API_VERSION,
       kind: 'DBaaSConnection',
       metadata: {
         // k8s only accept lowercase metadata.name and add last 10 chars of the instanceID to avoid same name
@@ -353,7 +353,9 @@ class InstanceTable extends React.Component {
       body: JSON.stringify(newBody),
     }
     fetch(
-      `/api/kubernetes/apis/dbaas.redhat.com/v1alpha1/namespaces/${this.state.currentNS}/dbaasconnections`,
+      `/api/kubernetes/apis/dbaas.redhat.com/` +
+        DBAAS_API_VERSION +
+        `/namespaces/${this.state.currentNS}/dbaasconnections`,
       requestOpts
     )
       .then((response) => response.json())

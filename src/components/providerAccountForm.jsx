@@ -38,6 +38,7 @@ import {
   DBaaSInventoryCRName,
   DBaaSPolicyCRName,
   CSVapiVersionKind,
+  DBAAS_API_VERSION,
 } from '../const'
 import './_dbaas-import-view.css'
 
@@ -286,7 +287,7 @@ class ProviderAccountForm extends React.Component {
         'X-CSRFToken': getCSRFToken(),
       },
       body: JSON.stringify({
-        apiVersion: 'dbaas.redhat.com/v1alpha1',
+        apiVersion: 'dbaas.redhat.com/' + DBAAS_API_VERSION,
         kind: 'DBaaSInventory',
         metadata: {
           name: inventoryName,
@@ -307,7 +308,9 @@ class ProviderAccountForm extends React.Component {
       }),
     }
     fetch(
-      `/api/kubernetes/apis/dbaas.redhat.com/v1alpha1/namespaces/${this.state.currentNS}/dbaasinventories`,
+      `/api/kubernetes/apis/dbaas.redhat.com/` +
+        DBAAS_API_VERSION +
+        `/namespaces/${this.state.currentNS}/dbaasinventories`,
       requestOpts
     )
       .then((response) => response.json())
@@ -322,7 +325,7 @@ class ProviderAccountForm extends React.Component {
               path: '/metadata/ownerReferences',
               value: [
                 {
-                  apiVersion: 'dbaas.redhat.com/v1alpha1',
+                  apiVersion: 'dbaas.redhat.com/' + DBAAS_API_VERSION,
                   kind: 'DBaaSInventory',
                   name: inventoryName,
                   uid: data.metadata.uid,

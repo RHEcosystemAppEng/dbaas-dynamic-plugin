@@ -1,10 +1,11 @@
 export const FLAG_DBAAS = 'FLAG_DBAAS'
 
-export const API_GROUP = 'dbaas.redhat.com'
+export const DBAAS_API_GROUP = 'dbaas.redhat.com'
+export const DBAAS_API_VERSION = 'v1beta1'
 export const API_VERSION = 'v1'
 
-export const DBaaSInventoryCRName = API_GROUP + '~v1alpha1~DBaaSInventory'
-export const DBaaSPolicyCRName = API_GROUP + '~v1alpha1~DBaaSPolicy'
+export const DBaaSInventoryCRName = DBAAS_API_GROUP + '~' + DBAAS_API_VERSION + '~DBaaSInventory'
+export const DBaaSPolicyCRName = DBAAS_API_GROUP + '~' + DBAAS_API_VERSION + '~DBaaSPolicy'
 export const CSVapiVersionKind = 'operators.coreos.com~v1alpha1~ClusterServiceVersion'
 
 export const DBaaSOperatorName = 'dbaas-operator'

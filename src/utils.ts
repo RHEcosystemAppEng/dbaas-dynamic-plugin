@@ -1,6 +1,6 @@
 import * as _ from 'lodash'
 import { stringify } from 'k8s-selector'
-import { API_GROUP } from './const'
+import { DBAAS_API_GROUP, DBAAS_API_VERSION } from './const'
 
 export const cookiePrefix = 'csrf-token='
 
@@ -116,10 +116,12 @@ async function fetchProjectsWithSelector(
   inventory = {
     metadata: { namespace: '' },
     spec: {
-      connectionNamespaces: [''],
-      connectionNsSelector: {
-        matchExpressions: [{ key: '', operator: {}, values: [''] }],
-        matchLabels: {},
+      policy: {
+        connections: {
+          namespaces: [''],
+          nsSelector: { matchExpressions: [{ key: '', operator: {}, values: [''] }], matchLabels: {} },
+        },
+        disableProvisions: false,
       },
     },
   },
@@ -131,10 +133,12 @@ async function fetchProjectsWithSelector(
   }
 
   var labelSelector = ''
-  if (!_.isNil(inventory.spec?.connectionNsSelector)) {
-    labelSelector = stringify(inventory.spec.connectionNsSelector)
-  } else if (!_.isNil(inventoryData.nsMap[inventory.metadata?.namespace]?.connectionNsSelector)) {
-    labelSelector = stringify(inventoryData.nsMap[inventory.metadata.namespace].connectionNsSelector)
+  if (!_.isNil(inventory.spec?.policy)) {
+    if (!_.isNil(inventory.spec?.policy?.connections?.nsSelector)) {
+      labelSelector = stringify(inventory.spec.policy.connections.nsSelector)
+    }
+  } else if (!_.isNil(inventoryData.nsMap[inventory.metadata?.namespace]?.connections?.nsSelector)) {
+    labelSelector = stringify(inventoryData.nsMap[inventory.metadata.namespace].connections.nsSelector)
   }
 
   if (!_.isEmpty(labelSelector)) {
@@ -259,8 +263,8 @@ export async function fetchInventoriesAndMapByNSAndRules(installNS = '') {
   let namespaces = await fetchInvAndConnNamespacesFromPolicies(installNS)
   let nsMap = namespaces.nsMap
   let inventoryList = await fetchObjectsByNamespaces(
-    API_GROUP,
-    'v1alpha1',
+    DBAAS_API_GROUP,
+    DBAAS_API_VERSION,
     'dbaasinventories',
     namespaces.uniqInventoryNamespaces
   )
@@ -320,15 +324,15 @@ export const isDbaasConnectionUsed = (serviceBinding, dbaasConnection) => {
 export async function fetchInvAndConnNamespacesFromPolicies(installNS = '') {
   let inventoryNamespaces = []
   let nsMap = {}
-  let policies = await fetchObjectsClusterOrNS(API_GROUP, 'v1alpha1', 'dbaaspolicies', installNS)
+  let policies = await fetchObjectsClusterOrNS(DBAAS_API_GROUP, DBAAS_API_VERSION, 'dbaaspolicies', installNS)
 
   policies.forEach((policy) => {
-    let policySpec = { connectionNamespaces: [''], connectionNsSelector: {}, disableProvisions: false }
+    let policySpec = { connections: { namespaces: [''], nsSelector: {} }, disableProvisions: false }
     if (policy.status?.conditions?.length > 0 && policy.status.conditions[0].status === 'True') {
       policySpec = policy.spec
       if (nsMap[policy.metadata?.namespace]) {
-        nsMap[policy.metadata?.namespace].connectionNamespaces.push(...policySpec?.connectionNamespaces)
-        nsMap[policy.metadata?.namespace].connectionNsSelector = policySpec?.connectionNsSelector
+        nsMap[policy.metadata?.namespace].connections.namespaces.push(...policySpec?.connections?.namespaces)
+        nsMap[policy.metadata?.namespace].connections.nsSelector = policySpec?.connections?.nsSelector
         nsMap[policy.metadata?.namespace].disableProvisions = policySpec?.disableProvisions
       } else {
         nsMap[policy.metadata?.namespace] = policySpec
@@ -347,8 +351,13 @@ async function returnInvIfValidNs(
   inventory = {
     metadata: { namespace: '' },
     spec: {
-      connectionNamespaces: [''],
-      connectionNsSelector: { matchExpressions: [{ key: '', operator: {}, values: [''] }], matchLabels: {} },
+      policy: {
+        connections: {
+          namespaces: [''],
+          nsSelector: { matchExpressions: [{ key: '', operator: {}, values: [''] }], matchLabels: {} },
+        },
+        disableProvisions: false,
+      },
     },
   },
   inventoryData = { inventoryList: [], nsMap: {} }
@@ -409,10 +418,12 @@ async function isValidNamespace(
   inventory = {
     metadata: { namespace: '' },
     spec: {
-      connectionNamespaces: [''],
-      connectionNsSelector: {
-        matchExpressions: [{ key: '', operator: {}, values: [''] }],
-        matchLabels: {},
+      policy: {
+        connections: {
+          namespaces: [''],
+          nsSelector: { matchExpressions: [{ key: '', operator: {}, values: [''] }], matchLabels: {} },
+        },
+        disableProvisions: false,
       },
     },
   },
@@ -423,10 +434,12 @@ async function isValidNamespace(
   }
 
   let validNamespaces = []
-  if (!_.isNil(inventory.spec?.connectionNamespaces)) {
-    validNamespaces.push(...inventory.spec.connectionNamespaces)
-  } else if (!_.isNil(inventoryData.nsMap[inventory.metadata?.namespace]?.connectionNamespaces)) {
-    validNamespaces.push(...inventoryData.nsMap[inventory.metadata.namespace].connectionNamespaces)
+  if (!_.isNil(inventory.spec?.policy)) {
+    if (!_.isNil(inventory.spec?.policy?.connections?.namespaces)) {
+      validNamespaces.push(...inventory.spec.policy.connections.namespaces)
+    }
+  } else if (!_.isNil(inventoryData.nsMap[inventory.metadata?.namespace]?.connections?.namespaces)) {
+    validNamespaces.push(...inventoryData.nsMap[inventory.metadata.namespace].connections.namespaces)
   }
 
   if (validNamespaces?.includes('*') || validNamespaces?.includes(currentNS)) {
