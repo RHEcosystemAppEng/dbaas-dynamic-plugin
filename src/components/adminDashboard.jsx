@@ -36,8 +36,6 @@ import {
   DBAAS_API_VERSION,
 } from '../const'
 import {
-  disableNSSelection,
-  enableNSSelection,
   fetchDbaasCSV,
   fetchObjectsClusterOrNS,
   isDbaasConnectionUsed,
@@ -53,7 +51,7 @@ import './_dbaas-import-view.css'
 
 const AdminDashboard = () => {
   const [noInstances, setNoInstances] = useState(false)
-  const [noProvisionableInstances, setNoProvisionableInstances] = useState(false)
+  const [noProvisionableInstances, setNoProvisionableInstances] = useState(true)
   const [statusMsg, setStatusMsg] = useState('')
   const [fetchInstancesFailed, setFetchInstancesFailed] = useState(false)
   const [showResults, setShowResults] = useState(false)
@@ -65,6 +63,7 @@ const AdminDashboard = () => {
   const [dBaaSOperatorNameWithVersion, setDBaaSOperatorNameWithVersion] = useState('')
   const [textInputNameValue, setTextInputNameValue] = useState('')
   const [installNamespace, setInstallNamespace] = useState('')
+  const [allNamespaces, setAllNamespaces] = useState(true)
 
   const currentNS = window.location.pathname.split('/')[3]
 
@@ -78,7 +77,11 @@ const AdminDashboard = () => {
   )
 
   const dropdownItems = [
-    <DropdownItem key="link" href={`/k8s/ns/${currentNS}/rhoda-admin-dashboard/import-provider-account`}>
+    <DropdownItem
+      key="link"
+      href={`/k8s/ns/${currentNS}/rhoda-admin-dashboard/import-provider-account`}
+      isDisabled={allNamespaces}
+    >
       Import Database Provider Account
     </DropdownItem>,
     <DropdownItem
@@ -219,53 +222,55 @@ const AdminDashboard = () => {
   }
 
   const fetchInstances = async () => {
-    const inventoryData = await fetchInventoriesAndMapByNSAndRules(installNamespace).catch((error) => {
-      setFetchInstancesFailed(true)
-      setStatusMsg(error)
-    })
+    if (!_.isEmpty(installNamespace)) {
+      const inventoryData = await fetchInventoriesAndMapByNSAndRules(installNamespace).catch((error) => {
+        setFetchInstancesFailed(true)
+        setStatusMsg(error)
+      })
 
-    let provisionItems = await filterInventoriesByConnNSandProvision(inventoryData, currentNS)
-    if (provisionItems.length > 0) {
-      setNoProvisionableInstances(false)
-    } else setNoProvisionableInstances(true)
+      if (!allNamespaces) {
+        let provisionItems = await filterInventoriesByConnNSandProvision(inventoryData, currentNS)
+        if (provisionItems.length > 0) {
+          setNoProvisionableInstances(false)
+        } else setNoProvisionableInstances(true)
+      } else setNoProvisionableInstances(true)
 
-    const inventoriesAll = []
-    if (inventoryData.inventoryList.length > 0) {
-      let filteredInventories = _.filter(
-        inventoryData.inventoryList,
-        (inventory) => inventory.status?.instances !== undefined
-      )
-      filteredInventories.forEach((inventory, index) => {
-        const obj = { id: 0, name: '', namespace: '', instances: [], status: {}, providername: '', alert: '' }
-        obj.id = index
-        obj.name = inventory.metadata?.name
-        obj.namespace = inventory.metadata?.namespace
-        obj.status = inventory.status
-        obj.providername = inventory.spec?.providerRef?.name
-
-        let inventoryReadyCondition = inventory?.status?.conditions?.find(
-          (condition) => condition.type?.toLowerCase() === 'inventoryready'
+      const inventoriesAll = []
+      if (inventoryData.inventoryList.length > 0) {
+        let filteredInventories = _.filter(
+          inventoryData.inventoryList,
+          (inventory) => inventory.status?.instances !== undefined
         )
-        let specSyncedCondition = inventory?.status?.conditions?.find(
-          (condition) => condition.type?.toLowerCase() === 'specsynced'
-        )
-        if (specSyncedCondition.type === 'SpecSynced') {
-          inventory.status?.instances?.map((instance) => (instance.provider = inventory.spec?.providerRef?.name))
-          obj.instances = inventory.status?.instances
-          if (specSyncedCondition.status === 'False' || inventoryReadyCondition.status === 'False') {
-            if (specSyncedCondition.reason === 'AuthenticationError') {
-              obj.alert = 'Can not establish a connection to this database instance.'
-            } else {
-              obj.alert = 'alert'
+        filteredInventories.forEach((inventory, index) => {
+          const obj = { id: 0, name: '', namespace: '', instances: [], status: {}, providername: '', alert: '' }
+          obj.id = index
+          obj.name = inventory.metadata?.name
+          obj.namespace = inventory.metadata?.namespace
+          obj.status = inventory.status
+          obj.providername = inventory.spec?.providerRef?.name
+
+          let inventoryReadyCondition = inventory?.status?.conditions?.find(
+            (condition) => condition.type?.toLowerCase() === 'inventoryready'
+          )
+          let specSyncedCondition = inventory?.status?.conditions?.find(
+            (condition) => condition.type?.toLowerCase() === 'specsynced'
+          )
+          if (specSyncedCondition.type === 'SpecSynced') {
+            inventory.status?.instances?.map((instance) => (instance.provider = inventory.spec?.providerRef?.name))
+            obj.instances = inventory.status?.instances
+            if (specSyncedCondition.status === 'False' || inventoryReadyCondition.status === 'False') {
+              if (specSyncedCondition.reason === 'AuthenticationError') {
+                obj.alert = 'Can not establish a connection to this database instance.'
+              } else {
+                obj.alert = 'alert'
+              }
             }
           }
-        }
 
-        inventoriesAll.push(obj)
-      })
-      setInventories(inventoriesAll)
-      setShowResults(true)
-    } else {
+          inventoriesAll.push(obj)
+        })
+        setInventories(inventoriesAll)
+      }
       setShowResults(true)
     }
   }
@@ -282,14 +287,20 @@ const AdminDashboard = () => {
     element.focus()
   }
 
-  const fetchCSV = async () => {
+  const fetchCSV = async (currentNS = '') => {
     let dbaasCSV = await fetchDbaasCSV(currentNS, DBaaSOperatorName)
-    setDBaaSOperatorNameWithVersion(dbaasCSV?.metadata?.name)
-    setInstallNamespace(dbaasCSV?.metadata?.annotations['olm.operatorNamespace'])
+    if (!_.isEmpty(dbaasCSV)) {
+      setDBaaSOperatorNameWithVersion(dbaasCSV?.metadata?.name)
+      setInstallNamespace(dbaasCSV?.metadata?.annotations['olm.operatorNamespace'])
+    } else {
+      setShowResults(false)
+    }
   }
 
   const goToCreateProviderPage = () => {
-    window.location.pathname = `/k8s/ns/${currentNS}/clusterserviceversions/${dBaaSOperatorNameWithVersion}/${DBaaSInventoryCRName}/~new`
+    if (!allNamespaces) {
+      window.location.pathname = `/k8s/ns/${currentNS}/clusterserviceversions/${dBaaSOperatorNameWithVersion}/${DBaaSInventoryCRName}/~new`
+    }
   }
 
   const displayInstancesFailed = () => {
@@ -316,22 +327,25 @@ const AdminDashboard = () => {
   }
 
   React.useEffect(() => {
-    disableNSSelection()
-
-    return () => {
-      enableNSSelection()
+    if (window.location.pathname.split('/')[2] === 'ns') {
+      setAllNamespaces(false)
+    } else {
+      setAllNamespaces(true)
     }
-  }, [])
+  }, [currentNS])
 
   React.useEffect(() => {
-    fetchCSV()
-  }, [])
+    if (allNamespaces) {
+      fetchCSV('')
+    } else fetchCSV(currentNS)
+    console.log('allNamespaces = ' + allNamespaces)
+  }, [currentNS, allNamespaces])
 
   React.useEffect(() => {
     fetchInstances()
     fetchDBaaSConnections()
     fetchServiceBindings()
-  }, [installNamespace, dBaaSOperatorNameWithVersion])
+  }, [installNamespace, dBaaSOperatorNameWithVersion, currentNS, allNamespaces])
 
   React.useEffect(() => {
     mapDBaaSConnectionsAndServiceBindings()

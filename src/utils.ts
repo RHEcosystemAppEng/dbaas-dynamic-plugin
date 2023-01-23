@@ -453,6 +453,15 @@ async function isValidNamespace(
 }
 
 export async function fetchDbaasCSV(currentNS = '', DBaaSOperatorName = '') {
+  if (_.isEmpty(currentNS)) {
+    let projects = await fetchProjects('')
+    if (projects.length > 0) {
+      currentNS = projects[0]
+    } else {
+      return {}
+    }
+  }
+
   let dbaasCSV = {}
   let requestOpts = {
     method: 'GET',
