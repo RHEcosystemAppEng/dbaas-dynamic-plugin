@@ -106,7 +106,8 @@
     "properties": {
       "exact": true,
       "path": [
-        "/k8s/ns/:ns/rhoda-admin-dashboard"
+        "/k8s/ns/:ns/rhoda-admin-dashboard",
+        "/k8s/all-namespaces/rhoda-admin-dashboard"
       ],
       "component": {
         "$codeRef": "adminDashboard"
