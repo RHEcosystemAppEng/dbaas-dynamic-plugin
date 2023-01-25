@@ -267,7 +267,9 @@ const AdminDashboard = () => {
             }
           }
 
-          inventoriesAll.push(obj)
+          if (allNamespaces || obj.namespace === currentNS) {
+            inventoriesAll.push(obj)
+          }
         })
         setInventories(inventoriesAll)
       }
