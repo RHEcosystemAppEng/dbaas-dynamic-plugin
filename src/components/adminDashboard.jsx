@@ -273,7 +273,6 @@ const AdminDashboard = () => {
         })
         setInventories(inventoriesAll)
       }
-      setShowResults(true)
     }
   }
 
@@ -294,8 +293,6 @@ const AdminDashboard = () => {
     if (!_.isEmpty(dbaasCSV)) {
       setDBaaSOperatorNameWithVersion(dbaasCSV?.metadata?.name)
       setInstallNamespace(dbaasCSV?.metadata?.annotations['olm.operatorNamespace'])
-    } else {
-      setShowResults(false)
     }
   }
 
@@ -329,6 +326,7 @@ const AdminDashboard = () => {
   }
 
   React.useEffect(() => {
+    setShowResults(false)
     if (window.location.pathname.split('/')[2] === 'ns') {
       setAllNamespaces(false)
     } else {
@@ -354,6 +352,7 @@ const AdminDashboard = () => {
     if (inventories.length > 0) {
       setNoInstances(false)
     } else setNoInstances(true)
+    setShowResults(true)
   }, [dbaasConnectionList, serviceBindingList, inventories])
 
   return (
