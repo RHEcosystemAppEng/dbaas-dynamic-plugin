@@ -386,7 +386,7 @@ const AdminDashboard = () => {
                       position={DropdownPosition.right}
                       toggle={
                         <DropdownToggle onToggle={onToggle} toggleIndicator={CaretDownIcon} isPrimary id="toggle-id-4">
-                          Configuration
+                          Configure
                         </DropdownToggle>
                       }
                       isOpen={isOpen}

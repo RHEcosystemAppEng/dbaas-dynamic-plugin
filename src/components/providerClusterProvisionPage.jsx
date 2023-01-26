@@ -19,21 +19,13 @@ import {
   ValidatedOptions,
   HelperTextItem,
   HelperText,
-  Form,
-  Popover,
+  FormSection,
 } from '@patternfly/react-core'
 import { InfoCircleIcon, CheckCircleIcon, ExternalLinkAltIcon, HelpIcon } from '@patternfly/react-icons'
 import FormHeader from './form/formHeader'
 import FlexForm from './form/flexForm'
 import FormBody from './form/formBody'
-import {
-  mongoProviderType,
-  crunchyProviderType,
-  rdsProviderType,
-  DBaaSOperatorName,
-  rdsEngineTypeDocUrl,
-  DBAAS_API_VERSION,
-} from '../const'
+import { mongoProviderType, crunchyProviderType, rdsProviderType, DBaaSOperatorName, DBAAS_API_VERSION } from '../const'
 import {
   getCSRFToken,
   fetchInventoriesAndMapByNSAndRules,
@@ -43,64 +35,74 @@ import {
   fetchDbaasCSV,
 } from '../utils'
 
-const LoadingView = ({ loadingMsg }) => {
-  return (
-    <React.Fragment>
-      <EmptyState>
-        <EmptyStateIcon variant="container" component={Spinner} />
-        <Title size="lg" headingLevel="h3">
-          {loadingMsg}
-        </Title>
-      </EmptyState>
-    </React.Fragment>
-  )
-}
+const LoadingView = ({ loadingMsg }) => (
+  <>
+    <EmptyState>
+      <EmptyStateIcon variant="container" component={Spinner} />
+      <Title size="lg" headingLevel="h3">
+        {loadingMsg}
+      </Title>
+    </EmptyState>
+  </>
+)
 
-const FailedView = ({ handleTryAgain, handleCancel, statusMsg }) => {
-  return (
-    <React.Fragment>
-      <EmptyState>
-        <EmptyStateIcon variant="container" component={InfoCircleIcon} className="error-icon" />
-        <Title headingLevel="h2" size="md">
-          Database instance creation failed
-        </Title>
-        <EmptyStateBody>The instance was not created. Try again.</EmptyStateBody>
-        <Alert variant="danger" isInline title="An error occured" className="co-alert co-break-word extra-top-margin">
-          <div>{statusMsg}</div>
-        </Alert>
-        <Button variant="primary" onClick={handleTryAgain}>
-          Try Again
+const FailedView = ({ handleTryAgain, handleCancel, statusMsg }) => (
+  <>
+    <EmptyState>
+      <EmptyStateIcon variant="container" component={InfoCircleIcon} className="error-icon" />
+      <Title headingLevel="h2" size="md">
+        Database instance creation failed
+      </Title>
+      <EmptyStateBody>The instance was not created. Try again.</EmptyStateBody>
+      <Alert variant="danger" isInline title="An error occured" className="co-alert co-break-word extra-top-margin">
+        <div>{statusMsg}</div>
+      </Alert>
+      <Button variant="primary" onClick={handleTryAgain}>
+        Try Again
+      </Button>
+      <EmptyStateSecondaryActions>
+        <Button variant="link" onClick={handleCancel}>
+          Close
         </Button>
-        <EmptyStateSecondaryActions>
-          <Button variant="link" onClick={handleCancel}>
-            Close
-          </Button>
-        </EmptyStateSecondaryActions>
-      </EmptyState>
-    </React.Fragment>
-  )
-}
+      </EmptyStateSecondaryActions>
+    </EmptyState>
+  </>
+)
 
-const SuccessView = ({ goToInstancesPage }) => {
-  return (
-    <React.Fragment>
-      <EmptyState>
-        <EmptyStateIcon variant="container" component={CheckCircleIcon} className="success-icon" />
-        <Title headingLevel="h2" size="md">
-          Database instance creation started
-        </Title>
-        <EmptyStateBody>
-          The database instance is being created, please click the button below to view it.
-        </EmptyStateBody>
-        <Button variant="primary" onClick={goToInstancesPage}>
-          View Database Instances
-        </Button>
-      </EmptyState>
-    </React.Fragment>
-  )
-}
+const SuccessView = ({ goToInstancesPage }) => (
+  <>
+    <EmptyState>
+      <EmptyStateIcon variant="container" component={CheckCircleIcon} className="success-icon" />
+      <Title headingLevel="h2" size="md">
+        Database instance creation started
+      </Title>
+      <EmptyStateBody>The database instance is being created, please click the button below to view it.</EmptyStateBody>
+      <Button variant="primary" onClick={goToInstancesPage}>
+        View Database Instances
+      </Button>
+    </EmptyState>
+  </>
+)
 
 const ProviderClusterProvisionPage = () => {
+  const [plan, setPlan] = React.useState([])
+  const [planOptions, setPlanOptions] = React.useState([])
+  const [isPlanFieldValid, setIsPlanFieldValid] = React.useState('')
+  const [cloudProvider, setCloudProvider] = React.useState([])
+  const [cpOptions, setCpOptions] = React.useState([])
+  const [isCloudProviderFieldValid, setIsCloudProviderFieldValid] = React.useState('')
+  const [selectedProvisioningData, setSelectedProvisioningData] = React.useState({})
+  const [isSpendLimitFieldValid, setIsSpendLimitFieldValid] = React.useState('')
+  const [isRegionFieldValid, setIsRegionFieldValid] = React.useState('')
+  const [isNodesFieldValid, setIsNodesFieldValid] = React.useState('')
+  const [isMachineTypeFieldValid, setIsMachineTypeFieldValid] = React.useState('')
+  const [isStorageFieldValid, setIsStorageFieldValid] = React.useState('')
+  const [isDatabaseTypeFieldValid, setIsDatabaseTypeFieldValid] = React.useState('')
+  const [isTeamProjectFieldValid, setIsTeamProjectFieldValid] = React.useState('')
+
+  const [filteredFieldsMap, setFilteredFieldsMap] = React.useState(new Map())
+  const [providerChosenOptionsMap, setProviderChosenOptionsMap] = React.useState(new Map())
+
   const [loadingMsg, setLoadingMsg] = React.useState('Fetching Database Providers and Provider Accounts...')
   const [providerList, setProviderList] = React.useState([{ value: '', label: 'Select database provider' }])
   const [selectedDBProvider, setSelectedDBProvider] = React.useState({})
@@ -108,8 +110,7 @@ const ProviderClusterProvisionPage = () => {
   const [filteredInventories, setFilteredInventories] = React.useState([{ name: 'Select provider account' }])
   const [selectedInventory, setSelectedInventory] = React.useState({})
   const [clusterName, setClusterName] = React.useState('')
-  const [projectName, setProjectName] = React.useState('')
-  const [engine, setEngine] = React.useState('')
+
   const [statusMsg, setStatusMsg] = React.useState('')
   const [inventoryHasIssue, setInventoryHasIssue] = React.useState(false)
   const [showResults, setShowResults] = React.useState(false)
@@ -118,9 +119,7 @@ const ProviderClusterProvisionPage = () => {
   const [provisionRequestFired, setProvisionRequestFired] = React.useState(false)
   const [isDBProviderFieldValid, setIsDBProviderFieldValid] = React.useState('')
   const [isInventoryFieldValid, setIsInventoryFieldValid] = React.useState('')
-  const [isInstanceNameFieldValid, setIsInstanceNameFieldValid] = React.useState('')
-  const [isProjectNameFieldValid, setIsProjectNameFieldValid] = React.useState('')
-  const [isEngineFieldValid, setIsEngineFieldValid] = React.useState('')
+  const [isNameFieldValid, setIsNameFieldValid] = React.useState('')
   const [isFormValid, setIsFormValid] = React.useState(false)
   const [installNamespace, setInstallNamespace] = React.useState('')
   const currentNS = window.location.pathname.split('/')[3]
@@ -128,12 +127,20 @@ const ProviderClusterProvisionPage = () => {
   const devSelectedProviderAccountName = window.location.pathname.split('/pa/')[1]
   const checkDBClusterStatusIntervalID = React.useRef()
   const checkDBClusterStatusTimeoutID = React.useRef()
-  const engineTypeOptions = [
-    { value: '', label: 'Select one', disabled: true, isPlaceholder: true },
-    { value: 'mariadb', label: 'MariaDB', disabled: false },
-    { value: 'mysql', label: 'MySQL', disabled: false },
-    { value: 'postgres', label: 'PostgreSQL', disabled: false },
+  const validationFields = [
+    ['plan', 'PlanFieldValid'],
+    ['cloudProvider', 'CloudProviderFieldValid'],
+    ['name', 'NameFieldValid'],
+    ['regions', 'RegionFieldValid'],
+    ['nodes', 'NodesFieldValid'],
+    ['spendLimit', 'SpendLimitFieldValid'],
+    ['databaseType', 'DatabaseTypeFieldValid'],
+    ['machineType', 'MachineTypeFieldValid'],
+    ['storageGib', 'StorageFieldValid'],
+    ['teamProject', 'TeamProjectFieldValid'],
   ]
+  const validationFieldMap = new Map(validationFields)
+
   const checkInventoryStatus = (inventory) => {
     if (inventory?.status?.conditions[0]?.type === 'SpecSynced') {
       if (inventory?.status?.conditions[0]?.status === 'False') {
@@ -151,16 +158,16 @@ const ProviderClusterProvisionPage = () => {
 
   const detectSelectedDBProviderAndProviderAccount = () => {
     if (!_.isEmpty(devSelectedDBProviderName) && !_.isEmpty(providerList)) {
-      let provider = _.find(providerList, (dbProvider) => {
-        return dbProvider.value === devSelectedDBProviderName
-      })
+      const provider = _.find(providerList, (dbProvider) => dbProvider.value === devSelectedDBProviderName)
       setSelectedDBProvider(provider)
       filterInventoriesByProvider(provider)
       setIsDBProviderFieldValid(ValidatedOptions.default)
+      setSelectedProvisioningData(provider.providerProvisioningData)
+      setIsFormValid(false)
     }
 
     if (!_.isEmpty(devSelectedProviderAccountName) && !_.isEmpty(inventories)) {
-      let inventory = inventories.forEach((inv) => {
+      const inventory = inventories.forEach((inv) => {
         if (inv.name === devSelectedProviderAccountName) {
           checkInventoryStatus(inv)
           setSelectedInventory(inv)
@@ -188,7 +195,7 @@ const ProviderClusterProvisionPage = () => {
 
   const checkDBClusterStatus = (clusterName) => {
     if (!_.isEmpty(clusterName)) {
-      let requestOpts = {
+      const requestOpts = {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -197,19 +204,14 @@ const ProviderClusterProvisionPage = () => {
       }
 
       fetch(
-        '/api/kubernetes/apis/dbaas.redhat.com/' +
-          DBAAS_API_VERSION +
-          '/namespaces/' +
-          currentNS +
-          '/dbaasinstances/' +
-          clusterName,
+        `/api/kubernetes/apis/dbaas.redhat.com/${DBAAS_API_VERSION}/namespaces/${currentNS}/dbaasinstances/${clusterName}`,
         requestOpts
       )
         .then((response) => response.json())
         .then((responseJson) => {
-          let provisionReadyCondition = responseJson?.status?.conditions?.find((condition) => {
-            return condition.type?.toLowerCase() === 'provisionready'
-          })
+          const provisionReadyCondition = responseJson?.status?.conditions?.find(
+            (condition) => condition.type?.toLowerCase() === 'provisionready'
+          )
 
           if (responseJson?.status?.phase?.toLowerCase() === 'creating') {
             setClusterProvisionSuccess(true)
@@ -252,15 +254,19 @@ const ProviderClusterProvisionPage = () => {
 
     if (!isFormValid) return
 
-    let otherInstanceParams = {}
+    let provisioningParameters = {}
 
-    if (selectedDBProvider.value === mongoProviderType) {
-      otherInstanceParams = { projectName: projectName }
-    } else if (selectedDBProvider.value === rdsProviderType) {
-      otherInstanceParams = { Engine: engine.value }
+    if (providerChosenOptionsMap.size > 0) {
+      for (const [mapKey, mapValue] of providerChosenOptionsMap) {
+        if (mapValue.value === undefined) {
+          provisioningParameters[mapKey] = mapValue
+        } else {
+          provisioningParameters[mapKey] = mapValue.value
+        }
+      }
     }
 
-    let requestOpts = {
+    const requestOpts = {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -268,7 +274,7 @@ const ProviderClusterProvisionPage = () => {
         'X-CSRFToken': getCSRFToken(),
       },
       body: JSON.stringify({
-        apiVersion: 'dbaas.redhat.com/' + DBAAS_API_VERSION,
+        apiVersion: `dbaas.redhat.com/${DBAAS_API_VERSION}`,
         kind: 'DBaaSInstance',
         metadata: {
           name: clusterName,
@@ -280,7 +286,7 @@ const ProviderClusterProvisionPage = () => {
             name: selectedInventory.name,
             namespace: selectedInventory.namespace,
           },
-          otherInstanceParams: otherInstanceParams,
+          provisioningParameters,
         },
       }),
     }
@@ -289,7 +295,7 @@ const ProviderClusterProvisionPage = () => {
     setLoadingMsg('Creating Database Instance...')
 
     fetch(
-      '/api/kubernetes/apis/dbaas.redhat.com/' + DBAAS_API_VERSION + '/namespaces/' + currentNS + '/dbaasinstances',
+      `/api/kubernetes/apis/dbaas.redhat.com/${DBAAS_API_VERSION}/namespaces/${currentNS}/dbaasinstances`,
       requestOpts
     )
       .then((response) => response.json())
@@ -322,12 +328,10 @@ const ProviderClusterProvisionPage = () => {
 
   const filterInventoriesByProvider = (provider) => {
     if (!_.isEmpty(provider)) {
-      let filteredInventoryList = _.filter(inventories, (inventory) => {
-        return inventory.providerRef?.name === provider.value
-      })
+      const filteredInventoryList = _.filter(inventories, (inventory) => inventory.providerRef?.name === provider.value)
       setFilteredInventories(filteredInventoryList)
 
-      //Set the first inventory as the selected inventory by default
+      // Set the first inventory as the selected inventory by default
       if (filteredInventoryList.length > 0) {
         checkInventoryStatus(filteredInventoryList[0])
         setSelectedInventory(filteredInventoryList[0])
@@ -343,10 +347,10 @@ const ProviderClusterProvisionPage = () => {
 
   const parseInventories = (inventoryItems) => {
     if (inventoryItems.length > 0) {
-      let inventories = []
+      const inventories = []
 
       inventoryItems.forEach((inventory, index) => {
-        let obj = { id: 0, name: '', namespace: '', instances: [], status: {}, providerRef: {} }
+        const obj = { id: 0, name: '', namespace: '', instances: [], status: {}, providerRef: {} }
         obj.id = index
         obj.name = inventory.metadata?.name
         obj.namespace = inventory.metadata?.namespace
@@ -357,9 +361,7 @@ const ProviderClusterProvisionPage = () => {
           inventory.status?.conditions[0]?.status !== 'False' &&
           inventory.status?.conditions[0]?.type === 'SpecSynced'
         ) {
-          inventory.status?.instances?.map((instance) => {
-            return (instance.provider = inventory.spec?.providerRef?.name)
-          })
+          inventory.status?.instances?.map((instance) => (instance.provider = inventory.spec?.providerRef?.name))
           obj.instances = inventory.status?.instances
         }
 
@@ -376,7 +378,7 @@ const ProviderClusterProvisionPage = () => {
   }
 
   async function filteredInventoriesByValidConnectionNS(installNS = '') {
-    let inventoryData = await fetchInventoriesAndMapByNSAndRules(installNS).catch(function (error) {
+    const inventoryData = await fetchInventoriesAndMapByNSAndRules(installNS).catch((error) => {
       console.log(error)
     })
     return await filterInventoriesByConnNSandProvision(inventoryData, currentNS)
@@ -384,48 +386,36 @@ const ProviderClusterProvisionPage = () => {
 
   const validateForm = () => {
     let isValid =
-      isDBProviderFieldValid === ValidatedOptions.default &&
-      isInventoryFieldValid === ValidatedOptions.default &&
-      isInstanceNameFieldValid === ValidatedOptions.default
+      isDBProviderFieldValid === ValidatedOptions.default && isInventoryFieldValid === ValidatedOptions.default
 
-    if (selectedDBProvider.value === mongoProviderType) {
-      isValid = isValid && isProjectNameFieldValid === ValidatedOptions.default
+    if (providerChosenOptionsMap.size > 0) {
+      for (const [key] of providerChosenOptionsMap) {
+        if (key === 'teamProject' && selectedDBProvider.value === crunchyProviderType) {
+          continue
+        }
+        isValid = isValid && eval(`is${validationFieldMap.get(key)}`) === ValidatedOptions.default
+      }
     }
-    if (selectedDBProvider.value === rdsProviderType) {
-      isValid = isValid && isEngineFieldValid === ValidatedOptions.default
-    }
-
     setIsFormValid(isValid)
   }
 
   const handleProjectNameChange = (value) => {
     if (_.isEmpty(value)) {
-      setIsProjectNameFieldValid(ValidatedOptions.error)
+      setIsTeamProjectFieldValid(ValidatedOptions.error)
     } else {
-      setIsProjectNameFieldValid(ValidatedOptions.default)
+      setIsTeamProjectFieldValid(ValidatedOptions.default)
     }
-    setProjectName(value)
-  }
-
-  const handleEngineChange = (value) => {
-    if (_.isEmpty(value)) {
-      setIsEngineFieldValid(ValidatedOptions.error)
-    } else {
-      setIsEngineFieldValid(ValidatedOptions.default)
-    }
-    let engineType = _.find(engineTypeOptions, (eng) => {
-      return eng.value === value
-    })
-    setEngine(engineType)
+    setProviderChosenOptionsMap(new Map(providerChosenOptionsMap.set('teamProject', value)))
   }
 
   const handleInstanceNameChange = (value) => {
     if (_.isEmpty(value)) {
-      setIsInstanceNameFieldValid(ValidatedOptions.error)
+      setIsNameFieldValid(ValidatedOptions.error)
     } else {
-      setIsInstanceNameFieldValid(ValidatedOptions.default)
+      setIsNameFieldValid(ValidatedOptions.default)
     }
     setClusterName(value)
+    setProviderChosenOptionsMap(new Map(providerChosenOptionsMap.set('name', value)))
   }
 
   const handleInventorySelection = (value) => {
@@ -434,11 +424,54 @@ const ProviderClusterProvisionPage = () => {
     } else {
       setIsInventoryFieldValid(ValidatedOptions.default)
     }
-    let inventory = _.find(inventories, (inv) => {
-      return inv.name === value
-    })
+    const inventory = _.find(inventories, (inv) => inv.name === value)
     checkInventoryStatus(inventory)
     setSelectedInventory(inventory)
+  }
+
+  const filterSelected = (unfilteredList) => {
+    let matchedItem
+
+    filterLoop: for (const item of unfilteredList) {
+      if (item.dependencies !== undefined) {
+        for (const dependsItem of item.dependencies) {
+          if (dependsItem.value !== providerChosenOptionsMap.get(dependsItem.field).value) {
+            continue filterLoop
+          }
+        }
+      }
+      matchedItem = item
+    }
+    return matchedItem
+  }
+
+  const setDefaultProviderData = (providerProvisioningData) => {
+    providerChosenOptionsMap.clear()
+    // setting plan options and initial value
+    if (providerProvisioningData.plan?.conditionalData[0].defaultValue === undefined) {
+      setIsPlanFieldValid(ValidatedOptions.error)
+    } else {
+      const defatulPlan = _.find(
+        providerProvisioningData.plan?.conditionalData[0].options,
+        (item) => item.value === providerProvisioningData.plan?.conditionalData[0].defaultValue
+      )
+      setPlan(defatulPlan)
+      setPlanOptions(providerProvisioningData.plan.conditionalData[0].options)
+      setIsPlanFieldValid(ValidatedOptions.default)
+      setProviderChosenOptionsMap(new Map(providerChosenOptionsMap.set('plan', defatulPlan)))
+    }
+    // setting cloud provider options and initial value
+    const cpDefault = filterSelected(providerProvisioningData.cloudProvider.conditionalData)
+
+    if (cpDefault.defaultValue === undefined) {
+      setIsCloudProviderFieldValid(ValidatedOptions.error)
+    } else {
+      const cloudProviderDefault = _.find(cpDefault.options, (item) => item.value === cpDefault.defaultValue)
+      setCloudProvider(cloudProviderDefault)
+      setCpOptions(cpDefault.options)
+      setProviderChosenOptionsMap(new Map(providerChosenOptionsMap.set('cloudProvider', cloudProviderDefault)))
+      setIsCloudProviderFieldValid(ValidatedOptions.default)
+    }
   }
 
   const handleDBProviderSelection = (value) => {
@@ -448,17 +481,18 @@ const ProviderClusterProvisionPage = () => {
       setIsDBProviderFieldValid(ValidatedOptions.default)
     }
     if (!_.isEmpty(providerList)) {
-      let provider = _.find(providerList, (dbProvider) => {
-        return dbProvider.value === value
-      })
+      const provider = _.find(providerList, (dbProvider) => dbProvider.value === value)
       setInventoryHasIssue(false)
       setSelectedDBProvider(provider)
+      setIsFormValid(false)
+      setSelectedProvisioningData(provider.providerProvisioningData)
+      setDefaultProviderData(provider.providerProvisioningData)
       filterInventoriesByProvider(provider)
     }
   }
 
   const fetchProviderInfo = () => {
-    let requestOpts = {
+    const requestOpts = {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -466,10 +500,10 @@ const ProviderClusterProvisionPage = () => {
       },
     }
 
-    fetch('/api/kubernetes/apis/dbaas.redhat.com/' + DBAAS_API_VERSION + '/dbaasproviders', requestOpts)
+    fetch(`/api/kubernetes/apis/dbaas.redhat.com/${DBAAS_API_VERSION}/dbaasproviders`, requestOpts)
       .then((response) => response.json())
       .then((data) => {
-        let dbProviderList = []
+        const dbProviderList = []
         data.items?.forEach((dbProvider) => {
           dbProviderList.push({
             value: dbProvider?.metadata?.name,
@@ -479,6 +513,7 @@ const ProviderClusterProvisionPage = () => {
               url: dbProvider?.spec?.externalProvisionURL,
               desc: dbProvider?.spec?.externalProvisionDescription,
             },
+            providerProvisioningData: dbProvider?.spec?.provisioningParameters,
           })
         })
         setProviderList(providerList.concat(dbProviderList))
@@ -488,106 +523,495 @@ const ProviderClusterProvisionPage = () => {
       })
   }
 
-  const setDBProviderFields = () => {
-    if (selectedDBProvider.value === mongoProviderType) {
-      return (
-        <FormGroup
-          label="Project Name"
-          fieldId="project-name"
-          isRequired
-          className="half-width-selection"
-          helperTextInvalid="This is a required field"
-          validated={isProjectNameFieldValid}
-        >
-          <TextInput
-            isRequired
-            type="text"
-            id="project-name"
-            name="project-name"
-            value={projectName}
-            onChange={handleProjectNameChange}
-            validated={isProjectNameFieldValid}
-          />
-          <HelperText>
-            <HelperTextItem variant="indeterminate">
-              Name of project under which database instance will be created at MongoDB Atlas
-            </HelperTextItem>
-          </HelperText>
-        </FormGroup>
-      )
+  const handlePlanChange = (value) => {
+    if (_.isEmpty(value)) {
+      setIsPlanFieldValid(ValidatedOptions.error)
+    } else {
+      setIsPlanFieldValid(ValidatedOptions.default)
     }
-    if (selectedDBProvider.value === rdsProviderType) {
+    const selectedPlan = _.find(planOptions, (cpPlan) => cpPlan.displayValue === value)
+    setPlan(selectedPlan)
+    setProviderChosenOptionsMap(new Map(providerChosenOptionsMap.set('plan', plan)))
+  }
+
+  const handleRegionChange = (value) => {
+    if (_.isEmpty(value) || value === '') {
+      setIsRegionFieldValid(ValidatedOptions.error)
+    } else {
+      setIsRegionFieldValid(ValidatedOptions.default)
+    }
+    const selectedRegion = _.find(filteredFieldsMap.get('regions').options, (cpRegion) => cpRegion.value === value)
+    setProviderChosenOptionsMap(new Map(providerChosenOptionsMap.set('regions', selectedRegion)))
+  }
+
+  const handleDatabaseTypeChange = (value) => {
+    if (_.isEmpty(value) || value === '') {
+      setIsDatabaseTypeFieldValid(ValidatedOptions.error)
+    } else {
+      setIsDatabaseTypeFieldValid(ValidatedOptions.default)
+    }
+    const selectedDatabaseType = _.find(
+      filteredFieldsMap.get('databaseType').options,
+      (cpDatabaseType) => cpDatabaseType.value === value
+    )
+    setProviderChosenOptionsMap(new Map(providerChosenOptionsMap.set('databaseType', selectedDatabaseType)))
+  }
+
+  const handleCPChange = (value) => {
+    if (_.isEmpty(value)) {
+      setIsCloudProviderFieldValid(ValidatedOptions.error)
+    } else {
+      setIsCloudProviderFieldValid(ValidatedOptions.default)
+    }
+    const selectedCP = _.find(cpOptions, (cp) => cp.displayValue === value)
+    setCloudProvider(selectedCP)
+    setProviderChosenOptionsMap(new Map(providerChosenOptionsMap.set('cloudProvider', selectedCP)))
+  }
+
+  const handleSpendLimitChange = (value) => {
+    if (_.isEmpty(value)) {
+      setIsSpendLimitFieldValid(ValidatedOptions.error)
+    } else {
+      setIsSpendLimitFieldValid(ValidatedOptions.default)
+    }
+    setProviderChosenOptionsMap(new Map(providerChosenOptionsMap.set('spendLimit', value)))
+  }
+
+  const handleNodesChange = (value) => {
+    if (_.isEmpty(value)) {
+      setIsNodesFieldValid(ValidatedOptions.error)
+    } else {
+      setIsNodesFieldValid(ValidatedOptions.default)
+    }
+    const selectedNodes = _.find(filteredFieldsMap.get('nodes').options, (cpNodes) => cpNodes.displayValue === value)
+    setProviderChosenOptionsMap(new Map(providerChosenOptionsMap.set('nodes', selectedNodes)))
+  }
+
+  const handleComputeChange = (value) => {
+    if (_.isEmpty(value)) {
+      setIsMachineTypeFieldValid(ValidatedOptions.error)
+    } else {
+      setIsMachineTypeFieldValid(ValidatedOptions.default)
+    }
+    const selectedCompute = _.find(
+      filteredFieldsMap.get('machineType').options,
+      (cpCompute) => cpCompute.value === value
+    )
+    setProviderChosenOptionsMap(new Map(providerChosenOptionsMap.set('machineType', selectedCompute)))
+  }
+
+  const handleStorageChange = (value) => {
+    if (_.isEmpty(value)) {
+      setIsStorageFieldValid(ValidatedOptions.error)
+    } else {
+      setIsStorageFieldValid(ValidatedOptions.default)
+    }
+    let selectedStorage = value
+    if (selectedProvisioningData.storageGib.conditionalData[0].options !== undefined) {
+      selectedStorage = _.find(filteredFieldsMap.get('storageGib').options, (cpStorage) => cpStorage.value === value)
+    }
+    setProviderChosenOptionsMap(new Map(providerChosenOptionsMap.set('storageGib', selectedStorage)))
+  }
+
+  const setDBProviderFields = () => {
+    if (plan.value === 'FREETRIAL') {
       return (
         <>
-          <FormGroup
-            label="Engine Type"
-            fieldId="engine"
-            isRequired
-            className="half-width-selection"
-            helperTextInvalid="This is a required field"
-            validated={isEngineFieldValid}
-            labelIcon={
-              <Popover
-                headerContent={<div>Engine Type</div>}
-                bodyContent={
-                  <div>
-                    The following options are set, regardless of which database engine is selected: <br />
-                    <ul>
-                      <li>DBInstanceClass: "db.t3.micro"</li>
-                      <li>AllocatedStorage: 20 (GB)</li>
-                      <li>PubliclyAccessible: true</li>
-                      <li>AvailabilityZone: "us-east-1a"</li>
-                    </ul>
-                  </div>
-                }
-                footerContent={
-                  <Button
-                    variant="link"
-                    component="a"
-                    href={rdsEngineTypeDocUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    icon={<ExternalLinkAltIcon />}
-                    iconPosition="right"
-                    isInline
-                  >
-                    Learn more
-                  </Button>
-                }
-              >
-                <button
-                  type="button"
-                  aria-label="more info"
-                  onClick={(e) => e.preventDefault()}
-                  aria-describedby="more-info"
-                  className="pf-c-form__group-label-help"
-                >
-                  <HelpIcon noVerticalAlign />
-                </button>
-              </Popover>
-            }
-          >
-            <FormSelect
-              isRequired
-              value={engine.value}
-              onChange={handleEngineChange}
-              aria-label="Engine Type"
-              validated={isEngineFieldValid}
+          {selectedProvisioningData.teamProject !== undefined ? (
+            <FormGroup
+              label={selectedProvisioningData.teamProject.displayName}
+              fieldId="teamProject"
+              isRequired={selectedDBProvider.value === mongoProviderType}
+              className="half-width-selection"
+              helperTextInvalid="This is a required field"
+              validated={isTeamProjectFieldValid}
             >
-              {engineTypeOptions.map((option, index) => (
-                <FormSelectOption isDisabled={option.disabled} key={index} value={option.value} label={option.label} />
-              ))}
-            </FormSelect>
-            <HelperText>
-              <HelperTextItem variant="indeterminate">
-                The name of the database engine to be used for this instance
-              </HelperTextItem>
-            </HelperText>
-          </FormGroup>
+              <TextInput
+                isRequired={selectedDBProvider.value === mongoProviderType}
+                type="text"
+                id="teamProject"
+                name="teamProject"
+                value={providerChosenOptionsMap.get('teamProject')}
+                onChange={handleProjectNameChange}
+                validated={isTeamProjectFieldValid}
+              />
+              <HelperText>
+                <HelperTextItem variant="indeterminate">
+                  Name of project under which database instance will be created
+                </HelperTextItem>
+              </HelperText>
+            </FormGroup>
+          ) : null}
         </>
       )
     }
-    return null
+    return (
+      <>
+        {plan.value === 'SERVERLESS' ? (
+          <>
+            {selectedProvisioningData.serverlessLocationLabel !== undefined && (
+              <Title headingLevel="h3" style={{ fontWeight: '600' }}>
+                {selectedProvisioningData.serverlessLocationLabel.displayName}
+              </Title>
+            )}
+            <HelperText>
+              <HelperTextItem variant="indeterminate" className="half-width-selection">
+                {selectedProvisioningData.serverlessLocationLabel.helpText}
+              </HelperTextItem>
+            </HelperText>
+            <FormGroup
+              label={selectedProvisioningData.regions.displayName}
+              fieldId="regions"
+              isRequired
+              helperTextInvalid="This is a required field"
+              validated={isRegionFieldValid}
+              className="half-width-selection"
+            >
+              <FormSelect
+                isRequired
+                value={
+                  providerChosenOptionsMap.get('regions') !== undefined && providerChosenOptionsMap.get('regions').value
+                }
+                onChange={handleRegionChange}
+                aria-label="regions"
+                validated={isRegionFieldValid}
+              >
+                {filteredFieldsMap.get('regions') !== undefined &&
+                  filteredFieldsMap
+                    .get('regions')
+                    .options.map((option, index) => (
+                      <FormSelectOption
+                        key={index}
+                        value={option.value}
+                        label={option.displayValue !== undefined ? option.displayValue : option.value}
+                      />
+                    ))}
+              </FormSelect>
+            </FormGroup>
+            {selectedProvisioningData.spendLimitLabel !== undefined && (
+              <Title headingLevel="h3" style={{ fontWeight: '600' }}>
+                {selectedProvisioningData.spendLimitLabel.displayName}
+              </Title>
+            )}
+            <HelperText>
+              <HelperTextItem variant="indeterminate" className="half-width-selection">
+                {selectedProvisioningData.spendLimitLabel.helpText}
+              </HelperTextItem>
+            </HelperText>
+            <FormGroup
+              label={selectedProvisioningData.spendLimit.displayName}
+              fieldId="spendLimit"
+              isRequired
+              helperTextInvalid="This is a required field"
+              validated={isSpendLimitFieldValid}
+              className="half-width-selection"
+            >
+              <TextInput
+                isRequired
+                type="text"
+                id="spendLimit"
+                name="spendLimit"
+                value={providerChosenOptionsMap.get('spendLimit')}
+                onChange={handleSpendLimitChange}
+                validated={isSpendLimitFieldValid}
+              />
+            </FormGroup>
+          </>
+        ) : (
+          <>
+            {selectedProvisioningData.databaseType !== undefined ? (
+              <FormGroup
+                label={selectedProvisioningData.databaseType.displayName}
+                fieldId="databaseType"
+                isRequired
+                helperTextInvalid="This is a required field"
+                validated={isDatabaseTypeFieldValid}
+                className="half-width-selection"
+              >
+                <FormSelect
+                  isRequired
+                  value={
+                    providerChosenOptionsMap.get('databaseType') !== undefined &&
+                    providerChosenOptionsMap.get('databaseType').value
+                  }
+                  onChange={handleDatabaseTypeChange}
+                  aria-label="databaseType"
+                  validated={isRegionFieldValid}
+                >
+                  {filteredFieldsMap.get('databaseType') !== undefined &&
+                    filteredFieldsMap
+                      .get('databaseType')
+                      .options.map((option, index) => (
+                        <FormSelectOption
+                          key={index}
+                          value={option.value}
+                          label={option.displayValue !== undefined ? option.displayValue : option.value}
+                        />
+                      ))}
+                </FormSelect>
+                <HelperText>
+                  <HelperTextItem variant="indeterminate">
+                    {selectedProvisioningData.databaseType.helpText}
+                  </HelperTextItem>
+                </HelperText>
+              </FormGroup>
+            ) : null}
+            {selectedProvisioningData.dedicatedLocationLabel !== undefined && (
+              <Title headingLevel="h3" style={{ fontWeight: '600' }}>
+                {selectedProvisioningData.dedicatedLocationLabel.displayName}
+              </Title>
+            )}
+            {selectedProvisioningData.dedicatedLocationLabel !== undefined ? (
+              <HelperText>
+                <HelperTextItem variant="indeterminate" className="half-width-selection">
+                  {selectedProvisioningData.dedicatedLocationLabel.helpText}
+                </HelperTextItem>
+              </HelperText>
+            ) : null}
+            {selectedProvisioningData.regions !== undefined ? (
+              <FormGroup
+                label={selectedProvisioningData.regions.displayName}
+                fieldId="regions"
+                isRequired
+                helperTextInvalid="This is a required field"
+                validated={isRegionFieldValid}
+                className="half-width-selection"
+              >
+                <FormSelect
+                  isRequired
+                  value={
+                    providerChosenOptionsMap.get('regions') !== undefined &&
+                    providerChosenOptionsMap.get('regions').value
+                  }
+                  onChange={handleRegionChange}
+                  aria-label="regions"
+                  validated={isRegionFieldValid}
+                >
+                  {filteredFieldsMap.get('regions') !== undefined &&
+                    filteredFieldsMap
+                      .get('regions')
+                      .options.map((option, index) => (
+                        <FormSelectOption
+                          key={index}
+                          value={option.value}
+                          label={option.displayValue !== undefined ? option.displayValue : option.value}
+                        />
+                      ))}
+                </FormSelect>
+                <HelperText>
+                  <HelperTextItem variant="indeterminate">{selectedProvisioningData.regions.helpText}</HelperTextItem>
+                </HelperText>
+              </FormGroup>
+            ) : null}
+            {selectedProvisioningData.nodes !== undefined ? (
+              <FormGroup
+                label={selectedProvisioningData.nodes.displayName}
+                fieldId="nodes"
+                isRequired
+                className="half-width-selection"
+                helperTextInvalid="This is a required field"
+                validated={isNodesFieldValid}
+              >
+                <FormSelect
+                  isRequired
+                  value={
+                    providerChosenOptionsMap.get('nodes') !== undefined && providerChosenOptionsMap.get('nodes').value
+                  }
+                  onChange={handleNodesChange}
+                  aria-label="nodes"
+                  validated={isNodesFieldValid}
+                >
+                  {filteredFieldsMap.get('nodes') !== undefined &&
+                    filteredFieldsMap
+                      .get('nodes')
+                      .options.map((option, index) => (
+                        <FormSelectOption
+                          key={index}
+                          value={option.value}
+                          label={option.displayValue !== undefined ? option.displayValue : option.value}
+                        />
+                      ))}
+                </FormSelect>
+              </FormGroup>
+            ) : null}
+            {selectedProvisioningData.hardwareLabel !== undefined && (
+              <Title headingLevel="h3" style={{ fontWeight: '600' }}>
+                {selectedProvisioningData.hardwareLabel.displayName}
+              </Title>
+            )}
+            {selectedProvisioningData.hardwareLabel !== undefined ? (
+              <HelperText>
+                <HelperTextItem variant="indeterminate" className="half-width-selection">
+                  {selectedProvisioningData.hardwareLabel.helpText}
+                </HelperTextItem>
+              </HelperText>
+            ) : null}
+            {selectedProvisioningData.machineType !== undefined ? (
+              <FormGroup
+                label={selectedProvisioningData.machineType.displayName}
+                fieldId="machineType"
+                isRequired
+                helperTextInvalid="This is a required field"
+                validated={isMachineTypeFieldValid}
+                className="half-width-selection"
+              >
+                <FormSelect
+                  isRequired
+                  value={
+                    providerChosenOptionsMap.get('machineType') !== undefined &&
+                    providerChosenOptionsMap.get('machineType').value
+                  }
+                  onChange={handleComputeChange}
+                  aria-label="machineType"
+                  validated={isMachineTypeFieldValid}
+                >
+                  {filteredFieldsMap.get('machineType') !== undefined &&
+                    filteredFieldsMap
+                      .get('machineType')
+                      .options.map((option, index) => (
+                        <FormSelectOption
+                          key={index}
+                          value={option.value}
+                          label={option.displayValue !== undefined ? option.displayValue : option.value}
+                        />
+                      ))}
+                </FormSelect>
+                <HelperText>
+                  <HelperTextItem variant="indeterminate">
+                    {selectedProvisioningData.machineType.helpText}
+                  </HelperTextItem>
+                </HelperText>
+              </FormGroup>
+            ) : null}
+
+            {selectedProvisioningData.storageGib !== undefined ? (
+              <>
+                {selectedProvisioningData.storageGib.conditionalData[0].options !== undefined ? (
+                  <FormGroup
+                    label={selectedProvisioningData.storageGib.displayName}
+                    fieldId="storageGib"
+                    isRequired
+                    helperTextInvalid="This is a required field"
+                    validated={isStorageFieldValid}
+                    className="half-width-selection"
+                  >
+                    <FormSelect
+                      isRequired
+                      value={
+                        providerChosenOptionsMap.get('storageGib') !== undefined &&
+                        providerChosenOptionsMap.get('storageGib').value
+                      }
+                      onChange={handleStorageChange}
+                      aria-label="storageGib"
+                      validated={isStorageFieldValid}
+                    >
+                      {filteredFieldsMap.get('storageGib') !== undefined &&
+                        filteredFieldsMap
+                          .get('storageGib')
+                          .options.map((option, index) => (
+                            <FormSelectOption
+                              key={index}
+                              value={option.value}
+                              label={option.displayValue !== undefined ? option.displayValue : option.value}
+                            />
+                          ))}
+                    </FormSelect>
+                  </FormGroup>
+                ) : (
+                  <FormGroup
+                    label={selectedProvisioningData.storageGib.displayName}
+                    fieldId="storageGib"
+                    isRequired
+                    helperTextInvalid="This is a required field"
+                    validated={isStorageFieldValid}
+                    className="half-width-selection"
+                  >
+                    <TextInput
+                      isRequired
+                      type="text"
+                      id="storageGib"
+                      name="storageGib"
+                      value={providerChosenOptionsMap.get('storageGib')}
+                      onChange={handleStorageChange}
+                      validated={isStorageFieldValid}
+                    />
+                    <HelperText>
+                      <HelperTextItem variant="indeterminate">
+                        {selectedProvisioningData.storageGib.helpText}
+                      </HelperTextItem>
+                    </HelperText>
+                  </FormGroup>
+                )}
+              </>
+            ) : null}
+          </>
+        )}
+      </>
+    )
+  }
+
+  const setDefaultsForDependentFields = (sortedFields) => {
+    for (const key of sortedFields) {
+      const item = selectedProvisioningData[key]
+      if (item?.conditionalData !== undefined) {
+        const matchedDependencies = filterSelected(item.conditionalData)
+        if (matchedDependencies !== undefined) {
+          if (matchedDependencies.options !== undefined) {
+            const foundOption = _.find(
+              matchedDependencies.options,
+              (option) => option.value === matchedDependencies.defaultValue
+            )
+            // setting validity of the field
+            if (foundOption.value) {
+              eval(`setIs${validationFieldMap.get(key)}('${ValidatedOptions.default}')`)
+            } else {
+              eval(`setIs${validationFieldMap.get(key)}('${ValidatedOptions.error}')`)
+            }
+            setProviderChosenOptionsMap(
+              new Map(
+                providerChosenOptionsMap.set(
+                  key,
+                  _.find(matchedDependencies.options, (option) => option.value === matchedDependencies.defaultValue)
+                )
+              )
+            )
+          } else {
+            if (matchedDependencies.defaultValue) {
+              eval(`setIs${validationFieldMap.get(key)}('${ValidatedOptions.default}')`)
+            } else {
+              eval(`setIs${validationFieldMap.get(key)}('${ValidatedOptions.error}')`)
+            }
+            setProviderChosenOptionsMap(new Map(providerChosenOptionsMap.set(key, matchedDependencies.defaultValue)))
+          }
+          // map with filtered data of drop downs available options.
+          setFilteredFieldsMap(new Map(filteredFieldsMap.set(key, matchedDependencies)))
+        }
+      } else {
+        if (item !== undefined) {
+          setProviderChosenOptionsMap(new Map(providerChosenOptionsMap.set(key, '')))
+        }
+      }
+    }
+  }
+
+  const setProviderFields = () => {
+    filteredFieldsMap.clear()
+    providerChosenOptionsMap.clear()
+    setProviderChosenOptionsMap(new Map(providerChosenOptionsMap.set('plan', plan)))
+    setProviderChosenOptionsMap(new Map(providerChosenOptionsMap.set('cloudProvider', cloudProvider)))
+
+    const sortedFields = [
+      'regions',
+      'spendLimit',
+      'nodes',
+      'databaseType',
+      'machineType',
+      'storageGib',
+      'teamProject',
+      'name',
+    ]
+
+    setDefaultsForDependentFields(sortedFields)
   }
 
   React.useEffect(() => {
@@ -612,18 +1036,37 @@ const ProviderClusterProvisionPage = () => {
     validateForm()
   }, [
     isDBProviderFieldValid,
-    isInstanceNameFieldValid,
+    isNameFieldValid,
     isInventoryFieldValid,
-    isProjectNameFieldValid,
+    isTeamProjectFieldValid,
     selectedDBProvider,
-    isEngineFieldValid,
+    isPlanFieldValid,
+    isCloudProviderFieldValid,
+    isRegionFieldValid,
+    isSpendLimitFieldValid,
+    isMachineTypeFieldValid,
+    isStorageFieldValid,
+    isNodesFieldValid,
+    isFormValid,
   ])
 
   React.useEffect(() => {
     if (!_.isEmpty(providerList) && !_.isEmpty(inventories)) {
       detectSelectedDBProviderAndProviderAccount()
     }
-  }, [providerList, inventories])
+  }, [providerList, inventories, selectedProvisioningData])
+
+  React.useEffect(() => {
+    if (!_.isEmpty(selectedDBProvider)) {
+      setProviderFields()
+    }
+  }, [plan, cloudProvider, selectedDBProvider])
+
+  // React.useEffect(() => {
+  //   if (!_.isEmpty(selectedDBProvider)) {
+  //     setDependentFields()
+  //   }
+  // }, [regions])
 
   return (
     <FlexForm className="instance-table-container" onSubmit={provisionDBCluster}>
@@ -642,7 +1085,7 @@ const ProviderClusterProvisionPage = () => {
         ) : null}
 
         {showResults && !provisionRequestFired ? (
-          <React.Fragment>
+          <>
             <Alert
               variant="info"
               isInline
@@ -704,7 +1147,7 @@ const ProviderClusterProvisionPage = () => {
               </FormSelect>
             </FormGroup>
             {selectedDBProvider?.allowsFreeTrial === true ? (
-              <React.Fragment>
+              <>
                 <FormGroup
                   label="Provider Account"
                   fieldId="provider-account"
@@ -756,21 +1199,21 @@ const ProviderClusterProvisionPage = () => {
                 ) : (
                   <>
                     <FormGroup
-                      label="Instance Name"
-                      fieldId="instance-name"
+                      label={selectedProvisioningData.name.displayName}
+                      fieldId="name"
                       isRequired
                       className="half-width-selection"
                       helperTextInvalid="This is a required field"
-                      validated={isInstanceNameFieldValid}
+                      validated={isNameFieldValid}
                     >
                       <TextInput
                         isRequired
                         type="text"
-                        id="instance-name"
-                        name="instance-name"
-                        value={clusterName}
+                        id="name"
+                        name="name"
+                        value={providerChosenOptionsMap.get('name')}
                         onChange={handleInstanceNameChange}
-                        validated={isInstanceNameFieldValid}
+                        validated={isNameFieldValid}
                       />
                       <HelperText>
                         <HelperTextItem variant="indeterminate">
@@ -778,6 +1221,54 @@ const ProviderClusterProvisionPage = () => {
                         </HelperTextItem>
                       </HelperText>
                     </FormGroup>
+
+                    {selectedProvisioningData.planLabel !== undefined ? (
+                      <FormSection
+                        title={selectedProvisioningData.planLabel.displayName}
+                        titleElement="h2"
+                        className="half-width-selection"
+                      >
+                        <FormGroup
+                          label={selectedProvisioningData.plan.displayName}
+                          fieldId="plan"
+                          isRequired
+                          helperTextInvalid="This is a required field"
+                          validated={isPlanFieldValid}
+                        >
+                          <FormSelect
+                            isRequired
+                            value={plan.displayValue}
+                            onChange={handlePlanChange}
+                            aria-label="plan"
+                            validated={isPlanFieldValid}
+                          >
+                            {planOptions.map((option, index) => (
+                              <FormSelectOption key={index} value={option.displayValue} label={option.displayValue} />
+                            ))}
+                          </FormSelect>
+                        </FormGroup>
+
+                        <FormGroup
+                          label={selectedProvisioningData.cloudProvider.displayName}
+                          fieldId="cloudProvider"
+                          isRequired
+                          helperTextInvalid="This is a required field"
+                          validated={isCloudProviderFieldValid}
+                        >
+                          <FormSelect
+                            isRequired
+                            value={cloudProvider.displayValue}
+                            onChange={handleCPChange}
+                            aria-label="cloudProvider"
+                            validated={isCloudProviderFieldValid}
+                          >
+                            {cpOptions.map((option, index) => (
+                              <FormSelectOption key={index} value={option.displayValue} label={option.displayValue} />
+                            ))}
+                          </FormSelect>
+                        </FormGroup>
+                      </FormSection>
+                    ) : null}
                     {setDBProviderFields()}
                     <ActionGroup>
                       <Button id="cluster-provision-button" variant="primary" type="submit" isDisabled={!isFormValid}>
@@ -789,9 +1280,9 @@ const ProviderClusterProvisionPage = () => {
                     </ActionGroup>
                   </>
                 )}
-              </React.Fragment>
+              </>
             ) : null}
-          </React.Fragment>
+          </>
         ) : null}
       </FormBody>
     </FlexForm>
