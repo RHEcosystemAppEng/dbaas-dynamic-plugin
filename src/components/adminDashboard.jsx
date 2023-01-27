@@ -276,8 +276,8 @@ const AdminDashboard = () => {
             inventoriesAll.push(obj)
           }
         })
-        setInventories(inventoriesAll)
       }
+      setInventories(inventoriesAll)
     }
   }
 
