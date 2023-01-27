@@ -64,6 +64,7 @@ const AdminDashboard = () => {
   const [textInputNameValue, setTextInputNameValue] = useState('')
   const [installNamespace, setInstallNamespace] = useState('')
   const [allNamespaces, setAllNamespaces] = useState(true)
+  const [retrieve, setRetrieve] = useState(true)
 
   const currentNS = window.location.pathname.split('/')[3]
 
@@ -202,23 +203,27 @@ const AdminDashboard = () => {
   }
 
   const fetchServiceBindings = async () => {
-    const serviceBindings = await fetchObjectsClusterOrNS(
-      'binding.operators.coreos.com',
-      'v1alpha1',
-      'servicebindings',
-      installNamespace
-    )
-    setServiceBindingList(serviceBindings)
+    if (!_.isEmpty(installNamespace)) {
+      const serviceBindings = await fetchObjectsClusterOrNS(
+        'binding.operators.coreos.com',
+        'v1alpha1',
+        'servicebindings',
+        installNamespace
+      )
+      setServiceBindingList(serviceBindings)
+    }
   }
 
   const fetchDBaaSConnections = async () => {
-    const connections = await fetchObjectsClusterOrNS(
-      'dbaas.redhat.com',
-      DBAAS_API_VERSION,
-      'dbaasconnections',
-      installNamespace
-    )
-    setDbaasConnectionList(connections)
+    if (!_.isEmpty(installNamespace)) {
+      const connections = await fetchObjectsClusterOrNS(
+        'dbaas.redhat.com',
+        DBAAS_API_VERSION,
+        'dbaasconnections',
+        installNamespace
+      )
+      setDbaasConnectionList(connections)
+    }
   }
 
   const fetchInstances = async () => {
@@ -329,31 +334,36 @@ const AdminDashboard = () => {
     setShowResults(false)
     if (window.location.pathname.split('/')[2] === 'ns') {
       setAllNamespaces(false)
+      fetchCSV(currentNS)
     } else {
       setAllNamespaces(true)
+      fetchCSV('')
     }
+    if (retrieve) {
+      setRetrieve(false)
+    } else setRetrieve(true)
   }, [currentNS])
 
   React.useEffect(() => {
-    if (allNamespaces) {
-      fetchCSV('')
-    } else fetchCSV(currentNS)
-    console.log('allNamespaces = ' + allNamespaces)
-  }, [currentNS, allNamespaces])
+    setShowResults(false)
+    fetchInstances()
+  }, [retrieve, installNamespace, allNamespaces])
 
   React.useEffect(() => {
-    fetchInstances()
     fetchDBaaSConnections()
     fetchServiceBindings()
-  }, [installNamespace, dBaaSOperatorNameWithVersion, currentNS, allNamespaces])
+  }, [inventories, installNamespace])
 
   React.useEffect(() => {
     mapDBaaSConnectionsAndServiceBindings()
-    if (inventories.length > 0) {
+  }, [inventories, dbaasConnectionList, serviceBindingList])
+
+  React.useEffect(() => {
+    if (inventoryInstances.length > 0) {
       setNoInstances(false)
     } else setNoInstances(true)
     setShowResults(true)
-  }, [dbaasConnectionList, serviceBindingList, inventories])
+  }, [inventoryInstances])
 
   return (
     <div className="instance-table-container">
