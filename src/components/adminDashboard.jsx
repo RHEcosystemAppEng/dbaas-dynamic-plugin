@@ -238,7 +238,7 @@ const AdminDashboard = () => {
         if (provisionItems.length > 0) {
           setNoProvisionableInstances(false)
         } else setNoProvisionableInstances(true)
-      } else setNoProvisionableInstances(true)
+      }
 
       const inventoriesAll = []
       if (inventoryData.inventoryList.length > 0) {
@@ -298,7 +298,7 @@ const AdminDashboard = () => {
     if (!_.isEmpty(dbaasCSV)) {
       setDBaaSOperatorNameWithVersion(dbaasCSV?.metadata?.name)
       setInstallNamespace(dbaasCSV?.metadata?.annotations['olm.operatorNamespace'])
-    }
+    } else setShowResults(true)
   }
 
   const goToCreateProviderPage = () => {
@@ -332,6 +332,8 @@ const AdminDashboard = () => {
 
   React.useEffect(() => {
     setShowResults(false)
+    setNoInstances(true)
+    setNoProvisionableInstances(true)
     if (window.location.pathname.split('/')[2] === 'ns') {
       setAllNamespaces(false)
       fetchCSV(currentNS)
@@ -345,7 +347,6 @@ const AdminDashboard = () => {
   }, [currentNS])
 
   React.useEffect(() => {
-    setShowResults(false)
     fetchInstances()
   }, [retrieve, installNamespace, allNamespaces])
 
