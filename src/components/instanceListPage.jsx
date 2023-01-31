@@ -99,7 +99,7 @@ const InstanceListPage = () => {
   const filteredInstances = React.useMemo(
     () =>
       selectedInventory?.instances?.filter((instance) =>
-        instance?.name?.toLowerCase().includes(textInputNameValue.toLowerCase())
+        instance?.serviceName?.toLowerCase().includes(textInputNameValue.toLowerCase())
       ),
     [selectedInventory.instances, textInputNameValue]
   )
@@ -112,11 +112,13 @@ const InstanceListPage = () => {
     if (newDbaasConnectionList.length > 0) {
       newDbaasConnectionList.forEach((dbaasConnection) => {
         if (
-          selectedInventory?.instances?.find((instance) => instance.instanceID === dbaasConnection.spec?.instanceID)
+          selectedInventory?.instances?.find(
+            (instance) => instance.serviceID === dbaasConnection.spec?.databaseServiceID
+          )
         ) {
           const connectionObj = {
-            instanceID: dbaasConnection?.spec?.instanceID,
-            instanceName: dbaasConnection?.metadata?.name,
+            serviceID: dbaasConnection?.spec?.databaseServiceID,
+            serviceName: dbaasConnection?.metadata?.name,
             connectionStatus: _.isEmpty(dbaasConnection?.status) ? '-' : dbaasConnection?.status?.conditions[0]?.reason,
             errMsg: 'N/A',
             applications: [],
@@ -249,8 +251,10 @@ const InstanceListPage = () => {
             inventory.status?.conditions[0]?.status !== 'False' &&
             inventory.status?.conditions[0]?.type === 'SpecSynced'
           ) {
-            inventory.status?.instances?.map((instance) => (instance.provider = inventory.spec?.providerRef?.name))
-            obj.instances = inventory.status?.instances
+            inventory.status?.databaseServices?.map(
+              (instance) => (instance.provider = inventory.spec?.providerRef?.name)
+            )
+            obj.instances = inventory.status?.databaseServices
           }
 
           newInventories.push(obj)

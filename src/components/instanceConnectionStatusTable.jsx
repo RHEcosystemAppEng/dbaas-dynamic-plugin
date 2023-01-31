@@ -60,8 +60,8 @@ class InstanceConnectionStatusTable extends React.Component {
       _.forEach(data, (rowData) => {
         rowList.push({
           cells: [
-            rowData.instanceID,
-            rowData.instanceName,
+            rowData.serviceID,
+            rowData.serviceName,
             rowData.connectionStatus,
             rowData.namespace,
             rowData.applications?.length > 0

@@ -171,7 +171,7 @@ class InstanceTable extends React.Component {
           if (!_.isEmpty(this.props.connectionAndServiceBindingList)) {
             for (const connection of this.props.connectionAndServiceBindingList) {
               if (
-                connection.instanceID === dbInstance.instanceID &&
+                connection.serviceID === dbInstance.serviceID &&
                 this.props.data.name === connection.providerAcct &&
                 this.props.data.namespace === connection.providerNamespace
               ) {
@@ -192,9 +192,9 @@ class InstanceTable extends React.Component {
           rowList.push({
             cells: [
               // Instance name
-              dbInstance.name,
+              dbInstance.serviceName,
               // Instance ID
-              dbInstance.instanceID,
+              dbInstance.serviceID,
               // Provider account issue
               this.state.inventoryHasIssue ? (
                 <>
@@ -245,9 +245,9 @@ class InstanceTable extends React.Component {
           rowList.push({
             cells: [
               // id
-              dbInstance.instanceID,
+              dbInstance.serviceID,
               // instance
-              `${dbInstance.name}-${dbInstance.instanceID.slice(-10)}`,
+              `${dbInstance.serviceName}-${dbInstance.serviceID.slice(-10)}`,
             ],
           })
         }
@@ -293,7 +293,7 @@ class InstanceTable extends React.Component {
   onSort = (_event, index, direction) => {
     let filterKey = ''
     let sortedInstances = []
-    const filterColumns = ['name', 'instanceID']
+    const filterColumns = ['serviceName', 'serviceID']
     filterKey = filterColumns[index - 1]
     const { filteredInstances } = this.props
 
@@ -330,8 +330,10 @@ class InstanceTable extends React.Component {
       apiVersion: 'dbaas.redhat.com/' + DBAAS_API_VERSION,
       kind: 'DBaaSConnection',
       metadata: {
-        // k8s only accept lowercase metadata.name and add last 10 chars of the instanceID to avoid same name
-        name: `${this.state.selectedInstance.name.toLowerCase()}-${this.state.selectedInstance.instanceID.slice(-10)}`,
+        // k8s only accept lowercase metadata.name and add last 10 chars of the serviceID to avoid same name
+        name: `${this.state.selectedInstance.serviceName.toLowerCase()}-${this.state.selectedInstance.serviceID.slice(
+          -10
+        )}`,
         namespace: this.state.currentNS,
       },
       spec: {
@@ -339,7 +341,7 @@ class InstanceTable extends React.Component {
           name: this.props.data.name,
           namespace: this.props.data.namespace,
         },
-        instanceID: this.state.selectedInstance.instanceID,
+        databaseServiceID: this.state.selectedInstance.serviceID,
       },
     }
 

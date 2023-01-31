@@ -62,7 +62,7 @@ class AdminConnectionsTable extends React.Component {
   onSort = (_event, index, direction) => {
     let filterKey = ''
     let sortedInstances = []
-    const filterColumns = ['instanceName', 'dbProvider', 'providerAcct']
+    const filterColumns = ['serviceName', 'dbProvider', 'providerAcct']
     filterKey = filterColumns[index]
     const { inventoryInstances } = this.props
 
@@ -91,7 +91,7 @@ class AdminConnectionsTable extends React.Component {
       data.forEach((inventoryInstance) => {
         rowList.push({
           cells: [
-            inventoryInstance.instanceName,
+            inventoryInstance.serviceName,
             inventoryInstance.dbProvider,
             inventoryInstance.providerAcct,
             inventoryInstance.alert.length > 0 ? (

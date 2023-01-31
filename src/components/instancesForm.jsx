@@ -84,18 +84,18 @@ class InstancesForm extends React.Component {
         })
       }
       if (responseJson?.status?.conditions[0]?.status === 'True') {
-        if (_.isEmpty(responseJson?.status?.instances)) {
+        if (_.isEmpty(responseJson?.status?.databaseServices)) {
           this.setState({
             noInstances: true,
             statusMsg: 'No database instance in this Provider Account',
             showResults: true,
           })
         } else {
-          responseJson?.status?.instances.map((instance) => {
+          responseJson?.status?.databaseServices.map((instance) => {
             instance.provider = responseJson?.spec?.providerRef?.name
           })
           this.setState({
-            inventory: { instances: responseJson?.status?.instances },
+            inventory: { instances: responseJson?.status?.databaseServices },
             hasInstanceUpdated: true,
             showResults: true,
           })

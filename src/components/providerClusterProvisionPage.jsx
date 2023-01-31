@@ -361,8 +361,8 @@ const ProviderClusterProvisionPage = () => {
           inventory.status?.conditions[0]?.status !== 'False' &&
           inventory.status?.conditions[0]?.type === 'SpecSynced'
         ) {
-          inventory.status?.instances?.map((instance) => (instance.provider = inventory.spec?.providerRef?.name))
-          obj.instances = inventory.status?.instances
+          inventory.status?.databaseServices?.map((instance) => (instance.provider = inventory.spec?.providerRef?.name))
+          obj.instances = inventory.status?.databaseServices
         }
 
         inventories.push(obj)
@@ -408,7 +408,7 @@ const ProviderClusterProvisionPage = () => {
     setProviderChosenOptionsMap(new Map(providerChosenOptionsMap.set('teamProject', value)))
   }
 
-  const handleInstanceNameChange = (value) => {
+  const handleServiceNameChange = (value) => {
     if (_.isEmpty(value)) {
       setIsNameFieldValid(ValidatedOptions.error)
     } else {
@@ -1212,7 +1212,7 @@ const ProviderClusterProvisionPage = () => {
                         id="name"
                         name="name"
                         value={providerChosenOptionsMap.get('name')}
-                        onChange={handleInstanceNameChange}
+                        onChange={handleServiceNameChange}
                         validated={isNameFieldValid}
                       />
                       <HelperText>
