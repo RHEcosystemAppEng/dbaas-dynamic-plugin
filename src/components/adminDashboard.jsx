@@ -71,7 +71,7 @@ const AdminDashboard = () => {
   const filteredInstances = React.useMemo(
     () =>
       inventoryInstances?.filter((instance) => {
-        const nameStr = instance.instanceName
+        const nameStr = instance.serviceName
         return nameStr.toLowerCase().includes(textInputNameValue.toLowerCase())
       }),
     [inventoryInstances, textInputNameValue]
@@ -109,8 +109,8 @@ const AdminDashboard = () => {
     if (newDbaasConnectionList.length > 0) {
       newDbaasConnectionList.forEach((dbaasConnection) => {
         const connectionObj = {
-          instanceID: dbaasConnection?.spec?.instanceID,
-          instanceName: dbaasConnection?.metadata?.name,
+          serviceID: dbaasConnection?.spec?.databaseServiceID,
+          serviceName: dbaasConnection?.metadata?.name,
           connectionStatus: _.isEmpty(dbaasConnection?.status) ? '-' : dbaasConnection?.status?.conditions[0]?.reason,
           errMsg: 'N/A',
           applications: [],
@@ -154,18 +154,18 @@ const AdminDashboard = () => {
       if (inventory.instances?.length > 0) {
         for (let dbInstance of inventory.instances) {
           const inventoryInstance = {}
-          inventoryInstance.instanceName = dbInstance.name
+          inventoryInstance.serviceName = dbInstance.serviceName
           inventoryInstance.dbProvider = dbProvider
           inventoryInstance.providerAcct = inventory.name
           inventoryInstance.alert = inventory.alert
-          inventoryInstance.instanceID = dbInstance.instanceID
+          inventoryInstance.serviceID = dbInstance.serviceID
           inventoryInstance.connections = []
           if (newConnectionAndServiceBindingList.length === 0) {
             inventoryInstance.connections.push(['--', '--', '--', '--'])
           } else {
             for (let connection of newConnectionAndServiceBindingList) {
               if (
-                connection.instanceID === dbInstance.instanceID &&
+                connection.serviceID === dbInstance.serviceID &&
                 inventory.name === connection.providerAcct &&
                 connection.providerNamespace === inventory.namespace
               ) {
@@ -244,7 +244,7 @@ const AdminDashboard = () => {
       if (inventoryData.inventoryList.length > 0) {
         let filteredInventories = _.filter(
           inventoryData.inventoryList,
-          (inventory) => inventory.status?.instances !== undefined
+          (inventory) => inventory.status?.databaseServices !== undefined
         )
         filteredInventories.forEach((inventory, index) => {
           const obj = { id: 0, name: '', namespace: '', instances: [], status: {}, providername: '', alert: '' }
@@ -261,8 +261,10 @@ const AdminDashboard = () => {
             (condition) => condition.type?.toLowerCase() === 'specsynced'
           )
           if (specSyncedCondition.type === 'SpecSynced') {
-            inventory.status?.instances?.map((instance) => (instance.provider = inventory.spec?.providerRef?.name))
-            obj.instances = inventory.status?.instances
+            inventory.status?.databaseServices?.map(
+              (instance) => (instance.provider = inventory.spec?.providerRef?.name)
+            )
+            obj.instances = inventory.status?.databaseServices
             if (specSyncedCondition.status === 'False' || inventoryReadyCondition.status === 'False') {
               if (specSyncedCondition.reason === 'AuthenticationError') {
                 obj.alert = 'Can not establish a connection to this database instance.'
