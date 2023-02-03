@@ -163,6 +163,7 @@ const ProviderClusterProvisionPage = () => {
       filterInventoriesByProvider(provider)
       setIsDBProviderFieldValid(ValidatedOptions.default)
       setSelectedProvisioningData(provider.providerProvisioningData)
+      setDefaultProviderData(provider.providerProvisioningData)
       setIsFormValid(false)
     }
 
@@ -1054,7 +1055,7 @@ const ProviderClusterProvisionPage = () => {
     if (!_.isEmpty(providerList) && !_.isEmpty(inventories)) {
       detectSelectedDBProviderAndProviderAccount()
     }
-  }, [providerList, inventories, selectedProvisioningData])
+  }, [providerList, inventories])
 
   React.useEffect(() => {
     if (!_.isEmpty(selectedDBProvider)) {
