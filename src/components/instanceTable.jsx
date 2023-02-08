@@ -33,6 +33,7 @@ import React from 'react'
 import { getCSRFToken, fetchDbaasCSV } from '../utils'
 import { DBaaSInventoryCRName, DBaaSOperatorName, topologyInstructionPageUrl, DBAAS_API_VERSION } from '../const'
 import './_dbaas-import-view.css'
+import { CATALOG_TYPE } from '../catalog/const'
 
 const IssuePopover = ({ action }) => (
   <Flex>
@@ -143,7 +144,12 @@ class InstanceTable extends React.Component {
   }
 
   handleCancel() {
-    window.history.back()
+    const { currentNS } = this.state
+    if (this.props.isSelectable) {
+      window.location.href = `/catalog/ns/${currentNS}?catalogType=${CATALOG_TYPE}`
+    } else {
+      window.history.back()
+    }
   }
 
   onSelect(event, isSelected, rowId) {
