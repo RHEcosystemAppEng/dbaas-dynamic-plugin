@@ -65,6 +65,7 @@ const AdminDashboard = () => {
   const [installNamespace, setInstallNamespace] = useState('')
   const [allNamespaces, setAllNamespaces] = useState(true)
   const [retrieve, setRetrieve] = useState(true)
+  const [initialLanding, setInitialLanding] = useState(true)
 
   const currentNS = window.location.pathname.split('/')[3]
 
@@ -280,6 +281,7 @@ const AdminDashboard = () => {
         })
       }
       setInventories(inventoriesAll)
+      setInitialLanding(false)
     }
   }
 
@@ -371,7 +373,7 @@ const AdminDashboard = () => {
   return (
     <div className="instance-table-container">
       <FormBody flexLayout>
-        {!showResults ? (
+        {!showResults || initialLanding ? (
           <EmptyState>
             <EmptyStateIcon variant="container" component={Spinner} />
             <Title size="lg" headingLevel="h3">
