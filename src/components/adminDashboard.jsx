@@ -302,7 +302,10 @@ const AdminDashboard = () => {
     if (!_.isEmpty(dbaasCSV)) {
       setDBaaSOperatorNameWithVersion(dbaasCSV?.metadata?.name)
       setInstallNamespace(dbaasCSV?.metadata?.annotations['olm.operatorNamespace'])
-    } else setShowResults(true)
+    } else {
+      setShowResults(true)
+      setInitialLanding(false)
+    }
   }
 
   const goToCreateProviderPage = () => {
