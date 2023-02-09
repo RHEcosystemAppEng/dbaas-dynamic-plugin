@@ -90,6 +90,7 @@ const ProviderClusterProvisionPage = () => {
   const [isPlanFieldValid, setIsPlanFieldValid] = React.useState('')
   const [cloudProvider, setCloudProvider] = React.useState([])
   const [cpOptions, setCpOptions] = React.useState([])
+  const [databaseType, setDatabaseType] = React.useState([])
   const [isCloudProviderFieldValid, setIsCloudProviderFieldValid] = React.useState('')
   const [selectedProvisioningData, setSelectedProvisioningData] = React.useState({})
   const [isSpendLimitFieldValid, setIsSpendLimitFieldValid] = React.useState('')
@@ -555,6 +556,7 @@ const ProviderClusterProvisionPage = () => {
       filteredFieldsMap.get('databaseType').options,
       (cpDatabaseType) => cpDatabaseType.value === value
     )
+    setDatabaseType(selectedDatabaseType)
     setProviderChosenOptionsMap(new Map(providerChosenOptionsMap.set('databaseType', selectedDatabaseType)))
   }
 
@@ -588,7 +590,7 @@ const ProviderClusterProvisionPage = () => {
     setProviderChosenOptionsMap(new Map(providerChosenOptionsMap.set('nodes', selectedNodes)))
   }
 
-  const handleComputeChange = (value) => {
+  const handleMachineTypeChange = (value) => {
     if (_.isEmpty(value)) {
       setIsMachineTypeFieldValid(ValidatedOptions.error)
     } else {
@@ -862,7 +864,7 @@ const ProviderClusterProvisionPage = () => {
                     providerChosenOptionsMap.get('machineType') !== undefined &&
                     providerChosenOptionsMap.get('machineType').value
                   }
-                  onChange={handleComputeChange}
+                  onChange={handleMachineTypeChange}
                   aria-label="machineType"
                   validated={isMachineTypeFieldValid}
                 >
@@ -995,6 +997,11 @@ const ProviderClusterProvisionPage = () => {
     }
   }
 
+  const setDependentFields = () => {
+    const sortedFields = ['machineType']
+    setDefaultsForDependentFields(sortedFields)
+  }
+
   const setProviderFields = () => {
     filteredFieldsMap.clear()
     providerChosenOptionsMap.clear()
@@ -1063,11 +1070,11 @@ const ProviderClusterProvisionPage = () => {
     }
   }, [plan, cloudProvider, selectedDBProvider])
 
-  // React.useEffect(() => {
-  //   if (!_.isEmpty(selectedDBProvider)) {
-  //     setDependentFields()
-  //   }
-  // }, [regions])
+  React.useEffect(() => {
+    if (!_.isEmpty(selectedDBProvider)) {
+      setDependentFields()
+    }
+  }, [databaseType])
 
   return (
     <FlexForm className="instance-table-container" onSubmit={provisionDBCluster}>
