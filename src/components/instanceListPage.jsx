@@ -60,7 +60,8 @@ export const handleCancel = () => {
 
 const InstanceListPage = () => {
   const [noInstances, setNoInstances] = React.useState(false)
-  const [noProvisionableInstances, setNoProvisionableInstances] = React.useState(false)
+  const [noProvisionableInstances, setNoProvisionableInstances] = React.useState(true)
+  const [provisionableList, setProvisionableList] = React.useState([])
   const [statusMsg, setStatusMsg] = React.useState('')
   const [fetchInstancesFailed, setFetchInstancesFailed] = React.useState(false)
   const [textInputNameValue, setTextInputNameValue] = React.useState('')
@@ -224,9 +225,7 @@ const InstanceListPage = () => {
     })
 
     let provisionItems = await filterInventoriesByConnNSandProvision(inventoryData, currentNS)
-    if (provisionItems.length > 0) {
-      setNoProvisionableInstances(false)
-    } else setNoProvisionableInstances(true)
+    setProvisionableList(provisionItems)
     return await filterInventoriesByConnNS(inventoryData, currentNS)
   }
 
@@ -306,6 +305,15 @@ const InstanceListPage = () => {
   React.useEffect(() => {
     mapDBaaSConnectionsAndServiceBindings()
   }, [dbaasConnectionList, serviceBindingList, selectedInventory])
+
+  React.useEffect(() => {
+    setNoProvisionableInstances(true)
+    provisionableList.forEach((item) => {
+      if (selectedInventory.name === item.metadata?.name && selectedInventory.namespace === item.metadata?.namespace) {
+        setNoProvisionableInstances(false)
+      }
+    })
+  }, [provisionableList, selectedInventory])
 
   return (
     <div className="instance-table-container">
