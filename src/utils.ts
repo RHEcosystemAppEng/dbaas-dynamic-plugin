@@ -393,8 +393,10 @@ export async function filterInventoriesByConnNSandProvision(
   let inventoryItems = []
   inventoryData.inventoryList.forEach((inventory) => {
     let disableProvision = false
-    if (!_.isNil(inventory.spec?.disableProvisions)) {
-      disableProvision = inventory.spec.disableProvisions
+    if (!_.isNil(inventory.spec?.policy)) {
+      if (!_.isNil(inventory.spec?.policy?.disableProvisions)) {
+        disableProvision = inventory.spec.policy.disableProvisions
+      }
     } else if (!_.isNil(inventoryData.nsMap[inventory.metadata?.namespace]?.disableProvisions)) {
       disableProvision = inventoryData.nsMap[inventory.metadata.namespace].disableProvisions
     }
