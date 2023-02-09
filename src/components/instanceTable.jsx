@@ -348,6 +348,7 @@ class InstanceTable extends React.Component {
           namespace: this.props.data.namespace,
         },
         databaseServiceID: this.state.selectedInstance.serviceID,
+        databaseServiceType: this.state.selectedInstance.serviceType,
       },
     }
 
