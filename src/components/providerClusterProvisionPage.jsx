@@ -1007,17 +1007,9 @@ const ProviderClusterProvisionPage = () => {
     providerChosenOptionsMap.clear()
     setProviderChosenOptionsMap(new Map(providerChosenOptionsMap.set('plan', plan)))
     setProviderChosenOptionsMap(new Map(providerChosenOptionsMap.set('cloudProvider', cloudProvider)))
+    setProviderChosenOptionsMap(new Map(providerChosenOptionsMap.set('name', clusterName)))
 
-    const sortedFields = [
-      'regions',
-      'spendLimit',
-      'nodes',
-      'databaseType',
-      'machineType',
-      'storageGib',
-      'teamProject',
-      'name',
-    ]
+    const sortedFields = ['regions', 'spendLimit', 'nodes', 'databaseType', 'machineType', 'storageGib', 'teamProject']
 
     setDefaultsForDependentFields(sortedFields)
   }
