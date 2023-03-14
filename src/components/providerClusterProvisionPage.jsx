@@ -183,7 +183,7 @@ const ProviderClusterProvisionPage = () => {
     if (!_.isEmpty(devSelectedDBProviderName) && !_.isEmpty(devSelectedProviderAccountName)) {
       window.location.pathname = `/k8s/ns/${currentNS}/${devSelectedDBProviderName}`
     } else {
-      window.location.pathname = `/k8s/ns/${currentNS}/rhoda-admin-dashboard`
+      window.location.pathname = `/k8s/ns/${currentNS}/dbaas-admin-dashboard`
     }
   }
 

@@ -81,14 +81,14 @@ const AdminDashboard = () => {
   const dropdownItems = [
     <DropdownItem
       key="link"
-      href={`/k8s/ns/${currentNS}/rhoda-admin-dashboard/import-provider-account`}
+      href={`/k8s/ns/${currentNS}/dbaas-admin-dashboard/import-provider-account`}
       isDisabled={allNamespaces}
     >
       Import Database Provider Account
     </DropdownItem>,
     <DropdownItem
       key="dbinstancelink"
-      href={`/k8s/ns/${currentNS}/rhoda-create-database-instance`}
+      href={`/k8s/ns/${currentNS}/dbaas-create-database-instance`}
       isDisabled={noProvisionableInstances}
     >
       Create Database Instance

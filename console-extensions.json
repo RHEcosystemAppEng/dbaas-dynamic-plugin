@@ -106,8 +106,8 @@
     "properties": {
       "exact": true,
       "path": [
-        "/k8s/ns/:ns/rhoda-admin-dashboard",
-        "/k8s/all-namespaces/rhoda-admin-dashboard"
+        "/k8s/ns/:ns/dbaas-admin-dashboard",
+        "/k8s/all-namespaces/dbaas-admin-dashboard"
       ],
       "component": {
         "$codeRef": "adminDashboard"
@@ -119,7 +119,7 @@
     "properties": {
       "exact": false,
       "path": [
-        "/k8s/ns/:ns/rhoda-admin-dashboard/import-provider-account"
+        "/k8s/ns/:ns/dbaas-admin-dashboard/import-provider-account"
       ],
       "component": {
         "$codeRef": "dbaasImportPage"
@@ -131,8 +131,8 @@
     "properties": {
       "exact": false,
       "path": [
-        "/k8s/ns/:ns/rhoda-create-database-instance",
-        "/k8s/ns/:ns/rhoda-create-database-instance/db/:dbProviderName/pa/:providerAccountName"
+        "/k8s/ns/:ns/dbaas-create-database-instance",
+        "/k8s/ns/:ns/dbaas-create-database-instance/db/:dbProviderName/pa/:providerAccountName"
       ],
       "component": {
         "$codeRef": "providerClusterProvisionPage"
@@ -150,12 +150,12 @@
   {
     "type": "console.navigation/href",
     "properties": {
-      "id": "rhoda-admin-dashboard",
+      "id": "dbaas-admin-dashboard",
       "prefixNamespaced": true,
       "perspective": "admin",
       "section": "data-services",
       "name": "Database Access",
-      "href": "/rhoda-admin-dashboard"
+      "href": "/dbaas-admin-dashboard"
     }
   }
 ]

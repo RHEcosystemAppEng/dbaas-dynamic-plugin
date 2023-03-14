@@ -411,7 +411,7 @@ const InstanceListPage = () => {
                         <Button
                           isDisabled={noProvisionableInstances}
                           component="a"
-                          href={`/k8s/ns/${currentNS}/rhoda-create-database-instance/db/${selectedDBProvider}/pa/${selectedInventory?.name}`}
+                          href={`/k8s/ns/${currentNS}/dbaas-create-database-instance/db/${selectedDBProvider}/pa/${selectedInventory?.name}`}
                           variant="link"
                           className="extra-left-margin"
                           icon={<PlusCircleIcon />}
