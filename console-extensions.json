@@ -94,7 +94,8 @@
         "/k8s/ns/:ns/mongodb-atlas-registration",
         "/k8s/ns/:ns/crunchy-bridge-registration",
         "/k8s/ns/:ns/cockroachdb-cloud-registration",
-        "/k8s/ns/:ns/rds-registration"
+        "/k8s/ns/:ns/rds-registration",
+        "/k8s/ns/:ns/provider-example-registration"
       ],
       "component": {
         "$codeRef": "instanceListPage"
