@@ -572,7 +572,7 @@ const ProviderClusterProvisionPage = () => {
   }
 
   const handleSpendLimitChange = (value) => {
-    if (_.isEmpty(value)) {
+    if (_.isEmpty(value) || isNaN(value) || parseInt(value) < 0) {
       setIsSpendLimitFieldValid(ValidatedOptions.error)
     } else {
       setIsSpendLimitFieldValid(ValidatedOptions.default)
@@ -705,7 +705,7 @@ const ProviderClusterProvisionPage = () => {
               label={selectedProvisioningData.spendLimit.displayName}
               fieldId="spendLimit"
               isRequired
-              helperTextInvalid="This is a required field"
+              helperTextInvalid="This field is required and must be 0 or a positive integer"
               validated={isSpendLimitFieldValid}
               className="half-width-selection"
             >
