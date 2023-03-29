@@ -142,7 +142,8 @@ const AdminDashboard = () => {
     }
 
     inventories?.forEach((inventory) => {
-      let dbProvider
+      let dbProvider = ''
+      dbProvider = inventory.providername
       if (inventory.providername === crunchyProviderType) {
         dbProvider = crunchyProviderName
       } else if (inventory.providername === mongoProviderType) {

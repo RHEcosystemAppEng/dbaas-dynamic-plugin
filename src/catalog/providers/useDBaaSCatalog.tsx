@@ -29,7 +29,7 @@ const useDBaaSCatalog: ExtensionHook<CatalogItem[]> = ({ namespace }): [CatalogI
         },
         cta: {
           label: 'Add to Topology',
-          href: `/k8s/ns/${namespace}/${provider.metadata?.name}`,
+          href: `/k8s/ns/${namespace}/oda-connection/${provider.metadata?.name}`,
         },
         details: {
           descriptions: [

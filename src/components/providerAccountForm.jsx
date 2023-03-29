@@ -191,7 +191,6 @@ class ProviderAccountForm extends React.Component {
       }
       if (provider?.metadata?.name === mongoProviderType) {
         this.setState({
-          credentialDocUrl: mongoFetchCredentialsUrl,
           createProviderAccountDocUrl: mongoUrl,
           providerShortName: mongoShortName,
         })
