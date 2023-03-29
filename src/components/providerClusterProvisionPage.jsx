@@ -165,6 +165,7 @@ const ProviderClusterProvisionPage = () => {
       setIsDBProviderFieldValid(ValidatedOptions.default)
       setSelectedProvisioningData(provider.providerProvisioningData)
       setDefaultProviderData(provider.providerProvisioningData)
+      setProviderFields()
       setIsFormValid(false)
     }
 
