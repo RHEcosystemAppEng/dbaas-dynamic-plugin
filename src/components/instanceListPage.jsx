@@ -197,6 +197,7 @@ const InstanceListPage = () => {
     let providerInfo = {}
     if (!_.isEmpty(dbaasProviders)) {
       providerInfo = _.find(dbaasProviders?.items, (provider) => provider?.metadata?.name === dbProviderType)
+      setDBProviderName(providerInfo.spec?.provider?.displayName)
       setDBProviderLogoUrl(
         `data:${providerInfo.spec?.provider?.icon?.mediatype};base64,${providerInfo.spec?.provider?.icon?.base64data}`
       )
@@ -208,9 +209,6 @@ const InstanceListPage = () => {
     }
     if (dbProviderType === mongoProviderType) {
       setDBProviderName(mongoShortName)
-    }
-    if (dbProviderType === cockroachdbProviderType) {
-      setDBProviderName(cockroachShortName)
     }
     if (dbProviderType === rdsProviderType) {
       setDBProviderName(rdsShortName)

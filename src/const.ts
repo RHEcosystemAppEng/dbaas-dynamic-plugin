@@ -21,15 +21,13 @@ export const cockroachdbProviderName = 'CockroachDB Cloud'
 export const rdsProviderType = 'rds-registration'
 export const rdsProviderName = 'Amazon Relational Database Service'
 export const topologyInstructionPageUrl =
-  'https://access.redhat.com/documentation/en-us/red_hat_openshift_database_access/1/html/quick_start_guide/connecting-an-application-to-a-database-instance-using-the-topology-view_rhoda-qsg'
-export const mongoFetchCredentialsUrl =
-  'https://access.redhat.com/documentation/en-us/red_hat_openshift_database_access/1/html/quick_start_guide/find-your-mongodb-atlas-account-credentials_rhoda-qsg'
+  'https://github.com/RHEcosystemAppEng/dbaas-operator/blob/release-0.5.0/docs/quick-start-guide/main.adoc#connecting-an-application-to-a-database-instance-using-the-topology-view'
 export const crunchyFetchCredentialsUrl =
-  'https://access.redhat.com/documentation/en-us/red_hat_openshift_database_access/1/html/quick_start_guide/find-your-crunchy-data-bridge-account-credentials_rhoda-qsg'
+  'https://github.com/RHEcosystemAppEng/dbaas-operator/blob/release-0.5.0/docs/quick-start-guide/main.adoc#find-your-crunchy-data-bridge-account-credentials'
 export const cockroachFetchCredentialsUrl =
-  'https://access.redhat.com/documentation/en-us/red_hat_openshift_database_access/1/html/quick_start_guide/find-your-cockroachdb-account-credentials_rhoda-qsg'
+  'https://github.com/RHEcosystemAppEng/dbaas-operator/blob/release-0.5.0/docs/quick-start-guide/main.adoc#find-your-cockroachdb-account-credentials'
 export const rdsFetchCredentialsUrl =
-  'https://access.redhat.com/documentation/en-us/red_hat_openshift_database_access/1/html/quick_start_guide/find-your-amazon-rds-account-credentials_rhoda-qsg'
+  'https://github.com/RHEcosystemAppEng/dbaas-operator/blob/release-0.5.0/docs/quick-start-guide/main.adoc#find-your-amazon-rds-account-credentials'
 export const rdsEngineTypeDocUrl =
   'https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.DBInstanceClass.html'
 export const mongoUrl = 'https://www.mongodb.com/atlas/database'
