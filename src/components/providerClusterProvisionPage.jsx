@@ -182,7 +182,7 @@ const ProviderClusterProvisionPage = () => {
 
   const goToInstancesPage = () => {
     if (!_.isEmpty(devSelectedDBProviderName) && !_.isEmpty(devSelectedProviderAccountName)) {
-      window.location.pathname = `/k8s/ns/${currentNS}/${devSelectedDBProviderName}`
+      window.location.pathname = `/k8s/ns/${currentNS}/oda-connection/${devSelectedDBProviderName}`
     } else {
       window.location.pathname = `/k8s/ns/${currentNS}/dbaas-admin-dashboard`
     }

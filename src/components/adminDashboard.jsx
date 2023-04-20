@@ -95,11 +95,7 @@ const AdminDashboard = () => {
     </DropdownItem>,
   ]
 
-  const dbProviderTitle = (
-    <div>
-      Database Access <Label className="ocs-preview-badge extra-left-margin">Service Preview</Label>
-    </div>
-  )
+  const dbProviderTitle = <div>Database Access</div>
 
   const mapDBaaSConnectionsAndServiceBindings = async () => {
     const newDbaasConnectionList = dbaasConnectionList

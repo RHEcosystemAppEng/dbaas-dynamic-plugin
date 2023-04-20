@@ -86,7 +86,6 @@ const InstanceListPage = () => {
       </span>
       <div>
         Add {dbProviderName} Instance to Topology{' '}
-        <Label className="ocs-preview-badge extra-left-margin">Service Preview</Label>
         <p className="pf-c-form__helper-text">The selected database instance will be added to the topology view.</p>
       </div>
     </div>
